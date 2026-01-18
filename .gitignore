@@ -1,0 +1,40 @@
+# use glob syntax
+syntax: glob
+
+./.*.swp
+*.o
+*.a
+*.exe
+*~
+*.out
+*.mod
+*.log
+*.errout
+*.orig
+*.la
+*.lo
+*.Plo
+*.Po
+*.ps
+*.pdf
+
+bin/
+
+*CONFIG*
+
+# ignore anything in the test directory
+tests/*/*dat
+tests/*/*log
+tests/*/*diff
+tests/*/*txt
+tests/*/*xyz
+tests/*/*dcd
+tests/*/Spawn.?
+tests/*/fort.*
+tests/*/*.[1-9]
+# Don't ignore these
+!tests/*/Control.dat
+!tests/*/Geometry.dat
+
+# auto-generated stuff from FMS
+src/moddepend

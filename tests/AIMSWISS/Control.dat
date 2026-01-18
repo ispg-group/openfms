@@ -1,0 +1,40 @@
+&control
+! Input for Izmaylov model
+!------ Initialization -------!
+ InitState=2
+ InitialCond='NoSample'
+ iRndSeed=57034456
+!------ Simulation Properties -------!
+ Model='TOY'		!to identify the potential used
+ iMethod=3        ! Indicates Izmaylov model
+ IzmOmegax=0.009557
+ IzmOmegay=0.003515
+ IzmXshift=20.07
+ IzmYshift=0.0
+ IzmDeltaE=0.01984
+ IzmCoupC=0.0006127
+ NumParticles=2
+ NumStates=2		!number of electronic states
+ zAllText=.true.     ! Output all text-based files
+ NumInitBasis=1
+!---- Stochastic Selection ----!
+ Stochastic = .true.
+ StochasticSwiss = .true.
+!-------- Integration and numerics --------!
+ TimeStep=1.0		!timestep for integration
+ SimulationTime=68.00	!integration time
+ MinTimeStep=0.001
+!-------- Spawning -------!
+ MultiSpawn=1		!number of spawns per event
+ MaxTraj=80		!max number of trajectories
+ OMax=0.6
+ SpawnCoupV=.false.
+ CSThresh=0.0001
+ CFThresh=0.005
+ PopToSpawn=0.001
+ CoupTimeStep=0.250
+/ !Atom type information below
+  2 ! number of atom types
+#Name  AtomicNum  AtomicWeight(amu) Width(1/bohr**2)
+ QQ    1       0.0005485      0.004775
+ PP    1       0.0005485      0.001675

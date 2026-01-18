@@ -1,0 +1,36 @@
+! Basic test for Boltzmann sampling of initial conditions (H2 molecule)
+
+&control
+! Initialization
+! --------------
+ InitState=2
+ InitialCond='Boltzmann'
+ Temperature=300.0
+ iRndSeed=234362789
+
+! Simulation Properties
+! ---------------------
+ Model='TOY'	  ! to identify the potential used
+ iMethod=3        ! Indicates Izmaylov model
+
+! Input for Izmaylov model
+! ------------------------
+ IzmOmegax=0.009557
+ IzmOmegay=0.003515
+ IzmXshift=20.07
+ IzmYshift=0.0
+ IzmDeltaE=0.01984
+ IzmCoupC=0.0006127
+ NumParticles=2
+ NumStates=2		!number of electronic states
+
+! Integration and numerics
+! ------------------------
+ TimeStep=1.0		!timestep for integration
+ SimulationTime=0.00	!integration time
+
+! Output
+! --------
+zTrajFile = .true.
+zXYZ = .true.
+/

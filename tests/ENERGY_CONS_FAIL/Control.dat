@@ -1,0 +1,37 @@
+Test adaptive time step algorithm:
+ - When energy drifts from the energy at t=0 too much (>EnergyCons threshold),
+   an error is printed, but currently the simulation is not stop. Is this a desired behaviour?
+
+&control
+! Integration and numerics
+ TimeStep=1.0
+ SimulationTime=2.00
+ MinTimeStep=0.03
+ ! Crazy low to trigger the adaptive time step
+ ! The particular number has been painstaikingly chosen so that
+ ! the adaptive time step at first succeeds, but then ultimately fails.
+ EnergyCons=5.00e-14
+
+! Initialization
+ InitState=2
+ InitialCond='NoSample'
+ iRndSeed=4362793
+
+! Simulation Properties
+ Model='TOY'
+ iMethod=3 ! Izmaylov model
+ NumParticles=2
+ NumStates=2
+
+! Input for Izmaylov model
+ IzmOmegax=0.009557
+ IzmOmegay=0.003515
+ IzmXshift=20.07
+ IzmYshift=0.0
+ IzmDeltaE=0.01984
+ IzmCoupC=0.0006127
+/ !Atom type information below
+  2 ! number of atom types
+#Name  AtomicNum  AtomicWeight(amu) Width(1/bohr**2)
+ QQ    1       0.0005485      0.004775
+ PP    1       0.0005485      0.001675

@@ -1,0 +1,1350 @@
+\documentclass[11pt]{article}
+\usepackage{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   % ... or a4paper or a5paper or ... 
+%\geometry{landscape}                % Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{epstopdf}
+\usepackage{hyperref}
+\usepackage{cmbright}
+\usepackage{xcolor}
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+\newcommand\bfec[1]{\textcolor{orange}{\textit{ XXX BFEC: #1 XXX }}}
+\renewcommand\dh[1]{\textcolor{purple}{\textit{ DH: #1 }}}
+
+\title{OpenFMS \\ Users' Guide}
+%\author{Benjamin G. Levine, Joshua D. Coe, Aaron M. Virshup, Hongli Tao, \\ Christian R. Evenhuis, William J. Glover, Toshifumi Mori, Michal Ben-Nun, Yorick Lassmann, \\ Daniel Hollas, Basile F. E. Curchod,  and Todd J. Mart\'{i}nez}
+\date{\today}                     
+\begin{document}
+\maketitle
+
+
+\newpage
+\tableofcontents
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% New section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Ab Initio Multiple Spawning}
+
+
+%2 INTRO
+OpenFMS implements the Ab Initio Multiple Spawning (AIMS) method to perform dynamics calculations on multiple electronic states. OpenFMS is based on the code FMS90, originally created by Todd J. Mart\'{i}nez and Michal Ben-Nun, and further developed by Benjamin G. Levine, Joshua D. Coe, Aaron M. Virshup, Hongli Tao, Christian R. Evenhuis, William J. Glover, Basile F. E. Curchod, Toshifumi Mori, and Nanna Holmgaard List. The OpenFMS project was initiated by Daniel Hollas and Basile F. E. Curchod, with contributions from Yorick Lassmann and Vera Brieskorn.
+
+AIMS provides a description of a time-evolving molecular wavepacket with a multiconfigurational, 
+product Gaussian function basis. To allow the size of the basis set to remain small while describing 
+the wavepacket dynamics, the centers of the full-dimensional Gaussian functions follow classical 
+trajectories while their widths are kept fixed (the frozen Gaussian approximation). When these 
+classical trajectories encounter regions of large non-adiabatic coupling to another electronic state, 
+new basis functions are {\em spawned} on the coupled state and the Time Dependent Schr\"odinger 
+Equation is solved in order to describe population transfer between the electronic states. In this way, 
+the description of the wavepacket can be systematically improved by increasing the number of initial 
+trajectory basis functions, while reducing the coupling threshold at which trajectories spawned. 
+Alternatively, spawning can be disabled, and the method will reduce to traditional first-principles 
+classical molecular dynamics when a single trajectory basis function is used.
+
+\subsection{Bibliography}
+\label{sec:aimsbiblio}
+All publications resulting from use of this program must acknowledge
+the above:
+\begin{itemize}
+\item B. G. Levine, J. D. Coe, A. M. Virshup and T. J. Mart\'{i}nez, Chem. Phys., \textbf{347}, 3 (2008).
+\item M. Ben-Nun and T. J. Mart\'{i}nez, Chem. Phys. Lett., \textbf{298}, 57 (1998).
+\end{itemize}
+
+\noindent Publications using SSAIMS should cite:
+\begin{itemize}
+\item B. F. E. Curchod, W. J. Glover, T. J. Mart\'{i}nez, J. Phys. Chem. A, \textbf{124}, 6133 (2020).
+\end{itemize}
+
+\noindent Publications using AIMSWISS should cite:
+\begin{itemize}
+\item Y. Lassmann, B. F. E. Curchod, J. Chem. Phys., \textbf{154}, 211106 (2021).
+\item Y. Lassmann, D. Hollas, B. F. E. Curchod, J. Phys. Chem. Lett., \textbf{13}, 12011 (2022).
+\end{itemize}
+
+% \noindent Publications using XFAIMS should cite:
+% \begin{itemize}
+% \item B. Mignolet,  B. F. E. Curchod,  and T. J. Mart\'{i}nez, J. Chem. Phys., \textbf{145}, 191104 (2016).
+% \end{itemize}
+
+% \noindent Publications using GAIMS should cite:
+% \begin{itemize}
+% \item B. F. E. Curchod, C. Rauer, P. Marquetand, L. Gonz\'{a}lez, and T. J. Mart\'{i}nez, J. Chem. Phys., \textbf{144}, 101102 (2016). 
+% \end{itemize}
+
+\noindent For additional information about AIMS, see:
+\begin{itemize}
+\item B. F. E. Curchod, \textit{Full and Ab Initio Multiple Spawning}, in ``Excited states: Methods for quantum chemistry and dynamics'', Eds. L. Gonz\'{a}lez and R. Lindh, Wiley, p. 435-467 (2020). 
+\item B. F. E. Curchod, T. J. Mart\'{i}nez, Chem. Rev., \textbf{118}, 3305 (2018).
+\item B. G. Levine and T. J. Mart\'{i}nez, J. Phys. Chem. A, \textbf{113}, 12815 (2009).
+\item T. J. Mart\'{i}nez, Acc. Chem. Res., \textbf{39}, 119 (2006).
+\end{itemize}
+
+\noindent For a discussion of AIMS approximations, see:
+\begin{itemize}
+\item B. Mignolet, B. F. E. Curchod, J. Chem. Phys., \textbf{148}, 134110 (2018).
+\end{itemize}
+
+\subsection{About this manual}
+
+If you have any comments or additions for this manual, please open an issue on the GitHub repository of OpenFMS (\url{https://github.com/ispg-group/openfms}).
+
+\newpage \section{Building OpenFMS}
+\label{build}
+
+To compile OpenFMS, please follow the up-to-date instructions that can be found on the GitHub page of the code: \url{https://github.com/ispg-group/openfms}.
+
+
+% \subsection{Quick start}
+% \label{start}
+% \begin{enumerate}
+% \item In the top level of the FMS directory, run \verb*$./configure$ to interactively configure your FMS installation.
+% \item Run \verb*$make$ to compile the code. Binaries are installed in the \verb*$bin/$ directory
+% %\item (recommended) Run \verb*$make util$ to compile the helper utilities. (Note that this cannot be done when linking with molpro)
+% %\item (optional) Run \verb*$make doc$ to assemble documentation (requires latex; code documentation additionally requires doxygen)
+% \item  Run \verb*$make test$ to run the battery of test jobs in the ``tests'' directory. The tests will be automatically checked for any run-time errors; the results should be manually verified.
+% \end{enumerate}
+
+
+% \subsection{Configuring the build}
+% Run \verb*$./configure$ to interactively configure your FMS installation. You will be prompted for electronic structure interface and compiler, and to provide the locations of the required libraries and utilities. This will create a file, \verb*$CONFIGFMS$, with the configuration options. This file can be modified, e.g. to fine-tune compiler flags or change library information.
+
+% \subsection{Making the code}
+% After a CONFIGFMS file has been created, type \verb*$make$ to compile the FMS code. An executable will be created and placed in the bin/ directory. 
+% %FMS utilities will also be compiled and placed in the util/ directory.
+
+% \subsubsection{FMSTerachem}
+% \label{BuildFMSTC}
+% \bfec{XXX}
+
+%\subsubsection{FMSQuantics}
+%\bfec{XXX}
+
+%\subsubsection{Documentation \bfec{check}}
+%Typing \verb*$make doc$ will create the documentation. Both user and code documentation require a functioning latex distribution; code documentation also requires doxygen (\url{http://www.doxygen.org/}).
+
+%\dh{TODO: \url{https://github.com/ispg-group/fms90-redux/issues/131}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% New section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Overview}
+\label{running} 
+
+This section provides an overview of the basic OpenFMS program flow for AIMS dynamics. The reader is assumed to be familiar with the fundamental principles of AIMS; see the OpenFMS bibliography (sec. \ref{sec:aimsbiblio}) for a list of references. 
+%For details of other calculation types, see section \ref{other}.
+
+
+\subsection{Initial Conditions}
+\label{initial} 
+
+Prior to the beginning of AIMS dynamics, initial conditions may be generated from an adequate ground-state distribution. OpenFMS provides a variety of sampling methods, depending on the system type. Alternatively, initial coordinates and momenta may be specified manually in Geometry.dat (sec. \ref{geomdat}).
+
+Initial conditions are generated in the following manner (with corresponding namelist variables):
+
+\paragraph{QM Calculations}
+For purely QM PESs, initial conditions are sampled from the harmonic oscillator states of a PES minimum, using one of several semi-classical transformations (sec. \ref{initial}). The geometry of the PES minimum is read from Geometry.dat (sec. \ref{geomdat}), while the frequencies or hessian of the minimum are read from their corresponding files (secs. \ref{aims:hessian} and \ref{aims:frequencies}).
+
+% \paragraph{QM/MM calculations \bfec{check}}
+% \begin{enumerate}
+%  \item  The starting geometry is retrieved from the MM package from the MM package.
+%  \item  For solvated runs, solvent positions may be randomly generated (GenSolvent,NumS,NumAS).
+%  \item  The energy of the MM system may be quenched (nRelaxSteps).
+%  \item  The system may be equilibrated. The QM system may be held rigid (EquiCon,BrownCon), in which case no QM calculations are necessary. Otherwise, the system can be equilibrated on the full QM/MM PES (Equi, Brown)
+%  \item  Initial conditions are sampled for the QM region (InitialCond) \textbf{IF}:
+% \begin{itemize}
+%  \item  The QM system was held rigid during equilibration, or
+%  \item  No equilibration took place
+% \end{itemize}
+% \end{enumerate}
+
+
+\subsection{Restarting}
+\label{restart} 
+
+If, in Control.dat, \verb*$iRestart$ is not equal to 0, OpenFMS will attempt to restart dynamics. A restart requires all the original input files and Checkpoint.txt (if Checkpoint.txt cannot be found, OpenFMS will use Last\_Bundle.txt). Any variable in Control.dat may be changed between restarts.
+
+\subsection{Dynamics}
+\label{dyn}
+
+Time-evolution of the combined electronic and nuclear wavefunction is, of course, the main goal of OpenFMS, and the bulk of computational time is spent doing this. At each timestep, the classical trajectories and their quantum mechanical amplitudes are time-evolved by one timestep. The timestep is determined on the fly, and may be automatically reduced to integrate rapidly-varying regions of the PES.
+
+After moving the full wavefunction forward in time by one timestep, OpenFMS will spawn new trajectory basis functions, if necessary. OpenFMS will also terminate the propagation of trajectories that no longer have enough population to spawn, or are on the state specified by ``IgnoreState". Quantum mechanically, the terminated trajectory basis functions are assumed to occupy a block of the Hamiltonian that does not change in time, and whose off-diagonal coupling elements with all live basis functions are 0. In this way, the energy and population of terminated basis functions are still included in overall analyses of simulation, but are not evolved in time.
+
+Output is written to files after every ``nStepToPrint''timesteps. Information sufficient to reconstruct the entire simulation state at a given timestep is written to ``Checkpoint.dat".
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% New section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage \section{Files Used}
+\label{files} 
+
+Each AIMS run must take place in its own directory.
+
+\subsection{Input files}
+\label{inputfiles} 
+
+Additional input files may be required by various electronic structure methods. See Electronic Structure Methods  (sec. \ref{elecstruc}) for specific methods.
+
+\paragraph{} \begin{tabular}{ | l | p{3 in} | }
+\hline
+ \textbf{Filename} & \textbf{Purpose} \\ \hline 
+ Control.dat & Control over program behavior and atom typing (sec. \ref{controldat}) \\ \hline 
+ Geometry.dat & Initial geometry (and optionally momentum) input (sec. \ref{geomdat}) \\ \hline 
+ Hessian.dat OR Frequencies.dat & Frequencies input for initial condition sampling (secs. \ref{aims:hessian} and \ref{aims:frequencies}) \\ \hline 
+\end{tabular}
+
+
+\subsection{Output files - default}
+\label{defoutfiles} 
+
+\paragraph{} \begin{tabular}{ | l | p{3in} | l | }
+\hline
+ \textbf{Filename} & \textbf{Purpose} & \textbf{Control Flag} \\ \hline 
+ FMS.out & General output file &  \\ \hline 
+ Spawn.log & Spawn information &  \\ \hline 
+ Coup.dat & Spawning region output &  \\ \hline 
+ FailSpawn.log & Failed spawn attempt output &  \\ \hline 
+ E.dat & Energy output & zEDatFile \\ \hline 
+ N.dat & Branching output file & zNDatFile \\ \hline 
+\end{tabular}
+
+
+\subsection{Output files - optional}
+\label{optoutfiles} 
+
+By setting \verb*$zAllText=.true.$ in Control.dat, all optional files will be written. All information contained in these files is also contained in Bundle.h5.
+
+
+
+Additional output files may be created by various electronic structure
+methods. See Electronic Structure Methods  (sec. \ref{elecstruc}) for
+specific methods. \\
+
+
+\begin{tabular}{ | l | p{3in} | l | }
+\hline
+ \textbf{Filename} & \textbf{Purpose} & \textbf{Control flag} \\ \hline 
+ Amp.x & Quantum mechanical coefficients for each trajectory basis function & zAmpFile \\ \hline 
+ Angles.x & Angle monitoring for trajectory x & nAngles \\ \hline 
+ Bonds.x & Bond monitoring for trajectory x & nBonds \\ \hline 
+ CFxn.dat & Correlation function output & zCorrFile \\ \hline 
+ Charge.x & Mulliken charges for trajectory x (not available for all methods) & zChargeFile \\ \hline 
+ Coup.x & Nonadiabatic coupling output for trajectory x (norm of nonadiabatic coupling vectors -- projection of the nonadiabatic coupling vectors on trajectory velocity) & zCoupFile \\ \hline 
+ Dihedral.x & Dihedral monitoring for trajectory x & nDihedrals \\ \hline 
+ H.dat & Hamiltonian output file & zBundMatFile \\ \hline 
+ Pyram.x & Pyramidalization angle monitoring for trajectory x & nPyrams \\ \hline 
+ MM.x & distribution of energy between QM and MM systems & zMMFile \\ \hline 
+ S.dat & Overlap output file & zBundMatFile \\ \hline 
+ SDot.dat & Time derivative of overlap output file & zBundMatFile \\ \hline 
+ TDip.dat & Transition dipole output (not available for all methods) & zTDipoleFile \\ \hline 
+ Traj.x & Classical parameters, weight and phase for Trajectory x & zTrajFile \\ \hline 
+ PotEn.x & Classical energy output for trajectory x (electronic energies and total classical energy) & zPotEnFile \\ \hline 
+\end{tabular}
+
+
+\subsection{Further information on the produced output}
+All values are given in
+atomic units unless otherwise specified. Electronic properties of a trajectory are evaluated at the center geometry of 
+the trajectory basis function.
+
+\begin{description}
+\item[FMS.out] Current progress of simulation and any warning/error messages.
+\item[E.dat] Wavepacket energies. QM energies are expectation values of the quantum operators, including coherences 
+between the trajectory basis functions. CL energies are averages of the trajectories' classical energies, 
+weighted by the amplitude norm of each trajectory.
+\item[N.dat] Electronic populations, the sum of which should be conserved.
+\item[TrajDump.i] Dynamic variables for trajectory i.
+\item[Amp.i] Amplitudes of trajectory i. Note: since the product Gaussian basis is non-orthogonal, the amplitude norms do not necessarily sum to 1.
+\item[PotEn.i] Electronic energies for trajectory i. The last column displays the total classical energy of the trajectory, which should be conserved.
+\item[positions.i.xyz] Snapshots of trajectory i's center geometry in XYZ format (Angstrom).
+\item[Coup.i] Nonadiabatic couplings of each state to the occupied state for trajectory i.
+The first nstate columns contain the magnitude of coupling vectors and the last nstate columns 
+contain the projection of the coupling onto the velocity vector.
+\item[Charge.i] Partial atomic charges corresponding to the occupied electronic state of trajectory i. 
+The molpro input deck must contain a Mulliken population analysis directive in the {\tt MPCALC} procedure.
+\item[Dipole.i] Dipole moments of each electronic state for trajectory i.
+\item[TDip.i] Transition dipoles from ground to excited states for trajectory i.
+\item[QMRR.i] Isotropic quadrupole moment $\langle r^2 \rangle$ of each electronic state for trajectory i. The molpro
+input deck must contain {\tt EXPEC,QMRR}.
+\item[CIVec.i] CI Vectors for each state of trajectory i.
+\item[CFxn.dat] The overlap correlation function $\langle \Psi(t) | \Psi(0) \rangle$.
+\item[H.dat] Hamiltonian matrix.
+\item[S.dat] Overlap matrix. Note: the overlap between trajectories on different states is zero, but is
+displayed here as if they were on the same state.
+\item[SDot.dat] The time derivative of the Overlap matrix.
+\item[i.j.molf] Molden file for trajectory i at time j.
+\item[Checkpoint.txt] Restart file with history.
+\item[Last\_Bundle.txt] Restart file for the last written timestep.
+\item[Spawn.log] Details of successful spawns.
+\item[FailSpawn.log] Details of unsuccessful spawns.
+\item[Spawn.i] XYZ file of geometry where trajectory i was spawned.
+\end{description}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% New section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage \section{Input Parameters}
+\label{params} 
+
+
+\subsection{Control.dat\label{controldat}}
+Control.dat is a fortran NAMELIST file which stores the main parameters of an AIMS simulation. Values in 
+atomic units unless otherwise specified. At the end of the file, one can optionally specify user-defined 
+atom types (see below)).
+
+A discussion of the key parameters in AIMS (and the sensitivity of the dynamics to the choice of these parameters) can be found in Theor. Chem. Acc., \textbf{142}, 66 (2023). 
+
+\begin{table}[h]
+\caption{Initialization} \label{tab:aims}
+\begin{tabular}{ l l l }
+\hline\hline
+Parameter & Options (Default) & Description \\
+\hline
+Required parameters:\\
+{\tt NumStates}      &{\tt Integer}             & {\small Number of electronic states.}\\
+{\tt InitState}      &{\tt Integer}             & {\small Initial electronic state.}\\
+{\tt NumParticles}   &{\tt Integer}             & {\small Number of atoms.}\\
+Common parameters:\\
+{\tt IMethod}        &{\tt 0}                   & {\small First principles dynamics (No NACV).}\\
+                     &{\tt (1)}                 & {\small CASSCF dynamics, with NACV.}\\
+{\tt IRestart}       &{\tt (0)/1}               & {\small Restart the calculation when set to 1.}\\
+{\tt RestartTime}    &{\tt Real (-100.0)}       & {\small Time from which to restart in Checkpoint.txt}\\&&
+                                                  {\small If disabled, use Last\_Bundle.txt.}\\
+{\tt IRndSeed}       &{\tt Integer (0)}         & {\small Initial condition random number seed.}\\
+{\tt InitialCond}    &{\tt ('NoSample')}        & {\small Read initial conditions from Geometry.dat.}\\
+                     &{\tt 'Wigner'}            & {\small Sample from the Wigner distribution of harmonic}\\&&
+                                                  {\small normal modes in Frequencies.dat.}\\
+                     &{\tt 'Quasiclassical'}    & {\small As above, for the Quasiclassical distribution.}\\
+                     &{\tt 'Boltzmann'}         & {\small As above, for the Boltzmann distribution.}\\
+{\tt Temperature}    &{\tt Real (0.0)}          & {\small Temperature (Kelvin) of the initial conditions.}\\
+Expert parameters:\\
+{\tt InitBright}     &{\tt Logical (.false.)}   & {\small Select optically brightest of {\tt InitState}}\\&&
+                                                  {\small and {\tt IDark} as initial state.}\\
+{\tt InitDark}       &{\tt Logical (.false.)}   & {\small As above, but for darkest state.}\\
+{\tt IDark}          &{\tt Integer (-1)}        & {\small See above.}\\
+{\tt InitGap}        &{\tt Real (0.0)}          & {\small Select initial ground-excited energy gap}\\&&
+                                                  {\small to within $\pm 0.5\times${\tt InitGapWidth}.}\\
+{\tt InitGapWidth}   &{\tt Real (0.0)}          & {\small See above.}\\
+{\tt NumInitBasis}   &{\tt Integer (1)}         & {\small Number of initial coupled basis functions.}\\
+{\tt FirstGauss}     &{\tt Logical (.false.)}   & {\small Place the first basis function at the}\\&&
+                                                  {\small molecular origin (that of Geometry.dat),}\\&&
+                                                  {\small with zero momentum.}\\
+{\tt MirrorBasis}    &{\tt Logical (.false.)}   & {\small Mirror the initial basis on another }\\&&
+                                                  {\small electronic state, {\tt MirrorState}.}\\
+{\tt MirrorState}    &{\tt Integer (1)}         & {\small See above.}\\
+{\tt EnergyAdjust}   &{\tt Logical (.false.)}   & {\small Adjust momenta of mirrored basis (along}\\&&
+                                                  {\small NACV) to match original basis energy.}\\
+{\tt SharpEnergy}    &{\tt Logical (.false.)}   & {\small Adjust momenta of all initial basis functions}\\&&
+                                                  {\small to match first basis function energy.}\\
+\hline\hline
+\end{tabular}
+\end{table}
+
+\clearpage
+\newpage
+\begin{table}[h]
+\caption{Integration and numerics}
+\begin{tabular}{ l l l }
+\hline\hline
+Parameter & Options (Default)& Description \\
+\hline
+Required parameters:\\
+{\tt TimeStep}          & {\tt Real}                & {\small Simulation timestep.}\\
+{\tt SimulationTime}    & {\tt Real}                & {\small Simulation length.}\\
+Common parameters:\\
+{\tt ExShift}           & {\tt Real (0.0)}          & {\small Apply a shift of {\tt +ExShift} to}\\&&
+                                                      {\small diagonals of Hamiltonian to improve} \\&&
+                                                      {\small amplitude/phase propagation. Good}\\&&
+                                                      {\small choice is average potential energy}\\&&
+                                                      {\small of ground and excited states.}\\
+{\tt CoupTimeStep}      &{\tt Real (TimeStep/4)}    & {\small Timestep to use in regions of large}\\&&
+                                                      {\small nonadiabatic coupling.}\\
+Expert parameters:\\
+{\tt TimeStepRejection} &{\tt Logical (.true.)}     & {\small Enables adaptive time-stepping when}\\&&
+                                                      {\small encountering integration problems.}\\
+{\tt MinTimeStep}       &{\tt Real (CoupTimeStep/4)}& {\small Minimum timestep to use when}\\&&
+                                                      {\small adaptive time-stepping.}\\
+{\tt DieOnMinStep}      & {\tt Logical (.true.)}    & {\small Stop calculation if minimum timestep}\\&&
+                                                      {\small is reached.}\\
+{\tt EnergyStepCons}    & {\tt Real (0.005)}        & {\small Allowed violation of classical energy}\\&&
+                                                      {\small conservation before timestep is}\\&&
+                                                      {\small rejected.}\\
+{\tt NormCons}          & {\tt Real (0.25)}         & {\small Permitted deviation in Norm from}\\&&
+                                                      {\small beginning of simulation.}\\
+{\tt RejectAllStateFlip}& {\tt Logical (.true.)}    & {\small Reject a timestep if any two}\\&&
+                                                      {\small electronic states flip. If {\tt .false.}}\\&&
+                                                      {\small then only reject if state is coupled}\\&&
+                                                      {\small to occupied state.}\\
+{\tt OlapThresh}        & {\tt Real (0.001)}        & {\small Threshold overlap between two}\\&&
+                                                      {\small trajectories below which matrix}\\&&
+                                                      {\small elements not calculated.}\\
+{\tt RegThresh}         & {\tt Real (0.0001)}       & {\small Threshold to regularize the overlap}\\&&
+                                                      {\small matrix before inversion.}\\
+%{\tt AssumeHermitian}   & {\tt Logical (.true.)}    & {\small Only compute upper half of H and S?}\\
+{\tt Constrain}         & {\tt Logical (.false.)}   & {\small Apply geometric contraints? If yes,}\\&&
+                                                      {\small supply Constraints.dat}\\
+
+\hline\hline
+\end{tabular}
+\end{table}
+
+\clearpage
+\newpage
+\begin{table}[h]
+\caption{SSAIMS}
+\begin{tabular}{ l l l }
+\hline\hline
+Parameter & Options (Default)& Description \\
+\hline
+Required parameters:\\
+{\tt Stochastic}          & {\tt Logical (.false.) }                & {\small Initiate stochastic-selection AIMS (SSAIMS).}\\
+{\tt StochasticOlap}          & {\tt Logical (.false.) }                & {\small Choose between energy-based SSAIMS}\\&& 
+{\small (ESSAIMS, false, default)}\\&& 
+{\small or overlap-based SSAIMS (OSSAIMS, true).}\\
+{\tt StochasticThresh}          & {\tt Real (1.0d-10) }                & {\small Stochastic selection threshold.} \\&&
+{\small Value corresponds to an overlap for OSSAIMS.} \\&&
+{\small Value corresponds to an energy for if ESSAIMS.} \\
+\hline\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\caption{AIMSWISS}
+\begin{tabular}{ l l l }
+\hline\hline
+Parameter & Options (Default)& Description \\
+\hline
+Required parameters:\\
+{\tt StochasticSwiss}          & {\tt Logical (.false.) }                & {\small Initiate AIMS with informed stochastic selections} \\&&  
+{\small(AIMSWISS).}\\
+\hline\hline
+\end{tabular}
+\end{table}
+
+% \begin{table}[h]
+% \caption{GAIMS}
+% \begin{tabular}{ l l l }
+% \hline\hline
+% Parameter & Options (Default)& Description \\
+% \hline
+% Required parameters:\\
+% {\tt XXXX}          & {\tt XXXX}                & {\small XXXX.}\\
+% \hline\hline
+% \end{tabular}
+% \end{table}
+
+% \begin{table}[h]
+% \caption{XFAIMS}
+% \begin{tabular}{ l l l }
+% \hline\hline
+% Parameter & Options (Default)& Description \\
+% \hline
+% Required parameters:\\
+% {\tt XXXX}          & {\tt XXXX}                & {\small XXXX.}\\
+% \hline\hline
+% \end{tabular}
+% \end{table}
+
+\clearpage
+\newpage
+\begin{table}[h]
+\caption{Spawning}
+\begin{tabular}{ l l l }
+\hline\hline
+Parameter & Options (Default)& Description \\
+\hline
+Common parameters:\\
+{\tt CSThresh}       & {\tt Real (0.1)}       & {\small Threshold Coupling, above which to spawn.}\\&&
+{\small Caution: this is the norm of NACV by default,}\\ &&
+{\small but this threshold should be changed if}\\ &&
+{\small{\tt SpawnCoupV} is used.}\\
+{\tt PopToSpawn}     & {\tt Real (0.1)}       & {\small Minimum population a trajectory must have}\\&&
+                                                {\small before it can spawn.}\\
+{\tt OMax}           & {\tt Real (0.8)}       & {\small Prevent spawning if overlap of spawned}\\&&
+                                                {\small trajectory with existing basis greater}\\&&
+                                                {\small than {\tt Omax}.}\\
+{\tt MaxTraj}        & {\tt Real (100)}       & {\small Maximum number of allowed trajectories.}\\&&
+                                                {\small Above which, spawning is disabled.}\\ 
+{\tt IgnoreState}    & {\tt Integer (0)}      & {\small Stop dynamics of trajectories on {\tt IgnoreState}}\\&&
+                                                {\small if not coupled for at least {\tt DecoherenceTime}.}\\&&
+                                                {\small Choose 1 if only interested in excited states.}\\
+{\tt MaxEDiff}       & {\tt Real (0.03)}      & {\small Energy gap threshold for calculating}\\&&
+                                                {\small nonadiabatic couplings, above which,}\\&&
+                                                {\small coupling taken to be zero.}\\
+Expert parameters:\\
+%{\tt MultiSpawn}     & {\tt Integer (1)}      & {\small How many trajectory basis functions to}\\&&
+%                                                {\small spawn during one coupling event.}\\
+{\tt DecoherenceTime}&{\tt Real (200.0)}      & {\small See above.}\\
+{\tt SpawnCoupV}     & {\tt Logical (.false.)}& {\small Use Coup.velocity as criterion for spawning}\\&&
+                                                {\small rather than NACV magnitude alone.}\\
+{\tt EShellOnly}     & {\tt Logical (.true.)} & {\small Require spawned trajetories to have same}\\&&
+                                                {\small classical energy as parent by adjusting}\\&&
+                                                {\small momentum along NACV.}\\
+\hline\hline
+\end{tabular}
+\end{table}
+
+\clearpage
+\newpage
+\begin{table}[h]
+\caption{Output -- common parameters}
+\begin{tabular}{ l l l }
+\hline\hline
+Parameter & Options (Default)& Description \\
+\hline
+{\tt zAllText}               & {\tt Logical (.false.)}& {\small Write all output files?}\\
+{\tt zEDatFile}              & {\tt Logical (.true.)} & {\small Write Energy file?}\\
+{\tt zNDatFile}              & {\tt Logical (.true.)} & {\small Write Population file?}\\
+{\tt zTrajFile}              & {\tt Logical (.false.)}& {\small Write Trajectory files?}\\
+{\tt zAmpFile}               & {\tt Logical (.false.)}& {\small Write Amplitude files?}\\
+{\tt zPotEnFile}             & {\tt Logical (.false.)}& {\small Write Potential Energy files?}\\
+{\tt zXYZ}                   & {\tt Logical (.false.)}& {\small Write XYZ Geometry files?}\\
+{\tt zCoupFile}              & {\tt Logical (.false.)}& {\small Write Coupling files?}\\
+{\tt zChargeFile}            & {\tt Logical (.false.)}& {\small Write Charge files?}\\
+{\tt zDipoleFile}            & {\tt Logical (.false.)}& {\small Write Dipole files?}\\
+{\tt zTDipoleFile}           & {\tt Logical (.false.)}& {\small Write Transition Dipole files?}\\
+{\tt zQMRRFile}              & {\tt Logical (.false.)}& {\small Write $\langle r^2 \rangle$ quadrupole moment files?}\\
+{\tt zCIVecFile}             & {\tt Logical (.false.)}& {\small Write CI Vector files? (Not}\\&&
+                                                        {\small recommended for large CI)}\\
+{\tt zCorrfile}              & {\tt Logical (.false.)}& {\small Write Correlation function file?}\\
+{\tt zBundMatFile}           & {\tt Logical (.false.)}& {\small Write Matrices (H, S, etc)?}\\
+{\tt WriteMolden}            & {\tt Logical (.false.)}& {\small Write Molden files?}\\
+{\tt MoldenStep}             & {\tt Integer (200)}    & {\small How often (every number of}\\&&
+                                                        {\small timesteps) Molden files are written.}\\
+{\tt RestartStep}            & {\tt Integer (4)}      & {\small How often (every number of}\\&&
+                                                        {\small timesteps) Restart files are written.}\\
+\hline\hline
+\end{tabular}
+\end{table}
+
+
+\begin{table}[h]
+\caption{Output -- expert parameters}
+\begin{tabular}{ l l l }
+\hline\hline
+Parameter & Options (Default)& Description \\
+\hline
+{\tt NStepToPrint}           & {\tt Integer (1)}      & {\small How often (every number of}\\&&
+                                                        {\small timesteps) output files are written.}\\
+{\tt WriteEveryStep}         & {\tt Logical (.true.)} & {\small Write output every timestep,}\\&&
+                                                        {\small including subtimesteps of}\\&&
+                                                        {\small adaptive propagation. Overrides}\\&&
+                                                        {\small {\tt NStepToPrint}.}\\
+{\tt NBonds}                 & {\tt Integer (0)}      & {\small Number of bond lengths to}\\&&
+                                                        {\small print. Define IBond below.}\\
+{\tt IBond(2,NBonds)}        & {\tt Integer (0)}      & {\small List of atom indices that}\\&&
+                                                        {\small are bonded. See NBonds above.}\\
+{\tt NAngles}                & {\tt Integer (0)}      & {\small Number of bond angles to}\\&&
+                                                        {\small print. Define IAngle below.}\\
+{\tt IAngle(3,NAngles)}      & {\tt Integer (0)}      & {\small List of atom indices that}\\&&
+                                                        {\small define bond angles.}\\
+{\tt NDihedrals}             & {\tt Integer (0)}      & {\small Number of dihedral angles to}\\&&
+                                                        {\small print. Define IDihedral below.}\\
+{\tt IDihedral(4,NDihedrals)}& {\tt Integer (0)}      & {\small List of atom indices that}\\&&
+                                                        {\small define dihedral angles.}\\ 
+{\tt NPyrams}                & {\tt Integer (0)}      & {\small Number of pyramidalization angles}\\&&
+                                                        {\small to print.\footnotemark \ Define IPyram below.}\\
+{\tt IPyram(4,NPyrams)}      & {\tt Integer (0)}      & {\small List of atom indices that}\\&&
+                                                        {\small define pyramidalization angles.}\\
+\hline\hline
+\end{tabular}
+\end{table}
+
+
+
+\clearpage
+\newpage
+\footnotetext{For definition, see J. Phys. Chem. A 113, 12815 (2009)}
+{\bf User-defined atom types}
+
+AIMS recognizes the atoms H, C, N, O, S, F, Cl and assigns appropriate masses and gaussian width
+parameters for these atoms. If you wish to modify these defaults, or if your system contains other
+atoms, you can define custom atom types at the end of Control.dat. The format is
+ (in atomic units):
+
+{\tt n}\\
+{\tt AtomName(1) AtomicNumber(1) AtomicMass(1) GaussianWidth(1)}\\
+$\vdots$\\
+{\tt AtomName(n) AtomicNumber(n) AtomicMass(n) GaussianWidth(n)}
+
+The widths of other atoms not included in AIMS can be obtained using the recipe described in Chem. Phys., \textbf{370}, 70 (2010) by using the code available at \url{}.
+
+%3 Geometry.dat
+\subsection{Geometry.dat\label{geomdat}}
+Geometry.dat contains the molecular geometry that will be used in the generation of initial conditions.
+Optionally, the momenta can also be specified, which is useful if\\
+{\tt InitialCond='NoSample'}:
+
+{\tt UNITS=ANG or UNITS=BOHR }\\
+{\tt natom}\\
+{\tt AtomName(1)\ \ \ \ \ x(1)\ \ \ \ \ \ y(1)\ \ \ \ \ \ z(1)}\\
+$\vdots$\\
+{\tt AtomName(natom) x(natom)\ \ y(natom)\ \ z(natom)}\\
+{\tt Momenta:}\\
+{\tt AtomName(1)\ \ \ \ \ px(1)\ \ \ \ \ py(1)\ \ \ \ \ pz(1)}\\  
+$\vdots$\\                                      
+{\tt AtomName(natom) px(natom) py(natom) pz(natom)}
+
+\clearpage
+\newpage
+
+%3 Hessian.dat
+\subsection{Hessian.dat\label{aims:hessian}}
+As an alternative to FrequenciesMP.dat, AIMS can generate the normal mode frequencies after reading in the Hessian from Hessian.dat.
+The format of this file is:
+
+{\tt natom}\\
+{\tt Hess(1,1) Hess(2,1) $\ldots$ Hess(3*natom,3*natom)}
+
+Note: the Hessian should not be mass weighted. It is permissible to have carriage returns in the list of 
+Hessian components.
+
+%3 Frequencies.dat
+\subsection{Frequencies.dat\label{aims:frequencies}}
+As an alternative to Hessian.dat, AIMS can read in normal-mode frequencies and vectors in AIMS format in
+Frequencies.dat.
+The format of this file is:
+
+{\tt natom \ \  nmodes}\\
+{\tt freq(1) freq(2) $\ldots$ freq(nmodes)}\\
+{\tt modevec(1,1) modevec(2,1) $\ldots$ modevec(3*natom,nmodes)}
+
+Note: Frequencies must be in cm$^{-1}$, but normal mode vectors can be mass scaled or not- AIMS 
+will detect. Also, it is permissible to have carriage returns in the list of frequencies and mode vectors.
+This file is generated by AIMS if either FrequenciesMP.dat or Hessian.dat is used initially.
+
+
+
+%%%%%%%%%%%%%%%%%%
+%%%OLD BELOW%%
+%%%%%%%%%%%%%%%%%%
+
+
+
+%\subsection{Control.dat}
+%\label{controldat} 
+%
+%\subsubsection{Namelist input}
+%
+%Most properties of FMS runs can be controlled through NAMELIST variables.  The name of the relevant namelist is CONTROL, and should be located in the file Control.dat.  
+%
+%
+%
+%\paragraph{Run mode}
+%\label{runmode}
+%
+%FMS dynamics is the default run mode.\\
+%\begin{tabular}{ | l | l | p{2.5in} | p{1in} |}
+%\hline
+% \textbf{Parameter} & \textbf{Default} & \textbf{Description} & \textbf{Dependencies} \\ \hline 
+% AnalysisMode & .false. & If .true., do not calculate electronic structure - draw quantities from Bundle.h5. More details (sec. \ref{analmode}) & none \\ \hline 
+% MinSearch & .false. & If .true., do not run dynamics - do a geometry optimization on given current state, then exit; see documentation (sec. \ref{minsearch}) & none \\ \hline 
+% Umbrella & .false. & Run umbrella sampling - see Umbrella Sampling documentation (sec. \ref{umbrella}) for details & none \\ \hline 
+% SMD & .false. & Steered molecular dynamics & none \\ \hline 
+%\end{tabular}
+%
+%
+%\paragraph{Simulation properties}:\\
+%\begin{tabular}{ | l | l | p{2.5in} | p{1in} |}
+%\hline
+% \textbf{Parameter} & \textbf{Default} & \textbf{Description} & \textbf{Dependencies} \\ \hline 
+% Model & (required) & Identifies electronic structure method, 0=FMSZero (fake, analytic electronic structure) & none \\ \hline 
+% NumStates & (required) & Number of electronic states in problem &
+% none \\ \hline 
+% NumParticles & (required) & Number of atoms (for QM/MM, just the
+%number of QM atoms) & none \\ \hline
+%\end{tabular}
+%
+%
+%\paragraph{Initial Conditions}
+%
+%:\\ \begin{tabular}{ | l | l | p{2.5in} | p{1in} | }
+%\hline
+% \textbf{Parameter} & \textbf{Default} & \textbf{Description} & \textbf{Dependencies} \\ \hline 
+% InitState & (required) & Initial state for all trajectories &   \\ \hline 
+% InitialCond & (required) & Selects intial condition sampling"NOSAMPLE''- Use initial conditions in Geometry.dat1 - Use Wigner sampling 2 - Use quasi-classical sampling3 – Use Boltzmann sampling4 – Use ``cold''Wigner & iRestart=0 \\ \hline 
+% iRestart & 0 & If iRestart /= 0, then restart from Bundle.h5 (See restarting (sec. \ref{restart})) & none \\ \hline 
+% iRndSeed & 0 & Random seed for random number generator (0 uses clock to find random number) & InitialCond /=0 \\ \hline 
+% NumPreSpawn & 0 & Number of trajectories to spawn at t=0 & InitialCond /= 0 \\ \hline 
+% sharpenergy & .false. & All pre-spawned trajectories run on the same energy shell & numprespawn /= 0 and initialcond/=0 \\ \hline 
+% norminitial & .false. & Normalize wavefunction on restart? & irestart
+% /= 0 \\ \hline 
+%\end{tabular}
+%\\(contd.)
+%
+%\paragraph{Initial Conditions (contd.)}:\\
+%\begin{tabular}{ | l | l | p{2.5in} | p{1in} | }
+%\hline
+% \textbf{Parameter} & \textbf{Default} & \textbf{Description} & \textbf{Dependencies} \\ \hline 
+% Temperature & 0.0d0 & System temperature & InitialCond /= 0 or any equilbration method \\ \hline 
+% NAddQuanta & 0 & Total number of quanta of vibrational energy to add for quasiclassical initial conditions & InitialCond=2 \\ \hline 
+% IAddQuanta &  0  & Array of dimension NAddQuanta listing modes in which to add a quanta of energy.  Example:NAddQuant=3IAddQuanta=3,3,5All vibrations in n=0 state except mode 3, for which n==2, and mode 5, for which n==1 & nAddQuanta > 0   \\ \hline 
+% firstgauss & .false. & Give first gaussian perfect overlap with quantum wavefunction & InitialCond/=0 \\ \hline 
+% mirrorbasis & .false. & mirror basis on all state indicated in MirrorState & initialcond /= 0 \\ \hline 
+% MirrorState & 1 & All basis functions are mirrored on state MirrorState & MirrorBasis=.true. \\ \hline 
+% EnergyAdjust & .false. & For SpawnMirror -  make sure all mirror basis functions have same energy as their parent &  MirrorBasis=.true. \\ \hline 
+% InitBright & .false. & If true, initial basis functions will be placed on either state InitState or IDark, depending on which has the higher transition dipole moment with state 1 & none \\ \hline 
+% IDark & 2 & see InitBright & InitBright=.true. \\ \hline 
+%\end{tabular}
+%
+%
+%
+%
+%
+%
+%\paragraph{Integration and numerics}:\\
+%\begin{tabular}{ | l | l | p{2.5 in} | p{1in} | }
+%\hline
+% \textbf{Parameter} & \textbf{Default} & \textbf{Description} & \textbf{Dependencies} \\ \hline 
+% TimeStepRejection & .true. & Use adaptively smaller timesteps in cases of integration problems or intersection jumps & none \\ \hline 
+% IntegType & ‘VV’ & A two letter code that selects the integrator to be used. At the present the following are implemented (except as noted): RK = Runge-Kutta 4th orderVV = Velocity VerletR2=Modified Runge-KuttaMM = Modified Midpoint Method & none \\ \hline 
+% Adaptive & .false. & If false, adaptive integrators are done without checking for acceptability of time step. & IntegType /= 'VV' \\ \hline 
+% SimulationTime & (required) & How long to integrate? & none \\ \hline 
+% TimeStep & (required) & Time Step for integrator & none \\ \hline 
+% IterInv & .false. & If true, use CG for solving the amplitude equations Otherwise (default) will use old method of building a regularized inverse of S & none \\ \hline 
+% RegThresh & .0001d0 & Regularization Threshold for Amplitude Propagation & IterInv=.false. \\ \hline 
+% AssumeHermitian & .true. & Assume that Hamiltonian is hermitian & none \\ \hline 
+% ExShift & 0.0d0 & Energy Shift for more accurate propagation of Amplitude & none \\ \hline 
+% MaxEDiff & 0.03d0 & If energy (in Hartree) difference between 2 states is greater than MaxEDiff, coupling is assumed to be zero. & none \\ \hline 
+%\end{tabular}
+%(contd.)
+%
+%\paragraph{Integration and numerics, contd.}:\\ \begin{tabular}{ | l | l | p{2.5 in} | p{1in} | }
+%\hline
+% \textbf{Parameter} & \textbf{Default} & \textbf{Description} & \textbf{Dependencies} \\ \hline 
+% TimeStepRejection & .true. & Use adaptively smaller timesteps in cases of integration problems or intersection jumps & none \\ \hline 
+% ISaddle & 0 & 0 -> Analytic integrals1 -> First-order saddle point for potential2 -> Second-order saddle point for all elements3 -> First-order for off-diagonals / Second-order for diagonals (may not work) & none \\ \hline 
+% NormThresh & 0.00005 & For VV propagation, the convergence threshold for integration of the norm. Not to be confused with threshold for norm non-conservation & IntegType='VV' \\ \hline 
+% NormCons & 0.25 & Run terminated if norm changes by this proportion during a run & none \\ \hline 
+% EnergyCons & 0.02 & Run terminated if energy changes by this amount during a run & none \\ \hline 
+% NormStepCons & 0.05 & Step rejected if norm changes by this amount during a single timestep & none \\ \hline 
+% EnergyStepCons & 0.02 & Step rejected if classical energy changes by
+% this amount during a single timestep & none \\ \hline 
+%\end{tabular}
+%
+%
+%\paragraph{Spawning}: \\
+%\begin{tabular}{ | l | l | p{2.5in} | p{1in} | }
+%\hline
+% \textbf{Parameter} & \textbf{Default} & \textbf{Description} & \textbf{Dependencies} \\ \hline 
+% SpawnCoupV & .true. & If true, spawning thresholds refer to Coupling .dot. Velocity; if false, spawning thresholds refer to norm of coupling vector &  \\ \hline 
+% MaxTraj & 100 & Stop spawning after MaxTraj trajectories are in the simulation & none \\ \hline 
+% CSThresh & .1 & When coupling exceeds CSThresh,spawn mode is entered. & none \\ \hline 
+% CFThresh & .005 & When coupling is below CFThrese, leave spawn mode & none \\ \hline 
+% EShellOnly & .true. & cancel spawn if it does not conserve classical energy & none \\ \hline 
+% MultiSpawn & 1 & Number of spawns/event & none \\ \hline 
+% SpawnAdaptive & .false. & If true an adaptive integrator will be used for the forward and reverse propagation in the Spawn routine & IntegType /= 'VV' \\ \hline 
+% PopToSpawn & .1 & Parent trajectory must have at least this much amplitude in order to spawn & none \\ \hline 
+% OMax & .6 & Do not spawn if the child trajectory would have overlap > OMax with an existing trajectory on the same electronic state & none \\ \hline 
+%\end{tabular}
+%
+%
+%\paragraph{Output Control}
+%
+%PLEASE NOTE: Far easier to use than these keywords is the utility (sec. \ref{util}) ``ExtractFile.e'', which can reproduce all of these files after a run has completed. For a detailed description of these FMS output, see section \ref{output}.
+%
+%\paragraph{} \begin{tabular}{ | l | l | p{2.5in} | p{1in} |}
+%\hline
+% \textbf{Parameter} & \textbf{Default} & \textbf{Description} & \textbf{Dependencies} \\ \hline 
+% zXYZ & .false. & Write positions.x.xyz file for trajectory x & none \\ \hline 
+% zTrajFile & .false. & Write Traj.x file for trajectory x & none \\ \hline 
+% zPotEnFile & .false. & Write PotEn.x file for trajectory x & none \\ \hline 
+% zNDatFile & .true. & Write N.dat file & none \\ \hline 
+% zEDatFile & .true. & Write E.dat file & none \\ \hline 
+% zBundMatFile & .false. & Write H.dat, S.dat and SDot.dat & none \\ \hline 
+% zCoupFile & .false. & Write Coup.x file for trajectory x & none \\ \hline 
+% zChargeFile & .false. & Write Charge.i file for trajectory i & ESP support \\ \hline 
+% zCorrFile & .false. & Write CFxn.i file for trajectory i & none \\ \hline 
+% zTDipole & .false. & Write TDip.i file for trajectory i & ESP support \\ \hline 
+% zDipoleFile & .false. & Write Dipole.i file for trajectory i & ESP support \\ \hline 
+% zAllText & .false. & Ouput all files above & none \\ \hline 
+% zWriteH5WFN & .false. & Store the wavefunction at each timestep in Bundle.h5 & none \\ \hline 
+% nStepToPrint & 1 & Print output every this many steps - applies to Bundle.h5 as well as text output. & none \\ \hline 
+% nBonds & 0 & Number of bonds to monitor - output for trajectory x written to Bond.x & none \\ \hline 
+% iBond & n/a & Which bonds to monitor & nBonds/=0 \\ \hline 
+% nAngles & 0 & Number of angles to monitor - output for trajectory x written to Angle.x & none \\ \hline 
+% iAngle & n/a & Which angles to monitor & nAngles/=0 \\ \hline 
+% nDihedrals & 0 & Number of dihedrals to monitor - output for trajectory x written to Dihedral.x & none \\ \hline 
+% iDihedral & n/a & Which dihedrals to monitor & nDihedrals/=0 \\ \hline 
+% nPyram & 0 & Number of pyramidalization angles to monitor - output for trajectory x written to Pyram.x & none \\ \hline 
+% iPyram & n/a & Which pyramidalization angles to monitor & nPyrams/=0 \\ \hline 
+%\end{tabular}
+%
+%For all array variables (iBond, iAngle, iDihedral, and iPyram),
+%consecutive values may be separated with commas rather than manually
+%specifying each array element. So, e.g., to monitor angles 2-1-3 and
+%5-1-2, set ``nAngles=2'' and ``iAngle(1,1=2,1,3,5,1,2''.
+%
+%
+%
+%
+%\paragraph{FMSMolpro-specific variables}: \\
+% \begin{tabular}{ | l | p{2.5in} | p{1in} |}
+%\hline
+% MoldenStep & 200 & Time between each molden file \\ \hline 
+% WriteMolden & .false. & If true, molden files are written \\ \hline 
+%\end{tabular}
+%
+%
+%\paragraph{QM/MM Parameters}: \\
+%\begin{tabular}{ | l | l | p{2.5in} | p{1in} |}
+%\hline
+% \textbf{Parameter} & \textbf{Default} & \textbf{Description} & \textbf{Dependencies} \\ \hline 
+% zQMMM & .false. & QM/MM run? & ESP support \\ \hline 
+% iMethod & 1 & QM/MM method? 1 Mopac build-in or 2 Mopac/Amber & Model=Mopac  \\ \hline 
+% GenSolvent & .false. & Generate solvent coordinates using prototype molecule in Solvent.dat &  \\ \hline 
+% nRelaxSteps & 0 & Relax MM system for nRelaxSteps of BFGS minimization &  \\ \hline 
+% Brownian & .false. & Equilibrate by running brownian dynamics on ground state? &  \\ \hline 
+% Brownian & .false. & Equilibrate by running brownian dynamics on ground state with fixed QM  coordinates? &  \\ \hline 
+% Equi & .false. & Equilibrate system on ground state by repeated boltzmann sampling of velocities? &  \\ \hline 
+% EquiCon & .false. & Equilibrate system on ground state by repeated boltzmann sampling of velocities, while constraining QM internal geometry with RATTLE? &  \\ \hline 
+% nCycles & 0 & Number of times to resample velocities & Equi or EquiCon \\ \hline 
+% nSteps & 0 & Number of equilibration timesteps & Any equilibration \\ \hline 
+% EquilTStep & TimeStep & Timestep for equilibration dynamics &  Any equilibration \\ \hline 
+% dGamma & 0.0 & Friction for brownian dynamics (units of 1/s) & Brown or BrownCon \\ \hline 
+% iBrown & 1 & Apply brownian stochastic force every iBrown timesteps & Brown or BrownCon \\ \hline 
+% NumS & 0 & Number of solvent molecules & GenSolvent \\ \hline 
+% NumAS & 0 & Number of atoms per solvent molecule & Gensolvent \\ \hline 
+% NumMM & 0 & Number of MM atoms & GenSolvent \\ \hline 
+% ConfineD & 0.0 & Radius of sphere for MM atoms &  \\ \hline 
+% ConfineK & 0.0 & Force constant for sphere &  \\ \hline 
+%\end{tabular}
+%
+%
+%
+%
+%\subsubsection{Particle input in Control.dat}
+%\label{controlpart} 
+%Atomic parameters - atomic number, and atomic mass, and gaussian wavepacket wdith - are assigned by the two-character atom symbol in Geometry.dat. FMS assigns default values for common atoms (C, O, N and S). To use custom values for these parameters, or to specify values for other atoms, parameters may be specified in Control.dat, on the lines immediately following the namelist:
+%
+%\begin{minipage}{.7\linewidth}  \begin{verbatim}
+%&control
+%[namelistvar1]=[value1]
+%[namelistvar2]=[value2]
+% .
+% .
+% .
+%/ !End of namelist input
+%  [Number of Atom Types]
+%# This is a comment line
+%[AtomName1]    [AtomicNum1]    [AtomicMass1(amu)]    [GaussianWidth1]   
+%[AtomName2]    [AtomicNum2]    [AtomicMass2(amu)]    [GaussianWidth2]
+%    .                .                .                      .    
+%    .                .                .                      .    
+%    .                .                .                      .    
+%\end{verbatim} \end{minipage} 
+%
+%
+%From this input, all atoms named AtomicName1 are assigned GaussianWidth1 (which has units of 1/bohr$^2$) and atomic number AtomicNum1.
+%
+%
+%
+%The atomic names will be matched to those read in Geometry.dat. FMS will assign default values to atoms it can recognize (those beginning with C,H,O,N and S), unless otherwise specified here.
+%
+%
+%
+%\subsection{Geometry.dat}
+%\label{geomdat} 
+%FMS takes the initial geometry for the QM molecule from Geometry.dat. The units for Geometry.dat are specified on the first line, which should read either \verb*$units=bohr$ for atomic units or \verb*$units=ang$ for Angstroms.
+%
+%If InitCond is set to 0 in Control.dat, then initial momenta must be specified in Geometry.dat; otherwise, they will be ignored. If \verb*$units=bohr$, then momenta are assumed to be in atomic units; if \verb*$units=ang$, they are assumed to be in hybrid units of Angstroms*amu/$t_0$, where $t_0$ is atomic time units.
+%
+%The file takes the following form:
+%
+%\begin{minipage}{.7\linewidth} \begin{verbatim}
+%UNITS=[BOHR or ANG]
+%[NumberOfAtoms]
+%[Name1] [x1] [y1] [z1]
+%[Name2] [x2] [y2] [z2]
+%  .       .    .    .
+%  .       .    .    .
+%  .       .    .    .
+%# Comment line - momenta may be listed below
+%[px1]  [py1]  [pz1]
+%[px2]  [py2]  [pz2]
+%   .     .     .
+%   .     .     .
+%   .     .     .
+%\end{verbatim} \end{minipage} 
+%
+%
+%
+%
+%
+%
+%\subsection{Hessian.dat/Frequencies.dat}
+%\label{freqfile} 
+%Either one of these files provides the vibrational modes of the molecule in its initial state; this allows FMS to sample initial conditions from the initial harmonic oscillator state. In photochemical applications, these modes correspond to
+%the normal modes of the ground state minimum, giving the state
+%of the molecule immediately prior to photoexcitation. One of
+%Frequencies.dat or Hessian.dat is required for all harmonic potential
+%sampling methods. Utilities are provided to create these files from
+%the output of a variety of electronic structure packages; see section
+%\ref{utilin} for more details.
+%
+%FMS can automatically test whether the coordinates provided are
+%mass-weighted or not; either is acceptable.
+%
+%\paragraph{Frequencies.dat}
+%List of vibrational frequency modes; the frequencies in this file must
+%have units of something, maybe wavenumbers (is this true?). The
+%corresponding vectors are in arbitrary units, either mass-weighted or
+%not.
+%
+%\begin{minipage}{.7\linewidth} \begin{verbatim}
+%[Number of atoms] [Number of frequencies]
+%[frequency 1] [frequency 2] ...
+%[normal mode 1 vector]
+%[normal mode 2 vector]
+% .
+% .
+% .
+%\end{verbatim}\end{minipage} 
+%
+%
+%\paragraph{Hessian.dat}
+%The elements of the Hessian. It is formatted as
+%below, where $\mathbf{R}_0$ is the minimum at which the Hessian was
+%evaluated, and $R_i, i=1...3N$ are the system's $3N$ cartesian coordinates.
+%
+%\begin{minipage}{.7\linewidth} \begin{verbatim}
+%[Number of atoms]
+%\end{verbatim} 
+%$ \frac{\partial V(\mathbf R)}{\partial R_1 \partial R_1}|_{\mathbf{R}_0}$ \hspace{0.5 in} 
+%$ \frac{\partial V(\mathbf R)}{\partial R_1 \partial R_2}|_{\mathbf{R}_0}$ ...
+%
+%$ \frac{\partial V(\mathbf R)}{\partial R_2 \partial R_1}|_{\mathbf{R}_0}$ \hspace{0.5 in} 
+%$ \frac{\partial V(\mathbf R)}{\partial R_2 \partial
+%    R_2}|_{\mathbf{R}_0}$ ...
+%\begin{verbatim}
+%  .
+%  .
+%  . 
+%\end{verbatim}
+%\end{minipage}
+%
+%
+%\subsection{Constraints.dat}
+%\label{constrain} 
+%Bond and angle values can be constrained for both minimizations and propagation. To use constraints, set Constrain=.true. in Control.dat. Constraints are input via a namelist named ``constrain''in the file Constraints.dat.  Parameters are as follows:
+%
+%\paragraph{} \begin{tabular}{ | l | p{2.5in} | p{1in} |}
+%\hline
+% \textbf{Parameter}  & \textbf{Description} & \textbf{Default} \\ \hline 
+%NumBonds & Number of bonds to constrain & 0 \\ \hline 
+%NumAngles & Number of angles to constrain & 0 \\ \hline 
+%iBondPtcles(i,j) & The atoms involved in each constrained bond; $i=1$
+%or 2; $j=1,...,NumBonds$ & required \\ \hline 
+%iAnglePtcles(i,j) & The atoms involved in each constrained bond;
+%$i=1,$ 2 or 3; $j=1,...,NumAngles$ & required \\ \hline   
+%nCOMAtoms & Constrain the center of mass of this many atoms & 0 \\ \hline
+%iCOMPtcles(i) & Constrain the center of mass of this group of atoms,
+%$i=1,...,nCOMAatoms$ & \\ \hline 
+%MaxIts & Maximum number of RATTLE iterations & 10000 \\ \hline
+%Toler & Tolerance for constraint convergence, as a proportion of each
+%constraint value & 0.0001 \\ \hline 
+%\end{tabular}
+%
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% New section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\newpage \section{Output}
+%\label{output}
+%
+%\subsection{FMS.out}
+%FMS.out is a log of the simulation progress. Information here includes the current timestep, the number of classical trajectories, and information about spawning calculations.
+%
+%\subsection{Bundle.h5}
+%\label{hdf5out}
+%The file ``Bundle.h5'' is an HDF5 formatted file containing enough information to reconstruct the system state at any time during the simulation. The HDF5 format allows hierarchical layout of datasets in much the same way as files in a filesystem in a compact, binary format. These files are therefore not human-readable. There are an increasing variety of programs, both commercial and freely available, able to parse HDF5-formatted files; the ``HDFView''program, released by the HDF5 developers, is a good first choice. A list of such programs is available from \url{http://hdfgroup.org}.
+%
+%FMS also includes several utilities to extract text files (sec. \ref{tfiles}) from Bundle.h5; see section \ref{oututil}.
+%
+%The root level of the file contains variables and timeseries pertaining the entire run. Each trajectory basis function is represented in a subdirectory, with information about its classical and quantum parameters, records of any spawning calculations, and symbolic links to the trajectory's children and parents (fig. \ref{fig:h5layout}).
+%\begin{figure}[htp]
+%\centering
+%\includegraphics[height=3.5 in]{sources/h5layout}
+%\caption{Schematic layout of Bundle.h5.} \label{fig:h5layout}
+%\end{figure}
+%
+%\subsection{Text files}
+%\label{tfiles}
+%Most of the following files are fortran-formatted, fixed width timeseries. Those that pertain to individual trajectories, rather than the simulation as a whole, are appended with the trajectory ID as a suffix. All of these files can be written during the simulation, or generated afterward from the Bundle.h5 file, using the ExtractFile utility (sec. \ref{oututil}).
+%
+%\paragraph{E.dat}
+%
+%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% New section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\newpage \section{Other calculations}
+%\label{other}
+%\subsection{Minimum Search Mode}
+%\label{minsearch} 
+%
+%If \verb*$MinSearch$ is set to \verb*$.true.$ in Control.dat, FMS will not run normal dynamics, but instead perform a geometry optimization on the state specified by ``InitState''in Control.dat. The optimization uses the BFGS algorithm from Numerical Recipes. An additional namelist input file is required, ``MinSearch.dat". Geometry constrains from Constraints.dat (sec. \ref{constrain}) will be constrained via penalty functions.
+%
+%
+%For QM/MM minimizations, it is not recommended to minimize the QM and MM systems simultaneously. Instead, the minimization can be configured to do a number of sequential minimizations, iterating between the two systems. During MM minimizations, electrostatic QM/MM interactions are approximated by calculating partial charges for the QM system. These can be periodically recalculated during the minimization, if desired.
+%
+%
+%
+%\paragraph{MinSearch.dat}
+%
+%\paragraph{} \begin{tabular}{ | l | p{2.5in} | p{1in} |}
+%\hline
+% \textbf{Parameter}  & \textbf{Description} & \textbf{Default} \\ \hline 
+% NumMins & Number of minimizations to perform & required \\ \hline 
+% MinProtocol(NumMins) & Which system to minimze? (1= MM system, 2=QM system, 3= full system) & required \\ \hline 
+% MinSteps(NumMins) & Maximum number of minimization steps & required \\ \hline 
+% toler(NumMins) & Convergence threshold for gradient RMSD & 0.0001 \\ \hline 
+% QMCycleSteps(NumMins) & For MM minimizations, QM recalculate partial charges every N steps (if 0, never recalculate partial charges) & 0 \\ \hline 
+% zRestart & Restart an incomplete minimization? (may not work yet) & .false. \\ \hline 
+% StepToPrint & Write output every N steps & 5 \\ \hline 
+%\end{tabular}
+%
+%
+%
+%
+%\subsection{Umbrella Sampling Mode}
+%\label{umbrella} 
+%
+%If \verb*$Umbrella$ is set to \verb*$.true.$ in Control.dat, FMS will not run normal dynamics, but will instead perform Umbrella sampling over bond, angle or dihedral coordinates. The value of ``SimulationTime''from Control.dat determines how long dynamics are run in each biasing window.  Initial conditions for Umbrella sampling are generated, without a biasing potential, as above (sec. \ref{initial}).
+%
+%
+%
+%Output from Umbrella sampling is designed for use with Alan Grossfield's WHAM implementation (\url{http://membrane.urmc.rochester.edu/}) for both 1-D and 2-D free energy plots
+%
+%
+%
+%Namelist input in the file \verb*$Umbrella.dat$ is required. All quantities are in atomic units, all angles in radians:
+%
+%\paragraph{Umbrella.dat}: \\
+%
+% \begin{tabular}{ | l | p{2.5in} | p{1in} |}
+%\hline
+% \textbf{Parameter}  & \textbf{Description} & \textbf{Dependencies} \\ \hline 
+% nCoords & Number of dimensions in which to do umbrella sampling (1 or 2) & required \\ \hline 
+% nBins(1:nCoords) &  Number of windows in each dimension & required \\ \hline 
+% iCoordType(1:nCoords) & Coordinate types for the first and second umbrella sampling window (2=Bond, 3=Angle, 4=Dihedral) & required \\ \hline 
+% iBondPtcles(1:2,1:nCoords) & Particles involved in each bond constraint & required if iCoordType=2 \\ \hline 
+% iAnglePtcles(1:3,1:nCoords) & Particles involved in each angle constraint & required if iCoordType=3 \\ \hline 
+% iDihedralPtcles(1:3,1:nCoords) & Particles involved in each dihdral constraint & required if iCoordType=4 \\ \hline 
+% ForceC(1:ncoords) & Force constant for each constraint & required \\ \hline 
+% MinVal(1:nCoords) & First equilibrium value for each constraint & required \\ \hline 
+% MaxVal(1:nCoords) & Last equilibrium value for each constraint & required \\ \hline 
+%\end{tabular}
+%
+%
+%
+%
+%\subsection{Analysis Mode}
+%\label{analmode} 
+%
+%If \verb*$AnalysisMode$ is set to \verb*$.true.$ in Control.dat, FMS
+% will perform no calculations. Instead, FMS will reassemble the state
+% of the system at each timestep, using the output from
+% Bundle.h5. Output is then written as requested in Control.dat. This
+% can be used to generate text output files from Bundle.h5. This also
+% gives the user the ability to analyze the system after the run is
+% complete, by placing new subroutines in FMS\_Output.
+%
+% 
+%
+%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% New section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage \section{Electronic Structure Interfaces}
+\label{elecstruc} 
+
+
+
+\subsection{OpenFMS-Terachem}
+\label{fms90tc}
+Follow the most up-to-date instructions on the GitHub page of OpenFMS: \url{https://github.com/ispg-group/openfms}.
+%\subsection{FMS90-Quantics}
+%\label{fms90quant} 
+
+%This interface is selected with \verb*$Model=`template'$.
+%
+%Templates allow FMS to be interfaced with an arbitrary electronic structure code without compiling the two programs together. Instead, whenever FMS requires an electronic structure calculation, it writes an input file for the ESP, invokes the ESP from the command line, then parses the output to retrieve the necessary quantities.
+%
+%
+%
+%Several additional files are used with the template interface:
+%\subsubsection{Template files}
+%\paragraph{} \begin{tabular}{ | l | p{.75in} | p{3in} |}
+%\hline
+% \textbf{File} & \textbf{Required?} & \textbf{Description} \\ \hline 
+% Template.dat & yes & Contains namelist specifying template interface (see below) \\ \hline 
+% template.write & yes & Template for writing electronic structure input \\ \hline 
+% template.poten.read & yes & Instructions to retrieve potential energy by parsing electronic structure output \\ \hline 
+% template.civec.read & yes (for coupled propagation) & Instructions to retrieve CI vector by parsing electronic structure output \\ \hline 
+% template.grad.read & no & Instructions to retrieve gradient by parsing electronic structure output \\ \hline 
+% template.coup.read & no & Instructions to retrieve couplings by parsing electronic structure output \\ \hline 
+% template.orb.read & no & Instructions to retrieve orbitals by parsing electronic structure output \\ \hline 
+%\end{tabular}
+%
+%\subsubsection{Template.dat}
+%The file Template.dat contains a namelist (named ``template"), with the following parameters:
+%
+%
+%\paragraph{} \begin{tabular}{ | l | l | p{3.5in} |}
+%\hline
+% \textbf{Variable } & \textbf{Type} & \textbf{Description} \\ \hline 
+%    RunScript & string   &    system command to run electronic structure code \\ \hline 
+%     InFile & string   &    Name of input file to write (will be read by RunScript) \\ \hline 
+%     OutFile & string   &    Name of output file to parse \\ \hline 
+%     lCIVec & int   &    length of CI Vector \\ \hline 
+%     nBasis & int   &    If FMS will read in the electronic wfn, the electronic orbital array is nBasis x nBasis (requires template.orb.da)t; if not, set nBasis=0 \\ \hline 
+%     WfnFile & string   &    If FMS will NOT read in the electronic wfn, the path to the electronic wavefunction file \\ \hline 
+%     Gradient & boolean   &    ES package will compute gradient (requires template.grad.read) \\ \hline 
+%     Coupling & boolean  &    ES package will compute NACV (requires template.coup.read) \\ \hline 
+%\end{tabular}
+%
+%
+%
+%\subsubsection{Templates}
+%
+%\paragraph{Templates for input} Occurrences of %%xxx are substituted with variable xxx. Note that you must use three characters, i.e. variable 1 should be written %%001. Other variables which can be 
+%substituted are indicated with the prefix %#VARNAM. Again, the variable name must be 
+%six characters long.  Only variables which have been coded explicitly
+%can be substituted.   
+%Currently, the following are implemented:
+%\begin{enumerate}
+% \item \%\#STATE  = current state being calculated 
+% \item \%\#ISTATE = istate 
+% \item \%\#JSTATE = jstate 
+% \item \%\#NOTISTM= The Mth state that's not the current state; i.e. for
+%      a trajectory on state 2, \%\#NOTIST3 gives state 4
+%\end{enumerate}
+%
+%
+%\paragraph{Templates for parsing output} Note that all directives are processed in order.  Essentially, we provide directives to find 
+%search strings in the output, skip a given number of lines, and read
+% variables from fixed positions in the lines.  The directives are:\\
+%\begin{tabular}{ | p{3 in} | p {3 in} |} \hline
+%    \verb1^iiistring1 & Find iiith occurrence of string after start of
+%line \\ \hline 
+%    \verb1*iiistring1 & Find iiith occurrence of string after anywhere in a
+%line - note that we only count one occurrence per line \\ \hline 
+%    \verb1@iii1 & skip iii lines \\ \hline
+% \verb1&%iiffffjjjkk%llggggmmmnn1 & Using format string ffff of length ii, read par(j) 
+%starting at position kk, then do same for par(m) with 
+%format string gggg of length ll starting at position nn \\ \hline
+% \verb1!string%iiffffjjjkk%llggggmmmnn1 & Like above, but will search for line beginning with string \verb1^iiistring1  \\ \hline
+%\end{tabular}
+%
+%\paragraph{Notes}
+%\begin{enumerate}
+% \item  The input template must do everything (i.e., if you want gradients, it must compute gradients, same goes for couplings)
+% \item  If you're computing couplings, you need to compute all of them and they must be in order of state in the output.
+% \item  There are extra variables to make this easier: \%\#NOTIST1 gives you the first state that's not the trajectory's state, \%\#NOTIST2 gives you the second, etc.
+% \item  If you're storing the orbitals, they need to get fed in through the input template.
+% \item  If you're NOT storing the orbitals, FMS will make a new copy of the wavefunction file you specify in ``WfnFile''for each trajectory and centroid.
+%\end{enumerate}
+
+
+\subsection{FMSZero}
+\label{zero} 
+
+OpenFMS contains a series of (analytical) model systems that can be used for development or to get acquainted with a typical AIMS simulation without the associated electronic-structure costs. The desired model is selected with the keyword gliModel. The following models are implemented:
+
+\begin{itemize}
+\item gliModel=2 \\ Persico 2-D 2-state CI (in stretched coordinates) \\ Ferretti et al, J. Chem. Phys., 104, 5517 (1996).
+
+\item gliModel=3 \\ Izmaylov 2-D 2-state LVC \\
+   Ryabinkin et al, J. Chem. Phys., 140, 214116 (2014). 
+\item gliModel=4 \\ 
+Spin-orbit coupling Model 1D 2-state (1 singlet, 1 triplet)  \\
+   Granucci et al, J. Chem. Phys., 137, 22A501 (2012). 
+\end{itemize}
+
+The model systems are used as a test set for OpenFMS.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% New section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Included with the FMS program is a number of utilities. They will be automatically compiled along with the main FMS program (except when compiling FMSMolpro). The compiled binaries are located in \verb*$util/$ directory.
+%
+%
+%\subsection{Analysis}
+%All utilities in this section extract data from the Bundle.h5 file from a completed or partially completed dynamics run. 
+%
+%\label{oututil}
+%
+%\paragraph{ExtractFile.e}
+%
+%Extracts text files (see sec. \ref{tfiles} from a Bundle.h5 file) - interactive. Type ``help''for a listing of commands.
+%
+%
+%\paragraph{DumpText.e}
+%
+%Dumps data from Bundle.h5 to text files. This is equivalent to setting ``AnalysisMode=.true.''and ``zAllText=.true.''in Control.dat. Run DumpText.e in the directory containing Bundle.h5.
+%
+%
+%\paragraph{DumpXYZ.e [HDF5 file]}
+%
+%DumpXYZ.e will search the given Bundle.h5 file for all datasets of the name ``Position", and dump each of them to an sequential xyz-formatted file. This is useful for viewing movies of each trajectory in visualization programs (such as VMD or molekel).
+
+
+%\paragraph{GetSpawns.e}
+%
+%GetSpawns.e performs post-simulation analysis of the spawning events from a dynamics run. It creates two files:
+%\begin{itemize}
+%\item CICoords.dat: contains analysis of the spawning event, including the amount of population transferred, the ``efficiency''of the event (the proportion of the parent trajectory's population transferred to the child trajectory), the minimum energy gap, and optional geometry analysis of the spawning configuration.
+%\item Spawns.xyz: an xyz file containing all spawning geometries.
+%\end{itemize}
+%
+%
+%
+%\subsection{Run modification}
+%\label{runmodutil}
+%
+%
+%\paragraph{Rewind.e}
+%
+%Rewind rolls back a simulation to an earlier timestep by erasing all data (and any trajectories spawned) after a given timestep. This allows the user to restart a partially finished simulation with different parameters (such as a smaller timestep)
+%
+%
+%Run Rewind.e in the directory containing the ``Bundle.h5''file to be altered. The ``trimmed''version will be saved as ``Bundle-trim.h5".
+%
+%
+%
+%\paragraph{LifeOrDeath.e}
+%
+%This program allows the user to mark trajectories in a bundle as
+%``dead", meaning that they will not be propagated. This both saves
+%computational time and lets you avoid propagating on problematic
+%states. Run LifeOrDeath.e in the folder containing the bundle. You can
+%also use LifeOrDeath to resurrect dead trajectories, provided that the
+%bundle has not propagated past the point at which those trajectories
+%died. See the details of propagation (sec. \ref{dyn}) for details.
+%
+%
+%\paragraph{Decimate.e}
+%
+%Decimate.e is a utility for making the output's time frequency more sparse, in order to conserve disk space. Given an input argument N, it removes all except for every Nth timestep from the output file. This gives the same output as if setting ``nStepsToPrint''during a standard run. It is invoked as \verb*$Decimate.e [nStepsToPrint]$, and should be run in the directory containing the Bundle.h5 file to be decimated. The decimated version of the file is saved as ``Bundle-dec.h5".
+%
+%
+%\paragraph{RemoveH5ElecStruc.e [HDF5 file]}
+%
+%Removes all electronic structure data from an HDF5 file, then recompacts the file. For most electronic structure methods, if zWriteWFN=.true., this will drastically reduce file size.
+%
+%
+%\subsection{Input creation}
+%\label{utilin}
+%
+%\paragraph{NewGeometry.e}
+%
+%Usage: \verb*$NewGeometry.e [Bundle.h5 file]$
+%
+%Create a new ``Geometry.dat''file (with both the geometry and momenta) from an existing run.
+
+%\paragraph{Tk\_Solvate.e}
+%
+%Requires: QM geometry in Geometry.dat; solvent molecule prototype defined in Tinker format in Solvent.in.xyz. Creates tinker input file with an arbitrary number of solvent molecules.
+%
+%The cluster geometry described in the tinker .in.xyz file will be very high energy, and must be quenched before dynamics.
+%
+%
+%\begin{minipage}{.8\linewidth} \begin{verbatim}
+%USAGE: Invoke Tk_Solvate.e in the directory containing Geometry.dat
+%and Solvent.in.xyz.
+%
+%REQUIRED INPUT: Geometry.dat: contains QM geometry, in FMS Geometry.dat format.
+%                Solvent.in.xyz: contains geometry of a single MM 
+%                                solvent molecule, in tinker format.
+%
+%OUTPUT:         Constraints.dat: only if using a rigid model. 
+%                                 Contains definitions of MM molecule 
+%                                 topology for use with RATTLE.
+%                [fmsname].in.xyz: Tinker input file defining full
+%                                  system's geometry and topology.
+%\end{verbatim}
+%\end{minipage} 
+%
+%
+%
+%\paragraph{CleanText.e}
+%
+%Removes any and all output files that may be recovered by running DumpText.e. Note that it does not remove FMS.out or any electronic-structure specific output. Run CleanText.e in the directory containincommentsg the text files to be removed.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% New section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \newpage \section{Examples and testjobs}
+% \label{extest}
+
+% \bfec{shall we write something here about the tests used for the code?}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% New section %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \newpage \section{Bibliography and links}
+% \label{fmsbib} 
+
+% \subsection*{The AIMS algorithm}
+
+% \begin{itemize}
+
+% \item T.~J. Martinez, M.~BenNun, and R.~D. Levine.
+% \newblock Multi-electronic-state molecular dynamics: A wave function approach
+%  with applications.
+% \newblock {\em Journal of Physical Chemistry}, 100(19):7884--7895, May 9 1996.
+
+% \item M.~BenNun, T.~J. Martinez, and R.~D. Levine.
+% \newblock Multiple traversals of a conical intersection: electronic quenching
+%  in Na*+H$_2$.
+% \newblock {\em Chemical Physics Letters}, 270(3-4):319--326, May 23
+% 1997.
+
+% \item M.~Ben-Nun and T.~J. Martinez.
+% \newblock Nonadiabatic molecular dynamics: Validation of the multiple spawning
+%  method for a multidimensional problem.
+% \newblock {\em Journal of Chemical Physics}, 108(17):7244--7257, May 1 1998.
+
+% \item Michal Ben-Nun and Todd.~J. Mart{\'\i}nez.
+% \newblock Ab Initio Quantum Molecular Dynamics, chapter in {\em
+%  Advances in Chemical Physics} volume 121, page 439.
+% \newblock John Wiley \& Sons, Inc., 2002.
+
+% \item Ben~G. Levine, Joshua~D. Coe, Aaron~M. Virshup, and Todd~J. Mart{\'\i}nez.
+% \newblock Implementation of ab initio multiple spawning in the molpro quantum
+%  chemistry package.
+% \newblock {\em Chemical Physics}, 347(1-3):3--16, 2008.
+
+% \end{itemize}
+% %
+% %\subsection*{Related and included packages}
+% %
+% %\begin{itemize}
+% %
+% %\item Doxygen (documentation generator) - \url{http://www.doxygen.org/}
+% %
+% %\end{itemize}
+\end{document}

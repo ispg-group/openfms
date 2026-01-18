@@ -1,0 +1,55 @@
+Basic AIMS restart test, restarting from Last_Bundle.txt.initial,
+which was copied over from AIMS test.
+
+&control
+! Input for Izmaylov model
+!------ Initialization -------!
+ InitState=2
+ InitialCond='NoSample'
+ iRndSeed=57034456
+ iRestart=1,
+ ! Restart both trajectories
+ iRestartTraj=1,2
+!------ Simulation Properties -------!
+ Model='TOY'		!to identify the potential used
+ iMethod=3        ! Indicates Izmaylov model
+ IzmOmegax=0.009557
+ IzmOmegay=0.003515
+ IzmXshift=20.07
+ IzmYshift=0.0
+ IzmDeltaE=0.01984
+ IzmCoupC=0.0006127
+ NumParticles=2
+ NumStates=2		!number of electronic states
+ NumInitBasis=1
+! Output
+ zAllText=.true.     ! Output all text-based files
+ zDCD=.true.	! Output trajectory in DCD format
+ zForce=.true.	! output forces
+ nBonds=1
+ iBond(1,1)=1
+ iBond(2,1)=2
+ nAngles=1
+ iAngle(1,1)=1,2,1
+ nDihedrals=1
+ iDihedral(1,1)=1,2,1,2
+ nPyrams=1
+ iPyram(1,1)=1,2,1,2
+!-------- Integration and numerics --------!
+ TimeStep=1.0		!timestep for integration
+ SimulationTime=31.00	!integration time
+ MinTimeStep=0.001
+!-------- Spawning -------!
+ MultiSpawn=1		!number of spawns per event
+ MaxTraj=80		!max number of trajectories
+ OMax=0.6
+ SpawnCoupV=.false.
+ CSThresh=0.0001
+ 
+ PopToSpawn=0.001
+ CoupTimeStep=0.250
+/ !Atom type information below
+  2 ! number of atom types
+#Name  AtomicNum  AtomicWeight(amu) Width(1/bohr**2)
+ QQ    1       0.0005485      0.004775
+ PP    1       0.0005485      0.001675

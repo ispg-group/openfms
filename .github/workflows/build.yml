@@ -1,0 +1,186 @@
+name: test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+env:
+  FORCE_COLOR: 1
+
+jobs:
+
+  gcc_build:
+    name: GCC-${{ matrix.gcc_v}} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    env:
+      FFLAGS: --coverage -fprofile-abs-path
+      LDFLAGS: --coverage
+    strategy:
+      fail-fast: false
+      matrix:
+         gcc_v: [latest]
+         os: [ubuntu-24.04, macos-15, macos-15-intel]
+         include:
+          - os: ubuntu-22.04
+            gcc_v: 9
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - uses: fortran-lang/setup-fortran@v1
+      id: setup-fortran
+      with:
+        compiler: gcc
+        version: ${{ matrix.gcc_v }}
+
+      # Python is needed for tests
+    - uses: actions/setup-python@v6
+      with: 
+        python-version: 3.13
+
+    - name: Configure
+      run: ./configure.sh
+      env:
+        FC: gfortran${{ matrix.os == 'macos-15-intel' && '-14' || '' }}
+
+    - name: Build
+      run: make -j
+
+    - name: Unit tests
+      run: make unittest
+
+    - name: End-to-end tests
+      run: make test
+
+    - name: Codecov upload
+      uses: codecov/codecov-action@v5
+      # For some reason gcov does not seem to work on MacOS
+      if: ! startsWith(matrix.os, 'macos')
+      with:
+        name: GCC-${{ matrix.gcc_v}} (${{ matrix.os }})
+        slug: ispg-group/fms90-redux
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: false
+
+
+  # Run tests with leak, address and undefined behaviour sanitizers (ASan, UBSan et al)
+  # Bounds checks and others are enabled as well (but those should be in default build as well)
+  debug_build:
+    name: Debug build (GCC-${{ matrix.gcc_v}}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    env:
+      FFLAGS: -fsanitize=address,undefined,leak --check=all
+      LDFLAGS: -fsanitize=address,undefined,leak
+    strategy:
+      fail-fast: false
+      matrix:
+         gcc_v: [14]
+         os: [ubuntu-24.04]
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - uses: fortran-lang/setup-fortran@v1
+      id: setup-fortran
+      with:
+        compiler: gcc
+        version: ${{ matrix.gcc_v }}
+
+    - name: Configure
+      run: ./configure.sh
+
+    - name: Build
+      run: make -j
+
+      # We don't run unit tests, they make sanitizer unhappy
+    - name: End-to-end tests
+      run: make test
+
+
+  intel_build:
+    name: ${{ matrix.toolchain.compiler }}-${{ matrix.toolchain.version }} build
+    runs-on: ubuntu-22.04
+    env:
+      FFLAGS: -O1 -g0
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain:
+          - {compiler: intel, version: latest}
+          - {compiler: intel-classic, version: '2021.10'}
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - uses: fortran-lang/setup-fortran@v1
+      id: setup-fortran
+      with:
+        compiler: ${{ matrix.toolchain.compiler }}
+        version: ${{ matrix.toolchain.version }}
+
+    - name: Configure
+      run: ./configure.sh
+
+    - name: Build
+      run: make -j
+
+    - name: Unit tests
+      run: make unittest
+
+      # NOTE: We need to disable the SWARM test,
+      # as its numerical output relies on the compiler implementation
+      # of PRNG (random_number subroutine)
+    - name: End-to-end tests
+      run: |
+        mv tests/SWARM tests/swarm
+        make test
+
+  tc_build:
+    name: TC build (${{ matrix.mpi }})
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+         mpi: [intelmpi, mpich]
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Setup MPI
+      if: matrix.mpi != 'mpich'
+      uses: mpi4py/setup-mpi@v1
+      with:
+        mpi: ${{ matrix.mpi }}
+
+    - name: MPICH build Cache
+      if: matrix.mpi == 'mpich'
+      id: mpich-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/mpich/
+        key: ${{runner.os}}-ubuntu22.04-mpich-gfortran-${{hashFiles('.github/install_mpich.sh')}}
+
+    - name: Build and Install MPICH
+      if: matrix.mpi == 'mpich' && steps.mpich-cache.outputs.cache-hit != 'true'
+      # Without the extra "-fallow-argument-mismatch" FFLAG, configure with GFortran >=10 fails with:
+      # "The Fortran compiler gfortran does not accept programs
+      # that call the same routine with arguments of different types"
+      env:
+        FFLAGS: -fallow-argument-mismatch -O1
+        FCFLAGS: -fallow-argument-mismatch -O1
+      run: |
+        .github/install_mpich.sh ${HOME}/mpich 4.0.2
+
+    - name: Configure with TC interface
+      env:
+        FC: ${{ matrix.mpi == 'mpich' && '${HOME}/mpich/4.0.2/install/bin/mpifort' || 'mpif90' }}
+      run: ./configure.sh tc
+
+    - name: Build
+      run: make -j
+
+    - name: Unit tests
+      run: make unittest
+
+    - name: End-to-end tests
+      run: make test

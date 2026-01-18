@@ -1,0 +1,23 @@
+&control
+!------ Initialization -------!
+ InitState=2
+ InitialCond='NoSample'
+ iRndSeed=57034456
+
+!------ Simulation Properties -------!
+ Model='TOY'		!to identify the potential used
+ iMethod=3        ! Indicates Izmaylov model
+ IzmOmegax=0.009557
+ IzmOmegay=0.003515
+ IzmXshift=20.07
+ IzmYshift=0.0
+ IzmDeltaE=0.01984
+ IzmCoupC=0.0006127
+ NumParticles=13
+ NumStates=2		!number of electronic states
+ NumInitBasis=1
+
+!-------- Integration and numerics --------!
+ TimeStep=1.0		!timestep for integration
+ SimulationTime=1.00	!integration time
+/

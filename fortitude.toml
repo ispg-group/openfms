@@ -1,0 +1,23 @@
+[check]
+ignore = [
+  "use-all", # should use "only:"
+  "implicit-external-procedures", # requires Fortran 2018
+  "star-kind", # don't use integer*4 et al
+  "literal-kind",
+]
+line-length = 120
+show-fixes = true
+[check.per-file-ignores]
+# TODO: Add missing intents!
+"src/modules/{Trajectory,Thermo,Terachem,Template,SMD,Bundle,Rattle,MinSearch,Restart,Spawn,Overlap}*.[fF]90" = ["missing-intent"]
+# TODO: Resolve this!
+"src/modules/SpawnModule.f90" = ["missing-exit-or-cycle-label"]
+# TODO: Would be nice to resolve this
+"src/modules/RattleModule.f90" = ["initialisation-in-declaration"]
+"src/*.[fF]90" = ["procedure-not-in-module"]
+"src/modules/TerachemModule.F90" = ["assumed-size"]
+"src/modules/BundleCalcsModule.f90" = ["common-block"]
+"src/modules/MinSearchModule.f90" = ["interface-implicit-typing"]
+# fortitude confused by ifdef?
+"src/modules/QuanticsModule.F90" = ["implicit-typing", "missing-accessibility-statement"]
+"src/modules/{Overlap,Verlet}Module.f90" = ["trailing-backslash"]

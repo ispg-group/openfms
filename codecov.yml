@@ -1,0 +1,4 @@
+ignore:
+  - "unit_tests/testdrive.F90"
+codecov:
+  branch: main

@@ -1,0 +1,39 @@
+name: Lint & Format
+
+# Run various static checks and autoformatter
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+env:
+  FORCE_COLOR: 1
+
+jobs:
+
+  module-check:
+    name: Module usage check
+    runs-on: ubuntu-24.04
+
+    steps:
+    - uses: actions/checkout@v6
+    - name: Check module usage
+      run: |
+        if git grep -E -n -i 'use (trajectory|particle|bundle)Module.*only'; then
+          echo "ERROR: Found improper use of Particle|Trajectory|Bundle Modules!"
+          echo "Never use the 'only' keyword with these modules"
+          exit 1
+        fi
+
+  lint:
+    name: fortitude check
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Install fortitude linter
+      run: pip install fortitude-lint==0.8.0rc1
+
+    - name: Run fortitude
+      run: fortitude check src/

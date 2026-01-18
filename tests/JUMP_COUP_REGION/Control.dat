@@ -1,0 +1,42 @@
+Test adaptive time step algorithm:
+ - If we step over the coupling region, reject the step, and go back.
+
+&control
+! Integration and numerics
+ TimeStep=2.0
+ SimulationTime=5.0
+
+ CSThresh=5.232990254568993E-002
+ CoupTimeStep=0.50
+
+! Initialization
+ InitState=2
+ InitialCond='NoSample'
+ iRndSeed=57034456
+
+! Simulation Properties
+ Model='TOY'
+ iMethod=3 ! Izmaylov model
+ NumParticles=2
+ NumStates=2
+ NumInitBasis=1
+
+! Input for Izmaylov model
+ IzmOmegax=0.009557
+ IzmOmegay=0.003515
+ IzmXshift=20.07
+ IzmYshift=0.0
+ IzmDeltaE=0.01984
+ IzmCoupC=0.0006127
+
+! Spawning
+ MultiSpawn=1		!number of spawns per event
+ MaxTraj=5		!max number of trajectories
+ OMax=0.6
+ SpawnCoupV=.false.
+ PopToSpawn=0.001
+/ !Atom type information below
+  2 ! number of atom types
+#Name  AtomicNum  AtomicWeight(amu) Width(1/bohr**2)
+ QQ    1       0.0005485      0.004775
+ PP    1       0.0005485      0.001675
