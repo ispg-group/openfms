@@ -5,7 +5,7 @@ ignore = [
   "star-kind", # don't use integer*4 et al
   "literal-kind",
 ]
-line-length = 120
+line-length = 132
 show-fixes = true
 [check.per-file-ignores]
 # TODO: Add missing intents!

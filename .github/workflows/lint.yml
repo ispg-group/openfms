@@ -26,6 +26,20 @@ jobs:
           exit 1
         fi
 
+  format:
+    name: Auto format code
+    runs-on: ubuntu-24.04
+
+    steps:
+    - uses: actions/checkout@v6
+    - uses: astral-sh/setup-uv@v6
+
+    - name: Run formatter
+      run: |
+        uv run autoformat.py
+        f=`git ls-files -m`; if [[ -n $f ]]; then echo -e "ERROR: Detected unformatted files:\n$f"; exit 1; fi
+
+
   lint:
     name: fortitude check
     runs-on: ubuntu-24.04
