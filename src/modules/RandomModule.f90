@@ -14,25 +14,25 @@ contains
 !<
    function fms_ranb(ixt)
 
-      REAL*8 :: FMS_RANB
-      INTEGER*4, intent(in) :: ixt
-      INTEGER*4, save :: FMS_IX
-      INTEGER*4 :: I1,I2,I3,I4,I5,I6,I7,I8,I9
-      DATA I2/16807/,I4/32768/,I5/65536/,I3/2147483647/
+      real*8 :: FMS_RANB
+      integer*4, intent(in) :: ixt
+      integer*4, save :: FMS_IX
+      integer*4 :: I1, I2, I3, I4, I5, I6, I7, I8, I9
+      data I2/16807/, I4/32768/, I5/65536/, I3/2147483647/
 
       if (ixt /= 0) then
-         FMS_ix=ixt
-         write(fmiOut, '(a, i0)') 'RanB seeded with ', ixt
-      endif
+         FMS_ix = ixt
+         write (fmiOut, '(a, i0)') 'RanB seeded with ', ixt
+      end if
 
-      I6=FMS_IX/I5
-      I7=(FMS_IX-I6*I5)*I2
-      I8=I7/I5
-      I9=I6*I2+I8
-      I1=I9/I4
-      FMS_IX=(((I7-I8*I5)-I3)+(I9-I1*I4)*I5)+I1
-      IF(FMS_IX<0.0d0) FMS_IX=FMS_IX+I3
-      FMS_RANB=(4.656613D-10)*DBLE(FMS_IX)
+      I6 = FMS_IX / I5
+      I7 = (FMS_IX - I6 * I5) * I2
+      I8 = I7 / I5
+      I9 = I6 * I2 + I8
+      I1 = I9 / I4
+      FMS_IX = (((I7 - I8 * I5) - I3) + (I9 - I1 * I4) * I5) + I1
+      if (FMS_IX < 0.0d0) FMS_IX = FMS_IX + I3
+      FMS_RANB = (4.656613d-10) * dble(FMS_IX)
 
    end function fms_ranb
 
@@ -41,11 +41,11 @@ contains
    ! Initializing PRNG subroutine random_number() defined by Fortran standard
    ! https://stackoverflow.com/questions/51893720/correctly-setting-random-seeds-for-repeatability
    subroutine initialize_fortran_prng(user_seed)
-      use, intrinsic :: iso_fortran_env, only: INT64
+      use, intrinsic :: iso_fortran_env, only: int64
       integer, intent(in) :: user_seed
       integer, allocatable :: seeds(:)
       integer :: i, seed_size
-      integer(INT64) :: s
+      integer(int64) :: s
       real(defReal) :: drans(100)
 
       call random_seed(size=seed_size)
@@ -68,17 +68,17 @@ contains
    ! Taken from:
    ! https://gcc.gnu.org/onlinedocs/gcc-4.9.1/gfortran/RANDOM_005fSEED.html
    integer function lcg(s)
-      use, intrinsic :: iso_fortran_env, only: INT64
+      use, intrinsic :: iso_fortran_env, only: int64
       ! TODO: I think this should be intent(in)?
-      integer(INT64), intent(inout) :: s
+      integer(int64), intent(inout) :: s
 
       if (s == 0) then
          s = 104729
       else
-         s = mod(s, 4294967296_INT64)
+         s = mod(s, 4294967296_int64)
       end if
-      s = mod(s * 279470273_INT64, 4294967291_INT64)
-      lcg = int(mod(s, int(huge(0), INT64)), kind(0))
+      s = mod(s * 279470273_int64, 4294967291_int64)
+      lcg = int(mod(s, int(huge(0), int64)), kind(0))
    end function lcg
 
 end module RandomModule

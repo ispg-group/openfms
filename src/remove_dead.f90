@@ -13,51 +13,51 @@
 !!
 !!    @ingroup propagation
 !<
-      ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 subroutine FMS_RemoveDead(B1)
-      ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      use GlobalModule, only: defInt, defReal, fmiOut, FPZero, &
-         glIgnoreState, glzCentroids, gliForceKill
-      use BundleModule
-      use BundleCalcsModule, only: FMS_bH, FMS_Mulliken
-      use SpawnModule, only: spdCFthresh, spawn_couple, spdpopToSpawn
-      implicit none
-      type(T_TrajectoryBundle), intent(inout) :: B1
-      type(T_TrajectoryBundle) :: BTemp
+   ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   use GlobalModule, only: defInt, defReal, fmiOut, FPZero, &
+                           glIgnoreState, glzCentroids, gliForceKill
+   use BundleModule
+   use BundleCalcsModule, only: FMS_bH, FMS_Mulliken
+   use SpawnModule, only: spdCFthresh, spawn_couple, spdpopToSpawn
+   implicit none
+   type(T_TrajectoryBundle), intent(inout) :: B1
+   type(T_TrajectoryBundle) :: BTemp
 
-      integer, parameter :: MaxIter=50
-      integer (kind=DefInt) :: iTraj,nDead,iLive,iDead,jTraj
-      integer (kind=DefInt) :: iCent,jCent, jDead,jLive
-      integer (kind=DefInt) :: iCBF,jCBF,nCBF,n2CBF
+   integer, parameter :: MaxIter = 50
+   integer(kind=DefInt) :: iTraj, nDead, iLive, iDead, jTraj
+   integer(kind=DefInt) :: iCent, jCent, jDead, jLive
+   integer(kind=DefInt) :: iCBF, jCBF, nCBF, n2CBF
 
-      integer(DefInt),dimension(B1%NumTraj,B1%NumTraj) :: Coupled, Coupled_prev
+   integer(DefInt), dimension(B1%NumTraj, B1%NumTraj) :: Coupled, Coupled_prev
 
-      real   (DefReal) :: Population(B1%NumTraj)
+   real(DefReal) :: Population(B1%NumTraj)
 
 !     GAIMS added
-      real(kind=DefReal) :: pop
+   real(kind=DefReal) :: pop
 !     GAIMS added end
 
-      integer(DefInt) :: ntraj, i, j, TrajID, StateID, nstate, n
+   integer(DefInt) :: ntraj, i, j, TrajID, StateID, nstate, n
 
-      logical :: NotCoupled, OnIgnoreState, PopBelowThresh, &
-                 MarkForDeath, OverSpawnThresh, ForceDead
+   logical :: NotCoupled, OnIgnoreState, PopBelowThresh, &
+              MarkForDeath, OverSpawnThresh, ForceDead
 
-      ntraj  = B1%NumTraj
-      nstate = B1%NumStates
+   ntraj = B1%NumTraj
+   nstate = B1%NumStates
 
 ! . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 !     First, decompose the hamiltonian into a block diagonal representation
-      ! work out the coupling matrix
-      Coupled = 0
-      do i = 2, ntraj
-      do j = 1 ,i
-         if(abs(FMS_bH(B1,i,j)) > FPZero) then
-            Coupled(i,j) = 1
-            Coupled(j,i) = 1
-         endif
-      enddo
-      enddo
+   ! work out the coupling matrix
+   Coupled = 0
+   do i = 2, ntraj
+      do j = 1, i
+         if (abs(FMS_bH(B1, i, j)) > FPZero) then
+            Coupled(i, j) = 1
+            Coupled(j, i) = 1
+         end if
+      end do
+   end do
 
 ! . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 !     This matrix has the properties that it is non-zero is
@@ -65,162 +65,160 @@ subroutine FMS_RemoveDead(B1)
 !        Coup^2   : connected by 1 or less common trajectory
 !        Coup^3   : connected by 2 or less common trajectories
 !     We will iterate the matrix multiplication to convergence
-      do
-         Coupled_prev = Coupled
+   do
+      Coupled_prev = Coupled
 
-         Coupled = min( matmul(Coupled,Coupled), 1 )
+      Coupled = min(matmul(Coupled, Coupled), 1)
 
-         if( all(Coupled==Coupled_prev) ) exit
-      enddo
-
+      if (all(Coupled == Coupled_prev)) exit
+   end do
 
 ! . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 !     Replace the diagonal with zero
-      do i = 1, ntraj
-        Coupled(i,i) = 0
-      enddo
+   do i = 1, ntraj
+      Coupled(i, i) = 0
+   end do
 
-      Population = abs( FMS_Mulliken(B1) )
+   Population = abs(FMS_Mulliken(B1))
 
-      ndead = 0
-      do i = 1, ntraj
+   ndead = 0
+   do i = 1, ntraj
 
-         TrajID  = B1%Trajectory(i)%TrajID
-         StateID = B1%Trajectory(i)%StateID
+      TrajID = B1%Trajectory(i)%TrajID
+      StateID = B1%Trajectory(i)%StateID
 
-         OverSpawnThresh = .false.
-         do n = 1,nstate
-             OverSpawnThresh = OverSpawnThresh .or. spawn_couple(B1%Trajectory(i), n) > spdCFThresh
-         enddo
+      OverSpawnThresh = .false.
+      do n = 1, nstate
+         OverSpawnThresh = OverSpawnThresh .or. spawn_couple(B1%Trajectory(i), n) > spdCFThresh
+      end do
 
 ! . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 !        Update DeadTime for those who will not be killed
-         NotCoupled     = all( Coupled(:,i)==0 )
-         OnIgnoreState  = ( StateID == glIgnoreState )
-         PopBelowThresh = ( Population(i) < spdPopToSpawn )
+      NotCoupled = all(Coupled(:, i) == 0)
+      OnIgnoreState = (StateID == glIgnoreState)
+      PopBelowThresh = (Population(i) < spdPopToSpawn)
 !        GAIMS changed
-         pop=0.d0
-         do n=1,ntraj
+      pop = 0.d0
+      do n = 1, ntraj
          if (B1%Trajectory(n)%CBF == B1%Trajectory(i)%CBF) then
-          pop=pop+Population(n)
-         endif
-         enddo
-         PopBelowThresh = ( pop < spdPopToSpawn )
+            pop = pop + Population(n)
+         end if
+      end do
+      PopBelowThresh = (pop < spdPopToSpawn)
 !        GAIMS changed end
-         MarkForDeath   = ( (OnIgnoreState .and. NotCoupled .and. .not.OverSpawnThresh) &
-                       .or. (PopBelowThresh .and. NotCoupled ) )
-         ForceDead = any( gliForceKill(:)==TrajID)
-         if (ForceDead) then
-           B1%Trajectory(i)%DeadTime=-9999.0d0
-         endif
-         MarkForDeath = ( MarkForDeath.OR.ForceDead)
+      MarkForDeath = ((OnIgnoreState .and. NotCoupled .and. .not. OverSpawnThresh) &
+                      .or. (PopBelowThresh .and. NotCoupled))
+      ForceDead = any(gliForceKill(:) == TrajID)
+      if (ForceDead) then
+         B1%Trajectory(i)%DeadTime = -9999.0d0
+      end if
+      MarkForDeath = (MarkForDeath .or. ForceDead)
 
-         if(.not.MarkForDeath)then
-            B1%Trajectory(i)%DeadTime = B1%CurrentTime
-         else
-            write(fmiOut,'(a,i0,a)') "Traj ", TrajID, " was marked for death"
-         endif
+      if (.not. MarkForDeath) then
+         B1%Trajectory(i)%DeadTime = B1%CurrentTime
+      else
+         write (fmiOut, '(a,i0,a)') "Traj ", TrajID, " was marked for death"
+      end if
 
 !        Workout who is getting killed
-         if( B1%Trajectory(i)%is_dead() )then
-            ndead = ndead + 1
-            if( ForceDead )then
-               write(fmiOut,'(a,i0,a,i0)') "** Force Killing trajectory ", TrajID, " on state ", StateID
-            elseif( OnIgnoreState )then
-               write(fmiOut,'(a,i0,a,i0)') "** Killing trajectory ", TrajID, " on state ", StateID
-            else
-               write(fmiOut,'(a,i0,a,f6.5)') "** Killing trajectory ", TrajID, " pop < ", spdPopToSpawn
-            endif
-         endif
-      enddo
+      if (B1%Trajectory(i)%is_dead()) then
+         ndead = ndead + 1
+         if (ForceDead) then
+            write (fmiOut, '(a,i0,a,i0)') "** Force Killing trajectory ", TrajID, " on state ", StateID
+         elseif (OnIgnoreState) then
+            write (fmiOut, '(a,i0,a,i0)') "** Killing trajectory ", TrajID, " on state ", StateID
+         else
+            write (fmiOut, '(a,i0,a,f6.5)') "** Killing trajectory ", TrajID, " pop < ", spdPopToSpawn
+         end if
+      end if
+   end do
 
 !     Remove dead trajectories
-      if( ndead > 0 )then
-         call BTemp%create(numtraj=B1%NumTraj-nDead, &
-                           numdeadtraj=B1%NumDeadTraj+nDead, &
-                           numstates=B1%NumStates, &
-                           numparticles=B1%NumParticles, &
-                           ncbfs=B1%NCBFs)
-         BTemp%CurrentTime=B1%CurrentTime
+   if (ndead > 0) then
+      call BTemp%create(numtraj=B1%NumTraj - nDead, &
+                        numdeadtraj=B1%NumDeadTraj + nDead, &
+                        numstates=B1%NumStates, &
+                        numparticles=B1%NumParticles, &
+                        ncbfs=B1%NCBFs)
+      BTemp%CurrentTime = B1%CurrentTime
 
 !        Copy old dead trajectories to new bundle
-         do iTraj=1,B1%NumDeadTraj
-            BTemp%DeadTraj(iTraj)=B1%DeadTraj(iTraj)
-            do jTraj=1,B1%NumDeadTraj
-               BTemp%DeadH(iTraj,jTraj)=B1%DeadH(iTraj,jTraj)
-            enddo
-         enddo
+      do iTraj = 1, B1%NumDeadTraj
+         BTemp%DeadTraj(iTraj) = B1%DeadTraj(iTraj)
+         do jTraj = 1, B1%NumDeadTraj
+            BTemp%DeadH(iTraj, jTraj) = B1%DeadH(iTraj, jTraj)
+         end do
+      end do
 
+      iLive = 0
+      iDead = 0
+      nCBF = 0
+      write (fmiOut, '(a,/,a)') "Reconstructing trajectory bundle. Living trajectories:"
 
-         iLive=0
-         iDead=0
-         nCBF=0
-         write(fmiOut,'(a,/,a)') "Reconstructing trajectory bundle. Living trajectories:"
-
-         do iTraj=1,B1%NumTraj
-            if( .not. B1%Trajectory(iTraj)%is_dead() ) then
+      do iTraj = 1, B1%NumTraj
+         if (.not. B1%Trajectory(iTraj)%is_dead()) then
 !              Alive: copy trajectory to new bundle
-               iLive=iLive+1
-               call BTemp%Trajectory(iLive)%copy_from(B1%Trajectory(iTraj))
+            iLive = iLive + 1
+            call BTemp%Trajectory(iLive)%copy_from(B1%Trajectory(iTraj))
 !              Get the CBF identifier. Here we use the fact that
 !              the 3 triplet trajecories are always stored in
 !              successive order starting with Ms=2
-               if( BTemp%Trajectory(iLive)%Ms == 2 ) then
-                 nCBF=nCBF+1
-               endif
-               if(B1%Trajectory(iTraj)%triplet)then
-                 write(fmiOut,'(4X,I4," S=1 Ms=",I0," CBF ",I0)') iTraj, BTemp%Trajectory(iLive)%Ms - 2, nCBF
-               else
-                 write(fmiOut,'(4X,I4," S=0 Ms=",I0," CBF ",I0)') iTraj, 0, nCBF
-               endif
-               BTemp%Trajectory(iLive)%CBF=nCBF
+            if (BTemp%Trajectory(iLive)%Ms == 2) then
+               nCBF = nCBF + 1
+            end if
+            if (B1%Trajectory(iTraj)%triplet) then
+               write (fmiOut, '(4X,I4," S=1 Ms=",I0," CBF ",I0)') iTraj, BTemp%Trajectory(iLive)%Ms - 2, nCBF
+            else
+               write (fmiOut, '(4X,I4," S=0 Ms=",I0," CBF ",I0)') iTraj, 0, nCBF
+            end if
+            BTemp%Trajectory(iLive)%CBF = nCBF
 !              Copy centroids over too
 ![bfec
-               if (glzCentroids) then
-                  jLive=0
-                  if ( BTemp%Trajectory(iLive)%Ms == 2 ) then
-                     n2CBF=0
-                     do jTraj = 1, iTraj-1
-                        if ( .not. B1%Trajectory(jTraj)%is_dead() .and. (B1%Trajectory(jTraj)%Ms == 2) ) then
-                           n2CBF=n2CBF+1
-                           iCBF=B1%Trajectory(iTraj)%CBF
-                           jCBF=B1%Trajectory(jTraj)%CBF
-                           iCent=((iCBF-2)*(iCBF-1))/2+jCBF
-                           jCent=((nCBF-2)*(nCBF-1))/2+n2CBF
-                           BTemp%Centroids(jCent)=B1%Centroids(iCent)
-                           BTemp%Centroids(jCent)%CentID(1)=nCBF
-                           BTemp%Centroids(jCent)%CentID(2)=n2CBF
-                        endif
-                     enddo
-                  endif
-               endif
+            if (glzCentroids) then
+               jLive = 0
+               if (BTemp%Trajectory(iLive)%Ms == 2) then
+                  n2CBF = 0
+                  do jTraj = 1, iTraj - 1
+                     if (.not. B1%Trajectory(jTraj)%is_dead() .and. (B1%Trajectory(jTraj)%Ms == 2)) then
+                        n2CBF = n2CBF + 1
+                        iCBF = B1%Trajectory(iTraj)%CBF
+                        jCBF = B1%Trajectory(jTraj)%CBF
+                        iCent = ((iCBF - 2) * (iCBF - 1)) / 2 + jCBF
+                        jCent = ((nCBF - 2) * (nCBF - 1)) / 2 + n2CBF
+                        BTemp%Centroids(jCent) = B1%Centroids(iCent)
+                        BTemp%Centroids(jCent)%CentID(1) = nCBF
+                        BTemp%Centroids(jCent)%CentID(2) = n2CBF
+                     end if
+                  end do
+               end if
+            end if
 
-            else
+         else
 !              Dead: add the trajectory to the graveyard
-               iDead=iDead+1
-               ! TODO: Use FMS_AssignTrajectory explicitly
-               ! call FMS_AssignTrajectory(BTemp%DeadTraj(B1%NumDeadTraj + iDead), B1%Trajectory(iTraj))
-               BTemp%DeadTraj(B1%NumDeadTraj + iDead) = B1%Trajectory(iTraj)
+            iDead = iDead + 1
+            ! TODO: Use FMS_AssignTrajectory explicitly
+            ! call FMS_AssignTrajectory(BTemp%DeadTraj(B1%NumDeadTraj + iDead), B1%Trajectory(iTraj))
+            BTemp%DeadTraj(B1%NumDeadTraj + iDead) = B1%Trajectory(iTraj)
 
 !              Set dead time of recently killed trajectory to be current time
 !              to make it easier for user to restart killed trajectories!
-               BTemp%DeadTraj(B1%NumDeadTraj+iDead)%DeadTime = BTemp%CurrentTime
+            BTemp%DeadTraj(B1%NumDeadTraj + iDead)%DeadTime = BTemp%CurrentTime
 !              Copy new hamiltonian elements into dead hamiltonian
-               jDead=0
-               do jTraj=1,iTraj
-                  if( B1%Trajectory(jTraj)%is_dead() )then
-                     jDead=jDead+1
-                     BTemp%DeadH(B1%NumDeadTraj+iDead, B1%NumDeadTraj+jDead) = FMS_bH(B1,iTraj,jTraj)
-                     BTemp%DeadH(B1%NumDeadTraj+jDead, B1%NumDeadTraj+iDead) = FMS_bH(B1,jTraj,iTraj)
-                  endif
-               enddo
-            endif
-         enddo
+            jDead = 0
+            do jTraj = 1, iTraj
+               if (B1%Trajectory(jTraj)%is_dead()) then
+                  jDead = jDead + 1
+                  BTemp%DeadH(B1%NumDeadTraj + iDead, B1%NumDeadTraj + jDead) = FMS_bH(B1, iTraj, jTraj)
+                  BTemp%DeadH(B1%NumDeadTraj + jDead, B1%NumDeadTraj + iDead) = FMS_bH(B1, jTraj, iTraj)
+               end if
+            end do
+         end if
+      end do
 
-         BTemp%NCBFs=nCBF
-         B1=BTemp
-         call BTemp%destroy()
+      BTemp%NCBFs = nCBF
+      B1 = BTemp
+      call BTemp%destroy()
 
-      endif
+   end if
 
 end subroutine FMS_RemoveDead
