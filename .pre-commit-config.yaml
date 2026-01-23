@@ -19,7 +19,7 @@ repos:
       - id: module-usage
         name: Check module usage
         language: system
-        entry: grep -Ein 'use (trajectory|particle|bundle)Module.*only'
+        entry: ./check_modules.sh
         files: '.[fF]90$'
         pass_filenames: true
 
