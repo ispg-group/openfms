@@ -36,7 +36,7 @@ jobs:
 
       # Python is needed for tests
     - uses: actions/setup-python@v6
-      with: 
+      with:
         python-version: 3.13
 
     - name: Configure
