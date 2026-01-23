@@ -27,6 +27,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v6
+      with:
+        fetch-depth: 2
 
     - uses: fortran-lang/setup-fortran@v1
       id: setup-fortran
@@ -56,10 +58,10 @@ jobs:
     - name: Codecov upload
       uses: codecov/codecov-action@v5
       # For some reason gcov does not seem to work on MacOS
-      if: ! startsWith(matrix.os, 'macos')
+      if: startsWith(matrix.os, 'ubuntu')
       with:
         name: GCC-${{ matrix.gcc_v}} (${{ matrix.os }})
-        slug: ispg-group/fms90-redux
+        slug: ispg-group/openfms
         token: ${{ secrets.CODECOV_TOKEN }}
         fail_ci_if_error: false
 
