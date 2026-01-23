@@ -1,6 +1,6 @@
 name: Lint & Format
 
-# Run various static checks and autoformatter
+# Run various static checks and autoformatter, using prek
 
 on:
   push:
@@ -12,42 +12,15 @@ env:
 
 jobs:
 
-  module-check:
-    name: Module usage check
+  prek:
     runs-on: ubuntu-24.04
 
     steps:
     - uses: actions/checkout@v6
-    - name: Check module usage
-      run: |
-        if git grep -E -n -i 'use (trajectory|particle|bundle)Module.*only'; then
-          echo "ERROR: Found improper use of Particle|Trajectory|Bundle Modules!"
-          echo "Never use the 'only' keyword with these modules"
-          exit 1
-        fi
 
-  format:
-    name: Auto format code
-    runs-on: ubuntu-24.04
+    - name: Install prek
+      # Configargparse is needed for the fprettify autoformatter
+      run: pip install prek configargparse
 
-    steps:
-    - uses: actions/checkout@v6
-    - uses: astral-sh/setup-uv@v6
-
-    - name: Run formatter
-      run: |
-        uv run autoformat.py
-        f=`git ls-files -m`; if [[ -n $f ]]; then echo -e "ERROR: Detected unformatted files:\n$f"; exit 1; fi
-
-
-  lint:
-    name: fortitude check
-    runs-on: ubuntu-24.04
-    steps:
-    - uses: actions/checkout@v6
-
-    - name: Install fortitude linter
-      run: pip install fortitude-lint==0.8.0rc1
-
-    - name: Run fortitude
-      run: fortitude check src/
+    - name: Run prek hooks
+      run: prek run --all-files --show-diff-on-failure

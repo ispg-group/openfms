@@ -28,7 +28,7 @@ subroutine test_create(error)
   type(error_type), allocatable, intent(out) :: error
   type(t_TrajectoryBundle) :: B
   integer, parameter :: NUM_TRAJ=2, NUM_DEADTRAJ=3, NUM_PART=4
-  integer, parameter :: NUM_STATES=5, NCBFS=6 
+  integer, parameter :: NUM_STATES=5, NCBFS=6
 
   ! To allocate B%Centroids
   glzCentroids = .true.

@@ -85,7 +85,7 @@ bin/$(PROGBASE).zero: $(FMSLIB) $(MAKEFILE) bin
 bin/$(PROGBASE).tc:  $(FMSLIB) $(MAKEFILE) bin
 		@rm -f bin/$(PROGBASE).e
 		@echo;echo "Linking $(PROGRAM) ..."
-		$(LD) $(FFLAGS) $(FMSLIB) -o $(TARGET) $(LIBS) $(LDFLAGS) 
+		$(LD) $(FFLAGS) $(FMSLIB) -o $(TARGET) $(LIBS) $(LDFLAGS)
 		@ln -s $(PROGRAM) bin/$(PROGBASE).e
 		@echo "done"
 

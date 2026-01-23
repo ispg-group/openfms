@@ -246,7 +246,7 @@ subroutine test_setget_all(error)
   integer, parameter :: num_particles=2, num_states=3, numdim = 3
   integer, parameter :: traj_dim = num_particles * numdim
   real(DefReal), dimension(traj_dim) :: pos, mom, mom2
-  real(DefReal) :: mass = 2.0D0
+  real(DefReal), parameter :: mass = 2.0D0
   integer :: i
 
   call T%create(numparticles=num_particles, numstates=num_states)
