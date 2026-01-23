@@ -29,5 +29,6 @@ repos:
         name: Autoformat code
         language: system
         entry: ./autoformat.py
-        files: 'src/.*[fF]90$'
+        files: '.[fF]90$'
         pass_filenames: true
+        exclude: unit_tests/testdrive.F90
