@@ -23,4 +23,4 @@ jobs:
       run: pip install prek configargparse
 
     - name: Run prek hooks
-      run: prek run --all-files --show-diff-on-failure
+      run: prek run --all-files --show-diff-on-failure --color always
