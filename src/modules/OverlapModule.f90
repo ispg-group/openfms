@@ -705,7 +705,12 @@ contains
       select case (mode)
       case (A)
          V = FMS_PotentialT(T_i)
-         V = V + SPA_1(T_i, T_i, S_ij)
+
+         if (glzSPA) then
+            V = V + SPA_1(T_i, T_i, S_ij)
+!            write(fmiOut,*) 'SPA1', SPA_1(T_i,T_i,S_ij)
+         end if
+
 !   write(fmiOut,*) '#########AAAAAAAAAAA###########'
 !   write(fmiOut,*) 'd',T_i%TrajID,T_i%StateID
 !   write(fmiOut,*) 'SPA0', FMS_PotentialT( T_i )
@@ -714,7 +719,6 @@ contains
 !   write(fmiOut,*) 'a_i', T_i%Particle(1)%width
 !   write(fmiOut,*) 'phase_i', T_i%Phase
 !   write(fmiOut,*) 'S_j',S_ij
-!   write(fmiOut,*) 'SPA1' ,SPA_1(T_i,T_i,S_ij)
 !   write(fmiOut,*) '###############################'
 
          if (glzxfaims) then
@@ -789,7 +793,12 @@ contains
       case (D)
          SOC_ij = FMS_SOCoupling(T_c, is, js, Msi, Msj)
          V = S_ij * SOC_ij
-         V = V + SPA_1(T_i, T_j, S_ij)
+
+         if (glzSPA) then
+            V = V + SPA_1(T_i, T_j, S_ij)
+ !           write(fmiOut,*) 'SPA1', SPA_1(T_i,T_j,S_ij)
+         end if
+
 !   write(fmiOut,*) '########DDDD#############'
 !   write(fmiOut,*) 'd',T_i%TrajID,T_j%TrajID,T_i%StateID,T_j%StateID
 !   write(fmiOut,*) 'Ms', Msi,Msj
@@ -804,12 +813,16 @@ contains
 !   write(fmiOut,*) 'a_j', T_j%Particle(1)%width
 !   write(fmiOut,*) 'phase_i', T_i%Phase
 !   write(fmiOut,*) 'phase_j', T_j%Phase
-!   write(fmiOut,*) 'SPA1' ,SPA_1(T_i,T_j,S_ij)
 !   write(fmiOut,*) '#########################'
 
       case (F)
          V = (0.d0, 0.d0)
-         V = V + SPA_1(T_i, T_j, S_ij)
+
+         if (glzSPA) then
+            V = V + SPA_1(T_i, T_j, S_ij)
+!            write(fmiOut,*) 'SPA1', SPA_1(T_i,T_j,S_ij)
+         end if
+
 !   write(fmiOut,*) '########FFFF#############'
 !   write(fmiOut,*) 'd',T_i%TrajID,T_j%TrajID,T_i%StateID,T_j%StateID
 !   write(fmiOut,*) 'Ms', Msi,Msj
@@ -822,8 +835,7 @@ contains
 !   write(fmiOut,*) 'a_j', T_j%Particle(1)%width
 !   write(fmiOut,*) 'phase_i', T_i%Phase
 !   write(fmiOut,*) 'phase_j', T_j%Phase
-!   write(fmiOut,*) 'SPA1' ,SPA_1(T_i,T_j,S_ij)
-         write (fmiOut, *) '#########################'
+!   write (fmiOut, *) '#########################'
 
       case (G)
          if (Msi /= Msj) then
@@ -1024,6 +1036,10 @@ contains
       complex(kind=DefComp), intent(in) :: S_ij
       real(kind=DefReal) :: x_cent, x_1, x_2, p_1, p_2, sigma_G, alpha_1, alpha_2
       complex(kind=DefComp) :: PotEn, dE, dSOC, roe
+
+      if (GlIMethod.ne.4) then 
+         call FMS_DieError("SPA1 only available for GAIMS Toy Model")
+      end if
 
       x_1 = T1%Particle(1)%get_pos(1)
       x_2 = T2%Particle(1)%get_pos(1)

@@ -89,6 +89,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    integer(kind=DefInt) :: NumTriplets
    real(kind=DefReal) :: SOCThresh
    real(kind=DefReal) :: ShiftTrip
+   logical :: SPA
 ! GAIMS added end
 
    logical :: zMMFile
@@ -270,7 +271,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
       , tspwnixf, tspwnfxf &
       ! xf added end
       ! GAIMS added
-      , NumSinglets, NumTriplets, SOCThresh, ShiftTrip &
+      , NumSinglets, NumTriplets, SOCThresh, ShiftTrip, SPA &
       ! GAIMS added end
       , StochasticSwiss, StochasticStateSpecific &
       ! Toy models
@@ -471,6 +472,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    NumTriplets = 0
    SOCThresh = 0.d0
    ShiftTrip = 0.d0
+   SPA = .false.
 ! GAIMS added end
 
 !     Flag for input errors
@@ -560,6 +562,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    glGrsigma = Grsigma
    glzFullyCoupled = FullyCoupled
    glzStochastic = Stochastic
+   glzSPA = SPA
 !bfec
    gldStochaThresh = StochasticThresh
    glzCentroids = CentroidApprox

@@ -135,7 +135,7 @@ module GlobalModule
    real(kind=DefReal) :: glIzmCoupC
 !     Global parameter for the GAIMS model in ToyModelModule
    real(kind=DefReal) :: glGrsigma
-
+   logical :: glzSPA
 !
 !-----------------------------------------------
    logical :: glzStoSwiss
