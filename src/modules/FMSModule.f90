@@ -9,4 +9,4 @@ module FMSModule
    interface
       include '../fortran_interfaces.inc'
    end interface
-end Module FMSModule
+end module FMSModule

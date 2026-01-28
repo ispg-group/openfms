@@ -8,6 +8,7 @@ syntax: glob
 *~
 *.out
 *.mod
+*__genmod.f90
 *.log
 *.errout
 *.orig
@@ -38,3 +39,5 @@ tests/*/*.[1-9]
 
 # auto-generated stuff from FMS
 src/moddepend
+# from fprettify
+__pycache__/

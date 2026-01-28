@@ -5,8 +5,9 @@ ignore = [
   "star-kind", # don't use integer*4 et al
   "literal-kind",
 ]
-line-length = 120
+line-length = 132
 show-fixes = true
+extend-exclude = ["unit_tests/testdrive.F90"]
 [check.per-file-ignores]
 # TODO: Add missing intents!
 "src/modules/{Trajectory,Thermo,Terachem,Template,SMD,Bundle,Rattle,MinSearch,Restart,Spawn,Overlap}*.[fF]90" = ["missing-intent"]

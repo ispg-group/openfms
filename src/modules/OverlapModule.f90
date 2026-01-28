@@ -1018,11 +1018,8 @@ contains
 
    end function nuc_dip_particlexf
 
-! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   ! Calculates the Saddle Point Approximation 1st order term
    function SPA_1(T1, T2, S_ij) result(PotEn)
-! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-!Calculates the Saddle Point Approximation 1st order term
-      use TrajectoryModule, only: T_Trajectory
       type(T_Trajectory), intent(in) :: T1, T2
       complex(kind=DefComp), intent(in) :: S_ij
       real(kind=DefReal) :: x_cent, x_1, x_2, p_1, p_2, sigma_G, alpha_1, alpha_2
@@ -1036,8 +1033,8 @@ contains
       alpha_2 = T2%Particle(1)%width
 
       x_cent = (alpha_1 * x_1 + alpha_2 * x_2) / (alpha_1 + alpha_2) !centroid position
+      ! roe from appendix A of Vanicek, J. Chem. Phys.,2013 139, 034112
       roe = -c1i * (p_1 - p_2) / (4 * (alpha_1))
-!roe from appendix A of Vanicek, J. Chem. Phys.,2013 139, 034112
 
       if (T1%StateID == T2%StateID) then !for intrastate cases
          !Derivative of potential energy
@@ -1047,7 +1044,9 @@ contains
             dE = -0.35d0 * 0.03452d0 * exp(-0.35d0 * x_cent)
          end if
          PotEn = dE * S_ij * roe
+
       else !for interstate cases
+
          !Derivative of SO_{I,J}^{Msi,Msj}(X_c) in Eq(11) from Granucci, J. Chem. Phys., 2012, 137, 22A501
          if (((glGrsigma - 1.d0) < x_cent) .and. (x_cent < (glGrsigma + 1.d0))) then
             sigma_G = 12.d0 * (((x_cent - glGrsigma)**2) / (2.d0**3)) - 3.d0 / 2.d0
@@ -1074,7 +1073,7 @@ contains
          end if
          PotEn = dSOC * S_ij * roe
       end if
-      return
+
    end function SPA_1
 
 end module OverlapModule
