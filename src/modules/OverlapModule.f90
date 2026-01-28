@@ -707,12 +707,17 @@ end select
 select case(mode)
 case( A )
    V = FMS_PotentialT( T_i )
-   !V = V + SPA_1(T_i,T_i,S_ij)
-!   write(fmiOut,*) '#########AAAAAAAAAAA###########'
-!   write(fmiOut,*) T_i%TrajID,T_i%StateID
-!   write(fmiOut,*) FMS_PotentialT( T_i )
-!   write(fmiOut,*) 'SPA1' ,SPA_1(T_i,T_i,S_ij)
-!   write(fmiOut,*) '###############################'
+   write(fmiOut,*) '#########AAAAAAAAAAA###########'
+   write(fmiOut,*) 'd',T_i%TrajID,T_i%StateID
+   write(fmiOut,*) 'SPA0', FMS_PotentialT( T_i )
+   write(fmiOut,*) 'x_i', T_i%Particle(1)%get_pos(1) 
+   write(fmiOut,*) 'p_i', T_i%Particle(1)%get_mom(1)
+   write(fmiOut,*) 'a_i', T_i%Particle(1)%width
+   write(fmiOut,*) 'phase_i', T_i%Phase
+   write(fmiOut,*) 'S_j',S_ij
+   V = V + SPA_1(T_i,T_i,S_ij) 
+   !write(fmiOut,*) 'SPA1' ,SPA_1(T_i,T_i,S_ij)
+   write(fmiOut,*) '###############################'
 
    if(glzxfaims)then
      bmis = T_i%StateID
@@ -787,22 +792,41 @@ case( C )
 case( D )
    SOC_ij = FMS_SOCoupling( T_c, is, js, Msi, Msj )
    V = S_ij * SOC_ij
-!   V = V + SPA_1(T_i,T_j,S_ij)
-!   write(fmiOut,*) '########DDDD#############'
-!   write(fmiOut,*) 'd',T_i%TrajID,T_j%TrajID,T_i%StateID,T_j%StateID
-!   write(fmiOut,*) Msi,Msj
-!   write(fmiOut,*) 'SOCc',SOC_ij
-!   write(fmiOut,*) S_ij,V
-!   write(fmiOut,*) 'SPA1' ,SPA_1(T_i,T_j,S_ij)
-!   write(fmiOut,*) FMS_PotentialT( T_i ),FMS_PotentialT( T_j, is )
-!   write(fmiOut,*) '#########################'
+   write(fmiOut,*) '########DDDD#############'
+   write(fmiOut,*) 'd',T_i%TrajID,T_j%TrajID,T_i%StateID,T_j%StateID
+   write(fmiOut,*) 'Ms', Msi,Msj
+   write(fmiOut,*) 'SOCc',SOC_ij
+   write(fmiOut,*) 'S_j',S_ij
+   write(fmiOut,*) 'SPA0', S_ij * SOC_ij 
+   write(fmiOut,*) 'x_i', T_i%Particle(1)%get_pos(1) 
+   write(fmiOut,*) 'x_j', T_j%Particle(1)%get_pos(1) 
+   write(fmiOut,*) 'p_i', T_i%Particle(1)%get_mom(1)
+   write(fmiOut,*) 'p_j', T_j%Particle(1)%get_mom(1) 
+   write(fmiOut,*) 'a_i', T_i%Particle(1)%width
+   write(fmiOut,*) 'a_j', T_j%Particle(1)%width
+   write(fmiOut,*) 'phase_i', T_i%Phase
+   write(fmiOut,*) 'phase_j', T_j%Phase
+   V = V + SPA_1(T_i,T_j,S_ij)
+   !write(fmiOut,*) 'SPA1' ,SPA_1(T_i,T_j,S_ij)
+   write(fmiOut,*) '#########################'
 
 case( F )
-      V=(0.d0,0.d0)
-!      V = V + SPA_1(T_i,T_j,S_ij)
-!      write(fmiOut,*) '########FFFF#############'
-!      write(fmiOut,*) 'SPA1' ,SPA_1(T_i,T_j,S_ij)
-!      write(fmiOut,*) '#########################' 
+   V=(0.d0,0.d0)
+   write(fmiOut,*) '########FFFF#############'
+   write(fmiOut,*) 'd',T_i%TrajID,T_j%TrajID,T_i%StateID,T_j%StateID
+   write(fmiOut,*) 'Ms', Msi,Msj
+   write(fmiOut,*) 'S_j',S_ij 
+   write(fmiOut,*) 'x_i', T_i%Particle(1)%get_pos(1) 
+   write(fmiOut,*) 'x_j', T_j%Particle(1)%get_pos(1) 
+   write(fmiOut,*) 'p_i', T_i%Particle(1)%get_mom(1)
+   write(fmiOut,*) 'p_j', T_j%Particle(1)%get_mom(1) 
+   write(fmiOut,*) 'a_i', T_i%Particle(1)%width
+   write(fmiOut,*) 'a_j', T_j%Particle(1)%width
+   write(fmiOut,*) 'phase_i', T_i%Phase
+   write(fmiOut,*) 'phase_j', T_j%Phase
+   V = V + SPA_1(T_i,T_j,S_ij)
+   !write(fmiOut,*) 'SPA1' ,SPA_1(T_i,T_j,S_ij)
+   write(fmiOut,*) '#########################' 
 
 case( G )
    if( Msi /= Msj ) then
@@ -1000,9 +1024,10 @@ enddo
 
 end function nuc_dip_particlexf
 
+! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 function SPA_1(T1,T2,S_ij) result( PotEn )
-!Calculates the Saddle point approximation 1st order term
-!for intrastate cases
+! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+!Calculates the Saddle Point Approximation 1st order term
 use TrajectoryModule, only: T_Trajectory
 type(T_Trajectory),    intent(in) :: T1,T2
 complex(kind=DefComp), intent(in) :: S_ij
@@ -1015,151 +1040,55 @@ p_1 = T1%Particle(1)%get_mom(1)
 p_2 = T2%Particle(1)%get_mom(1)
 alpha_1 = T1%Particle(1)%width
 alpha_2 = T2%Particle(1)%width
-x_cent  = ( alpha_1*x_1 + alpha_2*x_2 ) / ( alpha_1 + alpha_2 )
-roe = -c1i*(p_1-p_2)/(2*(alpha_1+alpha_2))
-if (T1%StateID==T2%StateID)then
-      !Force (Derivative of potential energy)
-      if(T1%StateID==2) then
-         dE=  -0.25d0*0.5d0*exp(-0.25d0*x_cent)
-      else
+
+x_cent  = ( alpha_1*x_1 + alpha_2*x_2 ) / ( alpha_1 + alpha_2 ) !centroid position
+roe = -c1i*(p_1-p_2)/(4*(alpha_1)) 
+!roe from appendix A of Vanicek, J. Chem. Phys.,2013 139, 034112
+
+if (T1%StateID==T2%StateID)then !for intrastate cases
+      !Derivative of potential energy
+      if(T1%StateID==2) then !T
+         dE=  -0.25d0*0.5d0*exp(-0.25d0*x_cent) !Derivative of V from Granucci, J. Chem. Phys., 2012, 137, 22A501
+      else !S
          dE= -0.35d0*0.03452d0*exp(-0.35d0*x_cent)
       endif
       PotEn = dE*S_ij*roe
-else
+
+      write(fmiOut,*) 'dE', dE
+      write(fmiOut,*) 'roe', roe
+      write(fmiOut,*) 'SPA1', PotEn
+else !for interstate cases
+      !Derivative of SO_{I,J}^{Msi,Msj}(X_c) in Eq(11) from Granucci, J. Chem. Phys., 2012, 137, 22A501 
       if ( ((glGrsigma-1.d0) < x_cent ) .and. ( x_cent < (glGrsigma+1.d0) ) ) then
-         sigma_G=12.d0*(((x_cent-glGrsigma)**2)/(2.d0**3))-3.d0/2.d0
+         sigma_G=12.d0*(((x_cent-glGrsigma)**2)/(2.d0**3))-3.d0/2.d0 
       else
          sigma_G=0.d0
       end if
 
       if(T1%StateID==1) then
          if(T2%Ms==1) then
-            dSOC = conjg((0.0005, 0.0005)*sigma_G)
+            dSOC = conjg((0.0005, 0.0005)*sigma_G) ! z*  : S,T-1
          elseif(T2%Ms==2) then
-            dSOC = c1i*0.001d0*sigma_G 
+            dSOC = c1i*0.001d0*sigma_G ! ib  : S,T0
          else
-            dSOC = (0.0005, 0.0005)*sigma_G
+            dSOC = (0.0005, 0.0005)*sigma_G ! z   : S,T1
          endif
       else
          if(T1%Ms==1) then
-            dSOC = (0.0005, 0.0005)*sigma_G
+            dSOC = (0.0005, 0.0005)*sigma_G ! z   : T-1,S
          elseif(T1%Ms==2) then
-            dSOC = -c1i*0.001d0*sigma_G 
+            dSOC = -c1i*0.001d0*sigma_G ! -ib : T0,S
          else
-            dSOC = conjg((0.0005, 0.0005)*sigma_G)
+            dSOC = conjg((0.0005, 0.0005)*sigma_G) ! z*  : T1,S
          endif
       endif
       PotEn = dSOC*S_ij*roe
+
+      write(fmiOut,*) 'dS0C', dSOC
+      write(fmiOut,*) 'roe', roe
+      write(fmiOut,*) 'SPA1', PotEn
 endif
 return
 end function SPA_1
-
-function SPA_2(T1,T2,S_ij) result( PotEn )
-!Calculates the Saddle point approximation 1st order term
-!for intrastate cases
-use TrajectoryModule, only: T_Trajectory
-type(T_Trajectory),    intent(in) :: T1,T2
-complex(kind=DefComp), intent(in) :: S_ij
-real(kind=DefReal) :: x_cent, x_1,x_2,p_1,p_2,sigma_G, alpha_1,alpha_2
-complex (kind=DefComp) :: PotEn, d2E,d2SOC,roe
-
-x_1 = T1%Particle(1)%get_pos(1)
-x_2 = T2%Particle(1)%get_pos(1)
-p_1 = T1%Particle(1)%get_mom(1)
-p_2 = T2%Particle(1)%get_mom(1)
-alpha_1 = T1%Particle(1)%width
-alpha_2 = T2%Particle(1)%width
-x_cent  = ( alpha_1*x_1 + alpha_2*x_2 ) / ( alpha_1 + alpha_2 )
-roe = -c1i*(p_1-p_2)/(2*(alpha_1+alpha_2))
-if (T1%StateID==T2%StateID)then
-      !Force (Derivative of potential energy)
-      if(T1%StateID==2) then
-         d2E=  0.0625d0*0.5d0*exp(-0.25d0*x_cent)
-      else
-         d2E= 0.1225d0*0.03452d0*exp(-0.35d0*x_cent)
-      endif
-      PotEn = 0.5d0*d2E*S_ij*(roe*roe+1/(4.d0*(alpha_1)))
-else
-      if ( (glGrsigma-1.d0 < x_cent ) .and. ( x_cent < glGrsigma+1.d0 ) ) then
-         sigma_G=24.d0*((x_cent-glGrsigma)/(2.d0**3))
-      else
-         sigma_G=0.d0
-      end if
-
-      if(T1%StateID==1) then
-         if(T2%Ms==1) then
-            d2SOC = conjg((0.0005, 0.0005)*sigma_G)
-         elseif(T2%Ms==2) then
-            d2SOC = c1i*0.001d0*sigma_G 
-         else
-            d2SOC = (0.0005, 0.0005)*sigma_G
-         endif
-      else
-         if(T1%Ms==1) then
-            d2SOC = (0.0005, 0.0005)*sigma_G
-         elseif(T1%Ms==2) then
-            d2SOC= -c1i*0.001d0*sigma_G 
-         else
-            d2SOC = conjg((0.0005, 0.0005)*sigma_G)
-         endif
-      endif
-      PotEn = 0.5d0*d2SOC*S_ij*(roe*roe+1/(2.d0*(alpha_1+alpha_2)))
-endif
-return
-end function SPA_2
-
-function SPA_3(T1,T2,S_ij) result( PotEn )
-!Calculates the Saddle point approximation 1st order term
-!for intrastate cases
-use TrajectoryModule, only: T_Trajectory
-type(T_Trajectory),    intent(in) :: T1,T2
-complex(kind=DefComp), intent(in) :: S_ij
-real(kind=DefReal) :: x_cent, x_1,x_2,p_1,p_2,sigma_G, alpha_1,alpha_2
-complex (kind=DefComp) :: PotEn, d3E,d3SOC,roe
-
-x_1 = T1%Particle(1)%get_pos(1)
-x_2 = T2%Particle(1)%get_pos(1)
-p_1 = T1%Particle(1)%get_mom(1)
-p_2 = T2%Particle(1)%get_mom(1)
-alpha_1 = T1%Particle(1)%width
-alpha_2 = T2%Particle(1)%width
-x_cent  = ( alpha_1*x_1 + alpha_2*x_2 ) / ( alpha_1 + alpha_2 )
-roe=(-c1i*(p_1-p_2))/(2*(alpha_1+alpha_2))
-if (T1%StateID==T2%StateID)then
-      !Force (Derivative of potential energy)
-      if(T1%StateID==2) then
-         d3E=  -0.015625d0*0.5d0*exp(-0.25d0*x_cent)
-      else
-         d3E= -0.042875d0*0.03452d0*exp(-0.35d0*x_cent)
-      endif
-      PotEn = (1.d0/6.d0)*d3E*S_ij*(roe*roe*roe+(3.d0*roe)/(4.d0*alpha_1))
-else
-      if ( (glGrsigma-1.d0 < x_cent ) .and. ( x_cent < glGrsigma+1.d0 ) ) then
-         sigma_G=24.d0*(1/(2.d0**3))
-      else
-         sigma_G=0.d0
-      end if
-
-      if(T1%StateID==1) then
-         if(T2%Ms==1) then
-            d3SOC = conjg((0.0005, 0.0005)*sigma_G)
-         elseif(T2%Ms==2) then
-            d3SOC = c1i*0.001d0*sigma_G 
-         else
-            d3SOC = (0.0005, 0.0005)*sigma_G
-         endif
-      else
-         if(T1%Ms==1) then
-            d3SOC = (0.0005, 0.0005)*sigma_G
-         elseif(T1%Ms==2) then
-            d3SOC = -c1i*0.001d0*sigma_G 
-         else
-            d3SOC = conjg((0.0005, 0.0005)*sigma_G)
-         endif
-      endif
-      PotEn = (1.d0/6.d0)*d3SOC*S_ij*(roe*roe*roe+(3.d0*roe)/(2.d0*(alpha_1+alpha_2)))
-endif
-return
-end function SPA_3
 
 end module OverlapModule
