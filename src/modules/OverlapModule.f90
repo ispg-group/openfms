@@ -707,17 +707,17 @@ end select
 select case(mode)
 case( A )
    V = FMS_PotentialT( T_i )
-   write(fmiOut,*) '#########AAAAAAAAAAA###########'
-   write(fmiOut,*) 'd',T_i%TrajID,T_i%StateID
-   write(fmiOut,*) 'SPA0', FMS_PotentialT( T_i )
-   write(fmiOut,*) 'x_i', T_i%Particle(1)%get_pos(1) 
-   write(fmiOut,*) 'p_i', T_i%Particle(1)%get_mom(1)
-   write(fmiOut,*) 'a_i', T_i%Particle(1)%width
-   write(fmiOut,*) 'phase_i', T_i%Phase
-   write(fmiOut,*) 'S_j',S_ij
    V = V + SPA_1(T_i,T_i,S_ij) 
-   !write(fmiOut,*) 'SPA1' ,SPA_1(T_i,T_i,S_ij)
-   write(fmiOut,*) '###############################'
+!   write(fmiOut,*) '#########AAAAAAAAAAA###########'
+!   write(fmiOut,*) 'd',T_i%TrajID,T_i%StateID
+!   write(fmiOut,*) 'SPA0', FMS_PotentialT( T_i )
+!   write(fmiOut,*) 'x_i', T_i%Particle(1)%get_pos(1) 
+!   write(fmiOut,*) 'p_i', T_i%Particle(1)%get_mom(1)
+!   write(fmiOut,*) 'a_i', T_i%Particle(1)%width
+!   write(fmiOut,*) 'phase_i', T_i%Phase
+!   write(fmiOut,*) 'S_j',S_ij
+!   write(fmiOut,*) 'SPA1' ,SPA_1(T_i,T_i,S_ij)
+!   write(fmiOut,*) '###############################'
 
    if(glzxfaims)then
      bmis = T_i%StateID
@@ -792,40 +792,40 @@ case( C )
 case( D )
    SOC_ij = FMS_SOCoupling( T_c, is, js, Msi, Msj )
    V = S_ij * SOC_ij
-   write(fmiOut,*) '########DDDD#############'
-   write(fmiOut,*) 'd',T_i%TrajID,T_j%TrajID,T_i%StateID,T_j%StateID
-   write(fmiOut,*) 'Ms', Msi,Msj
-   write(fmiOut,*) 'SOCc',SOC_ij
-   write(fmiOut,*) 'S_j',S_ij
-   write(fmiOut,*) 'SPA0', S_ij * SOC_ij 
-   write(fmiOut,*) 'x_i', T_i%Particle(1)%get_pos(1) 
-   write(fmiOut,*) 'x_j', T_j%Particle(1)%get_pos(1) 
-   write(fmiOut,*) 'p_i', T_i%Particle(1)%get_mom(1)
-   write(fmiOut,*) 'p_j', T_j%Particle(1)%get_mom(1) 
-   write(fmiOut,*) 'a_i', T_i%Particle(1)%width
-   write(fmiOut,*) 'a_j', T_j%Particle(1)%width
-   write(fmiOut,*) 'phase_i', T_i%Phase
-   write(fmiOut,*) 'phase_j', T_j%Phase
    V = V + SPA_1(T_i,T_j,S_ij)
-   !write(fmiOut,*) 'SPA1' ,SPA_1(T_i,T_j,S_ij)
-   write(fmiOut,*) '#########################'
+!   write(fmiOut,*) '########DDDD#############'
+!   write(fmiOut,*) 'd',T_i%TrajID,T_j%TrajID,T_i%StateID,T_j%StateID
+!   write(fmiOut,*) 'Ms', Msi,Msj
+!   write(fmiOut,*) 'SOCc',SOC_ij
+!   write(fmiOut,*) 'S_j',S_ij
+!   write(fmiOut,*) 'SPA0', S_ij * SOC_ij 
+!   write(fmiOut,*) 'x_i', T_i%Particle(1)%get_pos(1) 
+!   write(fmiOut,*) 'x_j', T_j%Particle(1)%get_pos(1) 
+!   write(fmiOut,*) 'p_i', T_i%Particle(1)%get_mom(1)
+!   write(fmiOut,*) 'p_j', T_j%Particle(1)%get_mom(1) 
+!   write(fmiOut,*) 'a_i', T_i%Particle(1)%width
+!   write(fmiOut,*) 'a_j', T_j%Particle(1)%width
+!   write(fmiOut,*) 'phase_i', T_i%Phase
+!   write(fmiOut,*) 'phase_j', T_j%Phase
+!   write(fmiOut,*) 'SPA1' ,SPA_1(T_i,T_j,S_ij)
+!   write(fmiOut,*) '#########################'
 
 case( F )
    V=(0.d0,0.d0)
-   write(fmiOut,*) '########FFFF#############'
-   write(fmiOut,*) 'd',T_i%TrajID,T_j%TrajID,T_i%StateID,T_j%StateID
-   write(fmiOut,*) 'Ms', Msi,Msj
-   write(fmiOut,*) 'S_j',S_ij 
-   write(fmiOut,*) 'x_i', T_i%Particle(1)%get_pos(1) 
-   write(fmiOut,*) 'x_j', T_j%Particle(1)%get_pos(1) 
-   write(fmiOut,*) 'p_i', T_i%Particle(1)%get_mom(1)
-   write(fmiOut,*) 'p_j', T_j%Particle(1)%get_mom(1) 
-   write(fmiOut,*) 'a_i', T_i%Particle(1)%width
-   write(fmiOut,*) 'a_j', T_j%Particle(1)%width
-   write(fmiOut,*) 'phase_i', T_i%Phase
-   write(fmiOut,*) 'phase_j', T_j%Phase
    V = V + SPA_1(T_i,T_j,S_ij)
-   !write(fmiOut,*) 'SPA1' ,SPA_1(T_i,T_j,S_ij)
+!   write(fmiOut,*) '########FFFF#############'
+!   write(fmiOut,*) 'd',T_i%TrajID,T_j%TrajID,T_i%StateID,T_j%StateID
+!   write(fmiOut,*) 'Ms', Msi,Msj
+!   write(fmiOut,*) 'S_j',S_ij 
+!   write(fmiOut,*) 'x_i', T_i%Particle(1)%get_pos(1) 
+!   write(fmiOut,*) 'x_j', T_j%Particle(1)%get_pos(1) 
+!   write(fmiOut,*) 'p_i', T_i%Particle(1)%get_mom(1)
+!   write(fmiOut,*) 'p_j', T_j%Particle(1)%get_mom(1) 
+!   write(fmiOut,*) 'a_i', T_i%Particle(1)%width
+!   write(fmiOut,*) 'a_j', T_j%Particle(1)%width
+!   write(fmiOut,*) 'phase_i', T_i%Phase
+!   write(fmiOut,*) 'phase_j', T_j%Phase
+!   write(fmiOut,*) 'SPA1' ,SPA_1(T_i,T_j,S_ij)
    write(fmiOut,*) '#########################' 
 
 case( G )
@@ -1053,10 +1053,6 @@ if (T1%StateID==T2%StateID)then !for intrastate cases
          dE= -0.35d0*0.03452d0*exp(-0.35d0*x_cent)
       endif
       PotEn = dE*S_ij*roe
-
-      write(fmiOut,*) 'dE', dE
-      write(fmiOut,*) 'roe', roe
-      write(fmiOut,*) 'SPA1', PotEn
 else !for interstate cases
       !Derivative of SO_{I,J}^{Msi,Msj}(X_c) in Eq(11) from Granucci, J. Chem. Phys., 2012, 137, 22A501 
       if ( ((glGrsigma-1.d0) < x_cent ) .and. ( x_cent < (glGrsigma+1.d0) ) ) then
@@ -1083,10 +1079,6 @@ else !for interstate cases
          endif
       endif
       PotEn = dSOC*S_ij*roe
-
-      write(fmiOut,*) 'dS0C', dSOC
-      write(fmiOut,*) 'roe', roe
-      write(fmiOut,*) 'SPA1', PotEn
 endif
 return
 end function SPA_1
