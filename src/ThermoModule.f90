@@ -352,7 +352,7 @@ real(8) :: gamdev
 integer, intent(in) :: ia
 integer j
 real(8) am,e,s,v1,v2,x,y,z
-if(ia.lt.1)pause 'bad argument in gamdev'
+if (ia < 1) error stop "bad argument in gamdev"
 if(ia.lt.6)then
   x=1.
   do 11 j=1,ia
