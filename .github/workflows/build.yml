@@ -130,13 +130,8 @@ jobs:
     - name: Unit tests
       run: make unittest
 
-      # NOTE: We need to disable the SWARM test,
-      # as its numerical output relies on the compiler implementation
-      # of PRNG (random_number subroutine)
     - name: End-to-end tests
-      run: |
-        mv tests/SWARM tests/swarm
-        make test
+      run: make test
 
   tc_build:
     name: TC build (${{ matrix.mpi }})
