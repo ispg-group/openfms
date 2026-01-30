@@ -407,7 +407,8 @@ contains
    !Update NHC forces
    G(1)=akin-dNbeta_inv
    G(2:M)=mNHC_inv(1:M-1)*pNHC(1:M-1)*pNHC(1:M-1)-beta_inv
-
+   
+   !Eqs.35 in Martyna et al. 1996 for the NHC propagator
    do k=1,nc
      do j=1,nys
        dts=w(j)*dt_nc
