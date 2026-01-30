@@ -14,6 +14,7 @@ repos:
     rev: v0.7.5
     hooks:
       - id: fortitude
+        args: ["--fix"]
 
   - repo: local
     hooks:
