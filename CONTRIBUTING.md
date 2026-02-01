@@ -5,7 +5,7 @@ Here's a couple of guidelines that you should keep in mind.
 
 ## Setup your environment
 
-We use tools such as autoformatter (fprettify) and linter (fortitude)
+We use tools such as autoformatter ([fprettify](https://github.com/fortran-lang/fprettify)) and linter ([fortitude](https://github.com/PlasmaFAIR/fortitude/))
 to keep our code nice and tidy. Instead of having the developer to
 install these and run them manually, we use a tool called `prek`
 which does this automatically on every commit.
@@ -16,7 +16,7 @@ To install `prek` and the `configargparse` dependency (needed for `fprettify`) r
 pip install --user prek configargparse
 ```
 
-Then you must run the following in the repository to install prek's (pre-commit hook)[https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks]:
+Then you must run the following in the repository to install prek's [pre-commit hook](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks):
 
 ```
 prek install
@@ -44,7 +44,7 @@ To run only autoformatter
 Autoformat code........................................Passed
 ```
 
-See (prek documentation)[https://prek.j178.dev/] for more details.
+See [prek documentation](https://prek.j178.dev/) for more details.
 
 
 ## Code style
