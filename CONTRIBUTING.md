@@ -53,7 +53,8 @@ Here's a quick summary of our code style that we try to adhere to (especially in
 
  - use `implicit none` everywhere, no exceptions! This is enforced by the compiler in CI.
  - each function/subroutine argument should have the intent attribute.
- - use `real(DefReal)` for real numbers, the `DefReal` constant indicating the kind (precision) is defined in `GlobalModule.f90`
+ - use `real(DefReal)` for real numbers, `integer(DefInt)` for integers and complex(DefComp) for complex numbers.
+   The `DefXXX` constants indicating the kind (precision) are defined in `GlobalModule`.
  - variables and subroutines in modules should be private by default, use `private` attribute,e.g.
 
 ```fortran
@@ -77,7 +78,6 @@ and you don't need to think about it for the most part.
 Here's a quick summary of our formatting style, as it is defined in `.fprettify.rc` config file.
 
  - use 3 spaces for indentation, no tabs.
- - use capital letters only for defined constants (e.g. those from module `mod_const`). We use lower case for everything else.
  - use C-style relational operators (`< > == /=`) instead of the old FORTRAN style (`.gt. .lt.`)
  - comments should start at the same indentation level as the code they are commenting.
     - use an exclamation mark to start a comment
@@ -85,9 +85,7 @@ Here's a quick summary of our formatting style, as it is defined in `.fprettify.
 ## Submitting code changes
 
 Last but not least, to get your code merged to the main repository, please open a Pull Request (PR) on Github.
-If you're not familiar with Pull Requests, take a look [here](https://guides.github.com/activities/hello-world/#pr).
-
-It's super easy, barely an inconvenience! (assuming basic familiarity with Git)
+If you're not familiar with Pull Requests, [take a look here](https://guides.github.com/activities/hello-world/#pr).
 
 ### Inspecting Git history
 
