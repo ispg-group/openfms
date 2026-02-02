@@ -1,4 +1,5 @@
 [![codecov](https://codecov.io/gh/ispg-group/openfms/graph/badge.svg?token=H1IEDF52ZX)](https://codecov.io/gh/ispg-group/openfms)
+[![Fortitude](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/PlasmaFAIR/fortitude/main/docs/assets/badge/v0.json)](https://github.com/PlasmaFAIR/fortitude)
 
 # OpenFMS: ab initio multiple spawning code
 
