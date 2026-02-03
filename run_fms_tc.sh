@@ -30,7 +30,7 @@ fi
 server=tcfms_port$(( ( RANDOM % 10000 ) + 1 ))
 printf "&tc\nserver_name = '%s'\n/\n" "$server" > tc_input
 
-if ! pgrep -f hydra_nameserver; then hydra_nameserver & sleep 1; fi
+if ! pgrep -f hydra_nameserver > /dev/null; then hydra_nameserver & sleep 1; fi
 
 # For MPICH, OpenFabrics interface works in general
 export MPIR_CVAR_CH4_NETMOD=ofi
