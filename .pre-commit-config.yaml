@@ -16,6 +16,12 @@ repos:
       - id: fortitude
         args: ["--fix"]
 
+  - repo: https://github.com/koalaman/shellcheck-precommit
+    rev: v0.11.0
+    hooks:
+      - id: shellcheck
+        files: 'run_fms_tc.sh'
+
   - repo: local
     hooks:
       - id: module-usage

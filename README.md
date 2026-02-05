@@ -35,6 +35,14 @@ To compile MPICH, we recommend using the included `.github/install_mpich.sh` scr
 Note that MPICH version >=4.0 is strongly encouraged as earlier versions
 contained bugs that were affecting the TeraChem interface.
 
+
+### Running simulations using TeraChem interface
+
+The current interface with TeraChem utilizes the MPI protocol
+to connect the OpenFMS and TeraChem processes. It is crucial that both TeraChem and OpenFMS are compiled
+with the same MPI library. Even then, succesfully establishing the connection between the two processes
+might be tricky. We highly recommend using the provided `run_fms_tc.sh` script for this purpose.
+
 ## Development
 
 Please see the [Contribution Guide](CONTRIBUTING.md).
