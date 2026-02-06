@@ -796,7 +796,7 @@ contains
 
          if (glzSPA) then
             V = V + SPA_1(T_i, T_j, S_ij)
- !           write(fmiOut,*) 'SPA1', SPA_1(T_i,T_j,S_ij)
+            !           write(fmiOut,*) 'SPA1', SPA_1(T_i,T_j,S_ij)
          end if
 
 !   write(fmiOut,*) '########DDDD#############'
@@ -1037,7 +1037,7 @@ contains
       real(kind=DefReal) :: x_cent, x_1, x_2, p_1, p_2, sigma_G, alpha_1, alpha_2
       complex(kind=DefComp) :: PotEn, dE, dSOC, roe
 
-      if (GlIMethod.ne.4) then 
+      if (GlIMethod /= 4) then
          call FMS_DieError("SPA1 only available for GAIMS Toy Model")
       end if
 
@@ -1052,7 +1052,7 @@ contains
       ! roe from appendix A of Vanicek, J. Chem. Phys.,2013 139, 034112
       roe = -c1i * (p_1 - p_2) / (4 * (alpha_1))
 
-      if (T1%StateID == T2%StateID) then !for intrastate cases
+      if ((T1%StateID == T2%StateID) .and. (T1%Ms == T2%Ms)) then !for intrastate case A
          !Derivative of potential energy
          if (T1%StateID == 2) then !T
             dE = -0.25d0 * 0.5d0 * exp(-0.25d0 * x_cent) !Derivative of V from Granucci, J. Chem. Phys., 2012, 137, 22A501
@@ -1060,9 +1060,10 @@ contains
             dE = -0.35d0 * 0.03452d0 * exp(-0.35d0 * x_cent)
          end if
          PotEn = dE * S_ij * roe
-
-      else !for interstate cases
-
+      elseif ((T1%StateID == T2%StateID) .and. (T1%Ms /= T2%Ms)) then !for interstate case F
+         dSOC = (0.0, 0.0)
+         PotEn = dSOC * S_ij * roe
+      else !for interstate case D
          !Derivative of SO_{I,J}^{Msi,Msj}(X_c) in Eq(11) from Granucci, J. Chem. Phys., 2012, 137, 22A501
          if (((glGrsigma - 1.d0) < x_cent) .and. (x_cent < (glGrsigma + 1.d0))) then
             sigma_G = 12.d0 * (((x_cent - glGrsigma)**2) / (2.d0**3)) - 3.d0 / 2.d0
