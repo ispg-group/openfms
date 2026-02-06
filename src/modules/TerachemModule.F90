@@ -23,6 +23,10 @@ module TerachemModule
    private
    public :: InitTerachem, tc_finalize, RunTerachem
 
+   ! Sleep interval in miliseconds while waiting for TC calculation to finish.
+   ! For now, this is hardcoded.
+   integer, parameter :: MPI_MILISLEEP = 50
+
 #ifdef TeraChem
    integer, public, save :: newcomm = MPI_COMM_NULL ! Initialized in connect_to_terachem subroutine
 
@@ -487,6 +491,7 @@ contains
       ! TeraChem pitches from: Fms::send in fms.cpp
       ! ------------------------------------------------
 
+      call wait_for_terachem(newcomm)
       write (*, '(a)') 'Receiving data from TeraChem'
 
       !    Receive energies from TC
@@ -750,8 +755,38 @@ contains
 
    end subroutine FMS_CheckOverlap
 
+   subroutine wait_for_terachem(tc_comm)
+      integer, intent(in) :: tc_comm
+      integer :: status(MPI_STATUS_SIZE)
+      integer :: ierr
+      logical :: ready
+
+      if (MPI_MILISLEEP <= 0) return
+
+      ! The idea here is to reduce the CPU usage of MPI_Recv() by taking a brief nap.
+      ! In most MPI implementations, MPI_Recv() is actively polling the other end
+      ! (in this case TeraChem) and consumes a whole CPU core. That's clearly wasteful,
+      ! since we're typically waiting for a long time for the ab initio result.
+      !
+      ! Some implementation provide an option to change this behaviour,
+      ! but I didn't figure out any for MPICH.
+      ! Based according to an answer here:
+      ! http://stackoverflow.com/questions/14560714/probe-seems-to-consume-the-cpu
+
+      ready = .false.
+      ! TODO: we need to somehow make sure that
+      ! we don't wait forever if TeraChem crashes.
+      ! At this moment, this is ensured at the BASH script level.
+      do while (.not. ready)
+         call MPI_IProbe(MPI_ANY_SOURCE, MPI_ANY_TAG, tc_comm, ready, status, ierr)
+         call milisleep(MPI_MILISLEEP)
+      end do
+   end subroutine wait_for_terachem
+
 #else
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Stub routines when FMS is compiled without TeraChem interface
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine InitTerachem(NumParticles, NumStates)
       integer(kind=DefInt), intent(in) :: NumParticles, NumStates
       call FMS_DieError('ERROR: not compiled for use with TeraChem.')
