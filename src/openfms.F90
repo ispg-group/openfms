@@ -40,6 +40,7 @@ program OpenFMS
       FMSWorkingDir(l + 1:) = '/'
    end if
 
+   call get_cmdline()
    ! Start the timer
    call cpu_time(timei)
 
@@ -432,5 +433,40 @@ contains
       deallocate (T1)
 
    end subroutine initialize_bundle
+
+   subroutine get_cmdline()
+      use, intrinsic :: iso_fortran_env, only: output_unit
+      character(len=256) :: arg
+      integer :: i
+
+      i = 0
+      do while (i < command_argument_count())
+
+         i = i + 1
+         call get_command_argument(i, arg)
+
+         select case (arg)
+         case ('-h', '--help')
+            call print_help()
+            stop 0
+         case ('-v', '--version')
+            call print_version(output_unit)
+            stop 0
+         case default
+            call print_help()
+            call FMS_DieError('Invalid command line argument "'//trim(arg)//'"')
+         end select
+
+      end do
+   end subroutine get_cmdline
+
+   subroutine print_help()
+      print '(a)', 'OpenFMS: Ab initio Multiple spawning for the masses'
+      print '(a)', ''
+      print '(a)', 'cmdline options:'
+      print '(a)', ''
+      print '(a)', '  -h, --help       print help and exit'
+      print '(a)', '  -v, --version    print version'
+   end subroutine print_help
 
 end program OpenFMS
