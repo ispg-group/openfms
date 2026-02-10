@@ -75,25 +75,25 @@ bin:
 
 # This is standalone OpenFMS, without external electronic structure
 bin/$(PROGBASE).zero: $(FMSLIB) $(MAKEFILE) bin
-		@rm -f bin/$(PROGBASE).e
+		@rm -f bin/$(PROGBASE)
 		@echo;echo "Linking $(PROGRAM) ..."
 		$(LD) $(FMSLIB) -I$(MODULEDIR) -o $(TARGET) $(LIBS) $(LDFLAGS)
-		@ln -s $(PROGRAM) bin/$(PROGBASE).e
+		@ln -s $(PROGRAM) bin/$(PROGBASE)
 		@echo "done"
 
 # OpenFMS with TeraChem interface
 bin/$(PROGBASE).tc:  $(FMSLIB) $(MAKEFILE) bin
-		@rm -f bin/$(PROGBASE).e
+		@rm -f bin/$(PROGBASE)
 		@echo;echo "Linking $(PROGRAM) ..."
 		$(LD) $(FFLAGS) $(FMSLIB) -o $(TARGET) $(LIBS) $(LDFLAGS)
-		@ln -s $(PROGRAM) bin/$(PROGBASE).e
+		@ln -s $(PROGRAM) bin/$(PROGBASE)
 		@echo "done"
 
 bin/$(PROGBASE).quantics: $(FMSLIB) $(MAKEFILE) bin
-		@rm -f bin/$(PROGBASE).e
+		@rm -f bin/$(PROGBASE)
 		@echo;echo "Linking $(PROGRAM) ..."
 		$(LD) $(FMSLIB) -I$(MODULEDIR) -o $(TARGET) $(LIBS) $(LDFLAGS) -J$(QUANTICS_OBJ)/include -L$(QUANTICS_DIR)/bin/dyn_libs -lsrf -lusrf -lsqlite3 -Wl,-rpath=$(QUANTICS_DIR)/bin/dyn_libs
-		@ln -s $(PROGRAM) bin/$(PROGBASE).e
+		@ln -s $(PROGRAM) bin/$(PROGBASE)
 		@echo "done"
 
 # End-To-End tests
