@@ -20,5 +20,6 @@ $FMSEXE --help >> fms.out 2>> err.out || echo "ERROR when printing help" >> erro
 $FMSEXE -v >> fms.out 2>> err.out || echo "ERROR when printing version" >> error.out
 $FMSEXE --version >> fms.out 2>> err.out || echo "ERROR when printing version" >> error.out
 
-# Filter out "STOP 0" from stderr, done by gfortran
-grep -v STOP err.out > errors.dat
+# Filter out "STOP X" or "X" from stderr, where X is the return code
+# This hack is tested for gfortran and intel compilers
+grep -E -v '^(STOP )?[01]$' err.out > errors.dat
