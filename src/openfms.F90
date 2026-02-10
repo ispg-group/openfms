@@ -449,7 +449,7 @@ contains
          case ('-h', '--help')
             call print_help()
             stop 0
-         case ('-V', '--version')
+         case ('-v', '--version')
             call print_version(output_unit)
             stop 0
          case default
