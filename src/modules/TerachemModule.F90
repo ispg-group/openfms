@@ -56,10 +56,13 @@ module TerachemModule
 contains
 
 #ifdef TeraChem
-   subroutine InitTerachem(NumParticles, NumStates)
+   subroutine InitTerachem(NumParticles, NumStates, tc_port_name)
       use GlobalModule, only: BohrToAng
       use ElecStrucModule
       integer(kind=DefInt), intent(in) :: NumParticles, NumStates
+
+      integer(kind=DefInt), intent(in) :: NumParticles, NumStates
+      character(len=*), intent(in) :: tc_port_name
 
       integer, parameter :: CLEN = 128
       integer(kind=DefInt) :: natoms, nqmmm
@@ -91,7 +94,7 @@ contains
       ! Initialization: Connect to "terachem_port", set
       ! newcomm (global), send relevant namelist variables.
       ! ---------------------------------------------------
-      call connect_to_terachem(server_name)
+      call connect_to_terachem(server_name, tc_port_name)
 
       ! -------------------
       ! Send job info to TC
@@ -225,13 +228,13 @@ contains
    end function get_server_name
 
    ! Connect to the TeraChem server.
-   subroutine connect_to_terachem(server_name)
+   subroutine connect_to_terachem(server_name, port_name)
       use mpi, only: MPI_MAX_PORT_NAME, MPI_Init, &
                      MPI_Comm_size, MPI_COMM_CONNECT, MPI_INFO_NULL
 
       character(len=*), intent(in) :: server_name
       integer :: nproc
-      character(len=MPI_MAX_PORT_NAME) :: port_name
+      character(len=*) :: port_name
       integer :: ierr
 
       write (*, *) 'Terachem MPI Initialization'
@@ -253,7 +256,9 @@ contains
       ! Look for server_name, get port name
       ! After 60 seconds, exit if not found
       ! -----------------------------------
-      call lookup_port_via_nameserver(server_name, port_name)
+      if (trim(port_name) == '') then
+         call lookup_port_via_nameserver(server_name, port_name)
+      end if
 
       ! Establish new communicator via port name
       call MPI_COMM_CONNECT(port_name, MPI_INFO_NULL, 0, MPI_COMM_WORLD, newcomm, ierr)
@@ -801,8 +806,9 @@ contains
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Stub routines when FMS is compiled without TeraChem interface
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   subroutine InitTerachem(NumParticles, NumStates)
+   subroutine InitTerachem(NumParticles, NumStates, tc_port_name)
       integer(kind=DefInt), intent(in) :: NumParticles, NumStates
+      character(len=*) :: tc_port_name
       call FMS_DieError('ERROR: not compiled for use with TeraChem.')
    end subroutine InitTerachem
 

@@ -27,6 +27,7 @@ program OpenFMS
    integer(kind=DefInt) :: NumTraj, l
    integer(kind=DefInt) :: numparticles, numstates
    real(kind=DefReal) :: simulationtime, dt
+   character(len=256) :: tc_port_name
    real(8) :: RndNum
 
 !-----------------------------------------------------------------------
@@ -40,7 +41,8 @@ program OpenFMS
       FMSWorkingDir(l + 1:) = '/'
    end if
 
-   call get_cmdline()
+   tc_port_name = ''
+   call get_cmdline(tc_port_name)
    ! Start the timer
    call cpu_time(timei)
 
@@ -77,7 +79,7 @@ program OpenFMS
 
    ! Here we make the first call to TeraChem et al!
    ! Must be separate from FMS_ESInit to prevent circular module dependency
-   call initialize_interface(NumParticles, NumStates)
+   call initialize_interface(NumParticles, NumStates, tc_port_name)
 
    ! Allocate memory structures, read initial geometry
    call initialize_bundle(Bundle, NumTraj, NumParticles, NumStates, inInitState)
@@ -326,17 +328,18 @@ contains
       flush (fmiOut)
    end subroutine print_simulation_info
 
-   subroutine initialize_interface(NumParticles, NumStates)
+   subroutine initialize_interface(NumParticles, NumStates, tc_port_name)
       use GlobalModule, only: gliModel, TEMPLATE, TC
       use TemplateModule, only: FMS_TemplateInit
       use TerachemModule, only: InitTerachem
       integer, intent(in) :: NumParticles, NumStates
+      character(len=*), intent(in) :: tc_port_name
 
       select case (gliModel)
       case (TEMPLATE)
          call FMS_TemplateInit()
       case (TC)
-         call InitTerachem(NumParticles, NumStates)
+         call InitTerachem(NumParticles, NumStates, tc_port_name)
       case default
          continue
       end select
@@ -438,8 +441,9 @@ contains
 
    end subroutine initialize_bundle
 
-   subroutine get_cmdline()
+   subroutine get_cmdline(tc_port_name)
       use, intrinsic :: iso_fortran_env, only: output_unit
+      character(len=*), intent(inout) :: tc_port_name
       character(len=256) :: arg
       integer :: i
 
@@ -456,6 +460,12 @@ contains
          case ('-v', '--version')
             call print_version(output_unit)
             stop 0
+         case ('--tc-port-name')
+            i = i + 1
+            call get_command_argument(i, tc_port_name)
+            if (trim(tc_port_name) == '') then
+               call FMS_DieError('Empty --tc-port-name argument. Provide port name of the TeraChem server')
+            end if
          case default
             call print_help()
             call FMS_DieError('Invalid command line argument "'//trim(arg)//'"')

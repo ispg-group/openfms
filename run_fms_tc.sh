@@ -27,21 +27,33 @@ if ! which "$FMSEXE" > /dev/null; then
 fi
 
 # Generate random port number to avoid conflicts
-server=tcfms_port$(( ( RANDOM % 10000 ) + 1 ))
-printf "&tc\nserver_name = '%s'\n/\n" "$server" > tc_input
-
-if ! pgrep -f hydra_nameserver > /dev/null; then hydra_nameserver & sleep 1; fi
+tc_server_name=tcfms_port$(( ( RANDOM % 10000 ) + 1 ))
+printf "&tc\nserver_name = '%s'\n/\n" "$tc_server_name" > tc_input
 
 # For MPICH, OpenFabrics interface works in general
 export MPIR_CVAR_CH4_NETMOD=ofi
 
+TCOUT=tc.out
 # shellcheck disable=SC2086
-$MPIRUN $MPI_ADDITIONAL_ARGUMENTS -n 1 "$TCEXE" -g "$GPUS" -U2 --MPIPort="$server" &> tc.out &
+$MPIRUN $MPI_ADDITIONAL_ARGUMENTS -n 1 "$TCEXE" -g "$GPUS" -U2 --MPIPort="$tc_server_name" &> $TCOUT &
 PID_TC=$!
-sleep 2 # grace time for terachem initialization (doesn't involve GPU initialization so should be fast)
+
+# Grep port name from TC output
+maxiter=10
+i=0
+while [[ -z ${tc_port} ]]; do
+  if [[ $i -gt $maxiter ]];then
+    echo "ERROR: Could not extract port name from $TCOUT" >&2
+    kill $PID_TC; wait $PID_TC; RETURN1=$?; echo "TC stopped ($RETURN1)";
+    exit 1
+  fi
+  sleep 1
+  tc_port=$(awk '/port_name:/ {print $(NF);exit}' $TCOUT)
+  (( ++i ))
+done
 
 # shellcheck disable=SC2086
-$MPIRUN $MPI_ADDITIONAL_ARGUMENTS -n 1 "$FMSEXE" &> fms.out &
+$MPIRUN $MPI_ADDITIONAL_ARGUMENTS -n 1 "$FMSEXE" --tc-port-name $tc_port &> fms.out &
 PID_FMS=$!
 
 echo "Both OpenFMS(pid=$PID_FMS) and TeraChem(pid=$PID_TC) have started, waiting for them to finish..."
