@@ -74,6 +74,9 @@ contains
       character(len=1) :: txt
       logical :: GeomInAngs
       integer :: iunit
+      character(len=:), allocatable :: tc_options_file
+      logical :: file_exists
+      character(len=500) :: errmsg
 
       ! Setup on first program call
       write (fmiOut, *) '    >>>> FMS / TC <<<<'
@@ -94,8 +97,17 @@ contains
       write (dbuffer(:, 1), '(a,/,E23.16)') 'coupthre', gldMaxEDiff
       write (dbuffer(:, 2), '(a,/,i0)') 'fmsnumstates', NumStates
 
-      ! Read the "misc_options" file and send the contents to TeraChem
-      open (newunit=iunit, file="misc_options")
+      ! Read the "tc_options" file and send its contents to TeraChem
+      ! If `tc_options` does not exist, try `misc_options` for backward compatibility
+      tc_options_file = "tc_options"
+      inquire (file=tc_options_file, exist=file_exists)
+      if (.not. file_exists) then
+         tc_options_file = "misc_options"
+      end if
+      open (newunit=iunit, file=tc_options_file, status="old", action="read", iostat=ierr, iomsg=errmsg)
+      if (ierr /= 0) then
+         call FMS_DieError(trim(errmsg))
+      end if
 
       noptions = 2
       do
@@ -115,8 +127,7 @@ contains
 !   Mpi::init in mpi_base.cpp on the TeraChem side.
 
 !   Send input parameters to TC (the startfile)
-      call MPI_Send(dbuffer, 2 * clen * size(dbuffer, 2), MPI_CHARACTER, 0, 2, &
-                    newcomm, ierr)
+      call MPI_Send(dbuffer, 2 * clen * size(dbuffer, 2), MPI_CHARACTER, 0, 2, newcomm, ierr)
 
       ! ---------------------------------------------
       ! Begin sending the inital geometry to terachem
