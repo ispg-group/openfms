@@ -1490,8 +1490,8 @@ contains
 !     Get forces
       if (eszAnalyticForces) then
          call FMS_ReadOutput(T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, :), T1%StateID, 'template.grad.read')
-         T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, :) = -tpigradsign * &
-                                                            T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, :) !minus sign because DerivMat storees -force
+         ! minus sign because DerivMat stores -force
+         T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, :) = -tpigradsign * T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, :)
          T1%ESFlags%zDerivCurrent(T1%StateID, T1%StateID) = .true.
       end if
 

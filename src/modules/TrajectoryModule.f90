@@ -79,25 +79,26 @@ module TrajectoryModule
       real(kind=DefReal) :: ModPot, & !< External potential, for SMD, etc.
                             MMPot !< Potential of MM system, for QM/MM runs
 
-      real(kind=DefReal), allocatable :: ElecPhase(:), & !< Electronic phase
-                                         PotEn(:), & !< Potential Energy for given nuclear configuration.
-                                         OldPotEn(:), & !< Potential Energy from previous timestep.
-                                         Dipole(:, :), & !< Dipole of each state
-                                         QMRR(:), & !< Quadruple moment
-                                         DerivMat(:, :, :), & !< holds derivative matrix (diagonals=-force, off-diagonals=coupling)
-                                         ModForce(:), & !< External forces, for SMD, etc.
-                                         MMForce(:), & !< Forces from MM sytem, for QM/MM runs
-                                         OldOrbitals(:, :), & !< Used to ensure continuity of phase
-                                         OldCIVecs(:, :), & !< The CI vectors obtained at the last time  step.  We will also use these to ensure continuity of
-                                         OverlapMatrix(:, :), & !< Overlap matrix between old and new wavefunctions
-                                         OldBlob(:), & !< Sent back and forth
-                                         TransDipole(:, :), & !< Transition dipole between various states at current geom
-                                         TransDipolexf(:), & !< xf added
-                                         !           MSPT2S(:,:),  &      !< CASPT2 overlap matrix
-                                         !           MSPT2C(:,:),  &      !< MSPT2 Mixing Coefficient
-                                         !           OldMSPT2S(:,:),   &  !< CASPT2 overlap last timestep
-                                         !           Need this one for restart file
-                                         OldMSPT2C(:, :) !< MSPT2 Mixing Coeff last timestep
+      real(kind=DefReal), allocatable :: &
+         ElecPhase(:), & !< Electronic phase
+         PotEn(:), & !< Potential Energy for given nuclear configuration.
+         OldPotEn(:), & !< Potential Energy from previous timestep.
+         Dipole(:, :), & !< Dipole of each state
+         QMRR(:), & !< Quadruple moment
+         DerivMat(:, :, :), & !< holds derivative matrix (diagonals=-force, off-diagonals=coupling)
+         ModForce(:), & !< External forces, for SMD, etc.
+         MMForce(:), & !< Forces from MM sytem, for QM/MM runs
+         OldOrbitals(:, :), & !< Used to ensure continuity of phase
+         OldCIVecs(:, :), & !< The CI vectors obtained at the last time  step.
+         OverlapMatrix(:, :), & !< Overlap matrix between old and new wavefunctions
+         OldBlob(:), & !< Sent back and forth
+         TransDipole(:, :), & !< Transition dipole between various states at current geom
+         TransDipolexf(:), & !< xf added
+         !           MSPT2S(:,:),  &      !< CASPT2 overlap matrix
+         !           MSPT2C(:,:),  &      !< MSPT2 Mixing Coefficient
+         !           OldMSPT2S(:,:),   &  !< CASPT2 overlap last timestep
+         !           Need this one for restart file
+         OldMSPT2C(:, :) !< MSPT2 Mixing Coeff last timestep
 
       complex(kind=DefComp), allocatable :: SOMat(:, :, :, :) !< Spin Orbit Matrix (i,j,Ms)
 
