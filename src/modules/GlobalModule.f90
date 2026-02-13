@@ -20,34 +20,30 @@ module GlobalModule
    integer :: idefault
    integer, parameter :: DefInt = kind(idefault) !<Default size of integer in bytes - allows for compiler flags to change this.
    integer, parameter :: DefInt4 = 4 !<4 byte integer
-   integer, parameter :: DefInt8 = 8 !<8 byte integer
 
-   double precision :: rdefault
-   integer(kind=DefInt), parameter :: DefReal = kind(rdefault) !<Default size of real in bytes - allows for compiler flags to change this.
-   integer(kind=DefInt), parameter :: DefReal4 = 4 !< 4 byte real
-   integer(kind=DefInt), parameter :: DefShort = 2 !< Default size of short integer in bytes
-!      integer (kind=DefInt),parameter::DefIntBlas=4 !< Default size of integer in bytes for BLAS ! may need to match to system requirement (for fms_ch)
-   integer(kind=DefInt), parameter :: DefIntBlas = DefInt !< Better to set blas integers to be default length. We can eventually clean up and remove DefIntBlas.
+   double precision :: rdefault ! (allows for compiler flags to change this)
+   integer(kind=DefInt), parameter :: DefReal = kind(rdefault) !<Default size of real in bytes
+   ! TODO: Remove defintblas
+   ! integer, parameter::DefIntBlas=4 !< Integer size for BLAS ! may need to match to system requirement (for fms_ch)
+   integer(kind=DefInt), parameter :: DefIntBlas = DefInt !< Better to set blas integers to be default length.
    integer(kind=DefInt), parameter :: DefComp = 8 !< Default size of complex in bytes
-   integer(kind=DefInt), parameter :: ShReal = 4 !< Default size of short real in bytes
    integer(kind=DefInt), parameter :: MaxTrajLimit = 1000 !< Maximum number of trajectories; 0 for no limit
 
 ! Physical Constants in AU and Unit Conversion Factors
-   real(kind=DefReal), parameter :: kcalPMtoH = 0.0015952353d0 !< Conversion factor from kilocalorie per mole to Hartree (atomic unit of energy)
+   real(kind=DefReal), parameter :: kcalPMtoH = 0.0015952353d0 !< Conversion factor from kilocalorie per mole to Hartree
    real(kind=DefReal), parameter :: FsToAU = 41.34137221718d0 !< Conversion factor from femtosecond to atomic unit of time
    real(kind=DefReal), parameter :: BohrToAng = 0.529177249d0 !< Conversion factor from bohr (atomic unit of distance) to Angstrom
-   real(kind=DefReal), parameter :: eVToH = 1.0 / 27.2113962d0 !< Conversion factor from electron volt to Hartree (atomic unit of energy)
+   real(kind=DefReal), parameter :: eVToH = 1.0 / 27.2113962d0 !< Conversion factor from electron volt to Hartree (a.u. of energy)
    real(kind=DefReal), parameter :: Pi = 3.141592653589793
    real(kind=DefReal), parameter :: d2 = 2.0 !< Floating point 2.0
    real(kind=DefReal), parameter :: dp5 = 0.5 !< Floating point 0.5
    real(kind=DefReal), parameter :: d1 = 1.0 !< Floating point one
    real(kind=DefReal), parameter :: d0 = 0.0 !< Floating point zero
    real(kind=DefReal), parameter :: FPZero = 1.0d-10 !< Floating point zero; an approximation to machine epsilon
-   real(kind=DefReal), parameter :: FPInfinity = 1.0d+100 !< Floating point infinity; an approximation to largest machine-representable number
-   real(kind=DefReal), parameter :: CMToAu = 0.000004556 !< Conversion factor from wavenumber to Hartree (atomic unit of energy)
-   real(kind=DefReal), parameter :: MassToAu = 1822.887 !< Conversion factor from atomic mass unit to mass of electron (atomic unit of mass)
-   real(kind=DefReal), parameter :: BoltzK = 3.16681520371153d-6 !< Conversion factor from Kelvin to Hartree (atomic unit of energy)
-   real(kind=DefReal), parameter :: DegToAu = BoltzK !< Conversion factor from degrees Celsius to Hartree (atomic unit of energy)
+   real(kind=DefReal), parameter :: CMToAu = 0.000004556 !< Conversion factor from wavenumber to Hartree (a.u. of energy)
+   real(kind=DefReal), parameter :: MassToAu = 1822.887 !< Conversion factor from atomic mass unit to mass of electron (au of mass)
+   real(kind=DefReal), parameter :: BoltzK = 3.16681520371153d-6 !< Conversion factor from Kelvin to Hartree (a.u.)
+   real(kind=DefReal), parameter :: DegToAu = BoltzK !< Conversion factor from degrees Celsius to Hartree
    integer(kind=DefInt), parameter :: i0 = 0 !< Integer zero
    integer(kind=DefInt4), parameter :: i4zero = 0 !< 4 byte Integer zero (used to call fms_ranb)
    complex(kind=DefComp), parameter :: c1i = (0.0, 1.0) !< Complex imaginary unit
