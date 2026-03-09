@@ -6,6 +6,5 @@ subroutine print_version(unit)
    ! GIT_VER is defined in Makefile
    character(len=*), parameter :: GIT_COMMIT = GIT_VER
 
-   write (unit, *) 'version: '//FMS_VERSION
-   write (unit, *) 'git commit: '//trim(GIT_COMMIT)
+   write (unit, '(a)') 'OpenFMS '//FMS_VERSION//' '//trim(GIT_COMMIT)
 end subroutine print_version

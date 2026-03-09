@@ -23,6 +23,10 @@ module TerachemModule
    private
    public :: InitTerachem, tc_finalize, RunTerachem
 
+   ! Sleep interval in miliseconds while waiting for TC calculation to finish.
+   ! For now, this is hardcoded.
+   integer, parameter :: MPI_MILISLEEP = 50
+
 #ifdef TeraChem
    integer, public, save :: newcomm = MPI_COMM_NULL ! Initialized in connect_to_terachem subroutine
 
@@ -70,6 +74,9 @@ contains
       character(len=1) :: txt
       logical :: GeomInAngs
       integer :: iunit
+      character(len=:), allocatable :: tc_options_file
+      logical :: file_exists
+      character(len=500) :: errmsg
 
       ! Setup on first program call
       write (fmiOut, *) '    >>>> FMS / TC <<<<'
@@ -90,8 +97,17 @@ contains
       write (dbuffer(:, 1), '(a,/,E23.16)') 'coupthre', gldMaxEDiff
       write (dbuffer(:, 2), '(a,/,i0)') 'fmsnumstates', NumStates
 
-      ! Read the "misc_options" file and send the contents to TeraChem
-      open (newunit=iunit, file="misc_options")
+      ! Read the "tc_options" file and send its contents to TeraChem
+      ! If `tc_options` does not exist, try `misc_options` for backward compatibility
+      tc_options_file = "tc_options"
+      inquire (file=tc_options_file, exist=file_exists)
+      if (.not. file_exists) then
+         tc_options_file = "misc_options"
+      end if
+      open (newunit=iunit, file=tc_options_file, status="old", action="read", iostat=ierr, iomsg=errmsg)
+      if (ierr /= 0) then
+         call FMS_DieError(trim(errmsg))
+      end if
 
       noptions = 2
       do
@@ -111,8 +127,7 @@ contains
 !   Mpi::init in mpi_base.cpp on the TeraChem side.
 
 !   Send input parameters to TC (the startfile)
-      call MPI_Send(dbuffer, 2 * clen * size(dbuffer, 2), MPI_CHARACTER, 0, 2, &
-                    newcomm, ierr)
+      call MPI_Send(dbuffer, 2 * clen * size(dbuffer, 2), MPI_CHARACTER, 0, 2, newcomm, ierr)
 
       ! ---------------------------------------------
       ! Begin sending the inital geometry to terachem
@@ -487,6 +502,7 @@ contains
       ! TeraChem pitches from: Fms::send in fms.cpp
       ! ------------------------------------------------
 
+      call wait_for_terachem(newcomm)
       write (*, '(a)') 'Receiving data from TeraChem'
 
       !    Receive energies from TC
@@ -750,8 +766,38 @@ contains
 
    end subroutine FMS_CheckOverlap
 
+   subroutine wait_for_terachem(tc_comm)
+      integer, intent(in) :: tc_comm
+      integer :: status(MPI_STATUS_SIZE)
+      integer :: ierr
+      logical :: ready
+
+      if (MPI_MILISLEEP <= 0) return
+
+      ! The idea here is to reduce the CPU usage of MPI_Recv() by taking a brief nap.
+      ! In most MPI implementations, MPI_Recv() is actively polling the other end
+      ! (in this case TeraChem) and consumes a whole CPU core. That's clearly wasteful,
+      ! since we're typically waiting for a long time for the ab initio result.
+      !
+      ! Some implementation provide an option to change this behaviour,
+      ! but I didn't figure out any for MPICH.
+      ! Based according to an answer here:
+      ! http://stackoverflow.com/questions/14560714/probe-seems-to-consume-the-cpu
+
+      ready = .false.
+      ! TODO: we need to somehow make sure that
+      ! we don't wait forever if TeraChem crashes.
+      ! At this moment, this is ensured at the BASH script level.
+      do while (.not. ready)
+         call MPI_IProbe(MPI_ANY_SOURCE, MPI_ANY_TAG, tc_comm, ready, status, ierr)
+         call milisleep(MPI_MILISLEEP)
+      end do
+   end subroutine wait_for_terachem
+
 #else
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Stub routines when FMS is compiled without TeraChem interface
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine InitTerachem(NumParticles, NumStates)
       integer(kind=DefInt), intent(in) :: NumParticles, NumStates
       call FMS_DieError('ERROR: not compiled for use with TeraChem.')
