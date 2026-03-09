@@ -706,19 +706,13 @@ contains
       case (A)
          V = FMS_PotentialT(T_i)
 
-         if (glzSPA) then
-            V = V + SPA_1(T_i, T_i, S_ij)
-!            write(fmiOut,*) 'SPA1', SPA_1(T_i,T_i,S_ij)
+         if (glzSPA_1Dmodel) then
+            V = V + SPA1_1Dmodel(T_i, T_i, S_ij)
          end if
 
 !   write(fmiOut,*) '#########AAAAAAAAAAA###########'
-!   write(fmiOut,*) 'd',T_i%TrajID,T_i%StateID
-!   write(fmiOut,*) 'SPA0', FMS_PotentialT( T_i )
-!   write(fmiOut,*) 'x_i', T_i%Particle(1)%get_pos(1)
-!   write(fmiOut,*) 'p_i', T_i%Particle(1)%get_mom(1)
-!   write(fmiOut,*) 'a_i', T_i%Particle(1)%width
-!   write(fmiOut,*) 'phase_i', T_i%Phase
-!   write(fmiOut,*) 'S_j',S_ij
+!   write(fmiOut,*) T_i%TrajID,T_i%StateID
+!   write(fmiOut,*) FMS_PotentialT( T_i )
 !   write(fmiOut,*) '###############################'
 
          if (glzxfaims) then
@@ -794,48 +788,23 @@ contains
          SOC_ij = FMS_SOCoupling(T_c, is, js, Msi, Msj)
          V = S_ij * SOC_ij
 
-         if (glzSPA) then
-            V = V + SPA_1(T_i, T_j, S_ij)
-            !           write(fmiOut,*) 'SPA1', SPA_1(T_i,T_j,S_ij)
+         if (glzSPA_1Dmodel) then
+            V = V + SPA1_1Dmodel(T_i, T_j, S_ij)
          end if
-
 !   write(fmiOut,*) '########DDDD#############'
 !   write(fmiOut,*) 'd',T_i%TrajID,T_j%TrajID,T_i%StateID,T_j%StateID
-!   write(fmiOut,*) 'Ms', Msi,Msj
+!   write(fmiOut,*) Msi,Msj
 !   write(fmiOut,*) 'SOCc',SOC_ij
-!   write(fmiOut,*) 'S_j',S_ij
-!   write(fmiOut,*) 'SPA0', S_ij * SOC_ij
-!   write(fmiOut,*) 'x_i', T_i%Particle(1)%get_pos(1)
-!   write(fmiOut,*) 'x_j', T_j%Particle(1)%get_pos(1)
-!   write(fmiOut,*) 'p_i', T_i%Particle(1)%get_mom(1)
-!   write(fmiOut,*) 'p_j', T_j%Particle(1)%get_mom(1)
-!   write(fmiOut,*) 'a_i', T_i%Particle(1)%width
-!   write(fmiOut,*) 'a_j', T_j%Particle(1)%width
-!   write(fmiOut,*) 'phase_i', T_i%Phase
-!   write(fmiOut,*) 'phase_j', T_j%Phase
+!   write(fmiOut,*) S_ij,V
+!   write(fmiOut,*) FMS_PotentialT( T_i ),FMS_PotentialT( T_j, is )
 !   write(fmiOut,*) '#########################'
 
       case (F)
          V = (0.d0, 0.d0)
 
-         if (glzSPA) then
-            V = V + SPA_1(T_i, T_j, S_ij)
-!            write(fmiOut,*) 'SPA1', SPA_1(T_i,T_j,S_ij)
+         if (glzSPA_1Dmodel) then
+            V = V + SPA1_1Dmodel(T_i, T_j, S_ij)
          end if
-
-!   write(fmiOut,*) '########FFFF#############'
-!   write(fmiOut,*) 'd',T_i%TrajID,T_j%TrajID,T_i%StateID,T_j%StateID
-!   write(fmiOut,*) 'Ms', Msi,Msj
-!   write(fmiOut,*) 'S_j',S_ij
-!   write(fmiOut,*) 'x_i', T_i%Particle(1)%get_pos(1)
-!   write(fmiOut,*) 'x_j', T_j%Particle(1)%get_pos(1)
-!   write(fmiOut,*) 'p_i', T_i%Particle(1)%get_mom(1)
-!   write(fmiOut,*) 'p_j', T_j%Particle(1)%get_mom(1)
-!   write(fmiOut,*) 'a_i', T_i%Particle(1)%width
-!   write(fmiOut,*) 'a_j', T_j%Particle(1)%width
-!   write(fmiOut,*) 'phase_i', T_i%Phase
-!   write(fmiOut,*) 'phase_j', T_j%Phase
-!   write (fmiOut, *) '#########################'
 
       case (G)
          if (Msi /= Msj) then
@@ -1030,15 +999,35 @@ contains
 
    end function nuc_dip_particlexf
 
-   ! Calculates the Saddle Point Approximation 1st order term
-   function SPA_1(T1, T2, S_ij) result(PotEn)
+! Calculates the Saddle Point Approximation 1st order term for 1D toy model (Granucci, J. Chem. Phys., 2012, 137, 22A501)
+! Analytical Computation only valid for specific model only
+! SPA 1st order term:
+!    Interstate:
+!        dSO_{I,J}^{Msi,Msj}(X_c)/dx * < X_i^I | x-x_c | X_j^I >
+!
+!        (r_sigma-1 < x_c < r_sigma +1) :
+!                  dSO_{I,J}^{Msi,Msj}(X_c)/dx = 12 ((x_c-r_sigma)^2)/dr_sigma^3 - 3/dr_sigma
+!         otherwise:
+!                  dSO_{I,J}^{Msi,Msj}(X_c)/dx = 0
+!
+!    Intrastate:
+!        dV(X_c)/dx * < X_i^I | x-x_c | X_j^I >
+!
+!        Singlet state:
+!                  dV(X_c)/dx =  -a_1*alpha_1*e^(-alpha_1*x_c)
+!        Triplet state:
+!                  dV(X_c)/dx =  -a_2*alpha_2*e^(-alpha_2*x_c)
+!
+!  < X_i^I | x-x_c | X_j^I > = -i*(p_1-p_2)/4*alpha_I * < X_i^I | X_j^I > (Vanicek, J. Chem. Phys.,2013 139, 034112)
+
+   function SPA1_1Dmodel(T1, T2, S_ij) result(PotEn)
       type(T_Trajectory), intent(in) :: T1, T2
       complex(kind=DefComp), intent(in) :: S_ij
       real(kind=DefReal) :: x_cent, x_1, x_2, p_1, p_2, sigma_G, alpha_1, alpha_2
       complex(kind=DefComp) :: PotEn, dE, dSOC, roe
 
-      if (GlIMethod /= 4) then
-         call FMS_DieError("SPA1 only available for GAIMS Toy Model")
+      if (glIMethod /= 4) then
+         call FMS_DieError("SPA1 only available for GAIMS 1D Toy Model")
       end if
 
       x_1 = T1%Particle(1)%get_pos(1)
@@ -1091,6 +1080,6 @@ contains
          PotEn = dSOC * S_ij * roe
       end if
 
-   end function SPA_1
+   end function SPA1_1Dmodel
 
 end module OverlapModule
