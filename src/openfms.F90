@@ -12,7 +12,8 @@ program OpenFMS
    use FMSModule
    use GlobalModule, only: DefInt, DefReal, fmiOut, &
                            FMS_DeleteFile, FmsWorkingDir, timei, FMS_DieError, &
-                           fmzWriteEveryStep, gldTimeStep, glzMinSearch, NSing, NTrip
+                           fmzWriteEveryStep, gldTimeStep, glzMinSearch, NSing, NTrip, &
+                           NumInitBasis
    use RandomModule, only: FMS_ranb, initialize_fortran_prng
    use BundleModule
    use BundleCalcsModule, only: FMS_UpdateBundle
@@ -407,15 +408,25 @@ contains
 
       call FMS_ParticleTypes(T1(1))
 
+!     Initialising amplitudes depending on number of initial TBFs
       T1%StateID = InitialState
       DMTemp = 1.0
-      T1(1)%Amplitude = DMTemp
-      do ITraj = 2, NumTraj
-         T1(ITraj) = T1(1)
-         ! DH: This seems weird???
-!        T1(ITraj)%Amplitude=0.0
-         T1(ITraj)%Amplitude = DMTemp
-      end do
+      if (NumInitBasis > 1) then
+
+         T1(1)%Amplitude=DMTemp
+         !T1(1)%Amplitude=DMTemp / NumInitBasis        ! for equally distributing initial amp
+
+         do ITraj = 2, NumTraj
+            T1(ITraj) = T1(1)
+            ! DH: This seems weird???
+            T1(ITraj)%Amplitude=0.0 
+!           T1(ITraj)%Amplitude=DMTemp / NumInitBasis  ! for equally distributing initial amp
+!           T1(ITraj)%Amplitude = DMTemp
+         end do
+
+      else
+         T1(1)%Amplitude = DMTemp
+      endif
 
 !     Check if we are initialising on a triplet state
       if (NTrip /= 0) then
