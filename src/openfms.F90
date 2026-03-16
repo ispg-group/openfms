@@ -16,7 +16,7 @@ program OpenFMS
                            NumInitBasis
    use RandomModule, only: FMS_ranb, initialize_fortran_prng
    use BundleModule
-   use BundleCalcsModule, only: FMS_UpdateBundle
+   use BundleCalcsModule, only: FMS_UpdateBundle, FMS_Norm
    use BundleIOModule, only: FMS_Output
    use InitialModule, only: iniRndSeed, inInitState
    use ElecStrucModule, only: FMS_ESInit
@@ -442,6 +442,11 @@ contains
          call B1%add_traj(T1(iTraj))
       end do
 
+      write (fmiout, *) "Trajectories in initially in Bundle: (after adding them)", B1%NumTraj
+      write (fmiout, *) "And their IDs: "
+      write (fmiout, *) "TrajID 1:", B1%Trajectory(1)%TrajID
+      write (fmiout, *) "TrajID 2:", B1%Trajectory(2)%TrajID
+
       do IParticle = 1, NumParticles
          call Particle(IParticle)%destroy()
       end do
@@ -451,6 +456,16 @@ contains
          call T1(ITraj)%destroy()
       end do
       deallocate (T1)
+
+      write (fmiout, *) "Trajectories in initially in Bundle: (after clean up step)", B1%NumTraj
+      write (fmiout, *) "And their IDs: "
+      write (fmiout, *) "TrajID 1:", B1%Trajectory(1)%TrajID
+      write (fmiout, *) "TrajID 2:", B1%Trajectory(2)%TrajID
+      write (fmiout, *) "And their Amplitudes: "
+      write (fmiout, *) "TrajID 1:", B1%Trajectory(1)%Amplitude
+      write (fmiout, *) "TrajID 2:", B1%Trajectory(2)%Amplitude
+      write (fmiout, *) "Norm of the Bundle: "
+      write (fmiout, *) FMS_Norm(B1)
 
    end subroutine initialize_bundle
 
