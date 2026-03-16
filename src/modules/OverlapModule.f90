@@ -672,6 +672,8 @@ contains
             ! check that the correct centroid was passed
 !    cent_match = (it==ic .and. jt==jc) .or. (jt==ic .and. it==jc)
             cent_match = (CBFi == ic .and. CBFj == jc) .or. (CBFj == ic .and. CBFi == jc)
+            write (fmiout, *) "(CBFij == ijc .and. CBFji == jic)", "CBFi, ic, CBFj, jc", CBFi, ic, CBFj, jc
+            flush (fmiout)
 !    cent_match = (i==ic .and. j==jc) .or. (j==ic .and. i==jc)
             if (.not. cent_match) then
                call FMS_DieError('overlap_V_trajectory :: centroids dont match')
