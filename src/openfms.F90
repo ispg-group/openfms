@@ -12,7 +12,7 @@ program OpenFMS
    use FMSModule
    use GlobalModule, only: DefInt, DefReal, fmiOut, &
                            FMS_DeleteFile, FmsWorkingDir, timei, FMS_DieError, &
-                           fmzWriteEveryStep, gldTimeStep, glzMinSearch
+                           fmzWriteEveryStep, gldTimeStep, glzMinSearch, NSing, NTrip
    use RandomModule, only: FMS_ranb, initialize_fortran_prng
    use BundleModule
    use BundleCalcsModule, only: FMS_UpdateBundle
@@ -416,6 +416,15 @@ contains
 !        T1(ITraj)%Amplitude=0.0
          T1(ITraj)%Amplitude = DMTemp
       end do
+
+!     Check if we are initialising on a triplet state
+      if (NTrip /= 0) then
+         do ITraj = 1, NumTraj
+            if (T1(ITraj)%StateID > NSing) then
+               call FMS_DieError('Trajectories cannot currently start from a triplet state')
+            end if
+         end do
+      end if
 
 !     Copy trajectories into bundle and clean up
       do ITraj = 1, NumTraj
