@@ -706,8 +706,8 @@ contains
       case (A)
          V = FMS_PotentialT(T_i)
 
-         if (glzSPA_1Dmodel) then
-            V = V + SPA1_1Dmodel(T_i, T_i, S_ij)
+         if (glzSPA1_SOC_model) then
+            V = V + SPA1_SOC_model(T_i, T_i, S_ij)
          end if
 
 !   write(fmiOut,*) '#########AAAAAAAAAAA###########'
@@ -788,8 +788,8 @@ contains
          SOC_ij = FMS_SOCoupling(T_c, is, js, Msi, Msj)
          V = S_ij * SOC_ij
 
-         if (glzSPA_1Dmodel) then
-            V = V + SPA1_1Dmodel(T_i, T_j, S_ij)
+         if (glzSPA1_SOC_model) then
+            V = V + SPA1_SOC_model(T_i, T_j, S_ij)
          end if
 !   write(fmiOut,*) '########DDDD#############'
 !   write(fmiOut,*) 'd',T_i%TrajID,T_j%TrajID,T_i%StateID,T_j%StateID
@@ -802,8 +802,8 @@ contains
       case (F)
          V = (0.d0, 0.d0)
 
-         if (glzSPA_1Dmodel) then
-            V = V + SPA1_1Dmodel(T_i, T_j, S_ij)
+         if (glzSPA1_SOC_model) then
+            V = V + SPA1_SOC_model(T_i, T_j, S_ij)
          end if
 
       case (G)
@@ -1006,21 +1006,22 @@ contains
 !        dSO_{I,J}^{Msi,Msj}(X_c)/dx * < X_i^I | x-x_c | X_j^I >
 !
 !        (r_sigma-1 < x_c < r_sigma +1) :
-!                  dSO_{I,J}^{Msi,Msj}(X_c)/dx = 12 ((x_c-r_sigma)^2)/dr_sigma^3 - 3/dr_sigma
+!                  dSO_{I,J}^{Msi,Msj}(X_c) / dx = 12 * ( (x_c-r_sigma)^2) / dr_sigma^3 ) - 3/dr_sigma
 !         otherwise:
-!                  dSO_{I,J}^{Msi,Msj}(X_c)/dx = 0
+!                  dSO_{I,J}^{Msi,Msj}(X_c) / dx = 0
 !
 !    Intrastate:
 !        dV(X_c)/dx * < X_i^I | x-x_c | X_j^I >
 !
 !        Singlet state:
-!                  dV(X_c)/dx =  -a_1*alpha_1*e^(-alpha_1*x_c)
+!                  dV(X_c)/dx =  -a_1 * alpha_1 * e^(-alpha_1 * x_c)
 !        Triplet state:
-!                  dV(X_c)/dx =  -a_2*alpha_2*e^(-alpha_2*x_c)
+!                  dV(X_c)/dx =  -a_2 * alpha_2 * e^(-alpha_2 * x_c)
 !
-!  < X_i^I | x-x_c | X_j^I > = -i*(p_1-p_2)/4*alpha_I * < X_i^I | X_j^I > (Vanicek, J. Chem. Phys.,2013 139, 034112)
+!
+!  < X_i^I | x-x_c | X_j^I > = -i * (p_1-p_2)/4 * alpha_I * < X_i^I | X_j^I > (Vanicek, J. Chem. Phys.,2013 139, 034112)
 
-   function SPA1_1Dmodel(T1, T2, S_ij) result(PotEn)
+   function SPA1_SOC_model(T1, T2, S_ij) result(PotEn)
       type(T_Trajectory), intent(in) :: T1, T2
       complex(kind=DefComp), intent(in) :: S_ij
       real(kind=DefReal) :: x_cent, x_1, x_2, p_1, p_2, sigma_G, alpha_1, alpha_2
@@ -1080,6 +1081,6 @@ contains
          PotEn = dSOC * S_ij * roe
       end if
 
-   end function SPA1_1Dmodel
+   end function SPA1_SOC_model
 
 end module OverlapModule

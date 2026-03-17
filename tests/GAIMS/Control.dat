@@ -14,7 +14,7 @@
  NumTriplets=1
  zAllText=.true.     ! Output all text-based files
  NumInitBasis=1
- SPA=.false. !SPA1 for toy model only
+ SPA1_SOC_model=.false. !SPA1 for toy model only
 !---- Stochastic Selection ----!
  Stochastic = .false.
  StochasticSwiss = .false.
