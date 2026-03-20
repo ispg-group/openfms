@@ -33,8 +33,6 @@ tests/*/*dcd
 tests/*/Spawn.?
 tests/*/fort.*
 tests/*/*.[1-9]
-tests/.DS_Store
-tests/*/.DS_Store
 # Don't ignore these
 !tests/*/Control.dat
 !tests/*/Geometry.dat
