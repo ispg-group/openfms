@@ -7,13 +7,14 @@
 !------ Simulation Properties -------!
  Model='TOY'		 ! to identify the potential used
  iMethod=4           ! Indicates GAIMS model
- Grsigma=8.0
+ Grsigma=10.0
  NumParticles=1
  NumStates=2		 ! number of electronic states
  NumSinglets=1
  NumTriplets=1
  zAllText=.true.     ! Output all text-based files
  NumInitBasis=1
+ SPA1_SOC_model=.true. !First order saddle point approximation for 1D model System
 !---- Stochastic Selection ----!
  Stochastic = .false.
  StochasticSwiss = .false.
