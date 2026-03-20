@@ -1,5 +1,5 @@
 &control
-! Input for some model
+! Input for testing the saddle point approximation of order 1 on GAIMS 1D Toy Model
 !------ Initialization -------!
  InitState=1
  InitialCond='NoSample'
@@ -7,6 +7,7 @@
 !------ Simulation Properties -------!
  Model='TOY'		 ! to identify the potential used
  iMethod=4           ! Indicates GAIMS model
+ SPA1_SOC_model=.true. !First order saddle point approximation for 1D model System
  Grsigma=10.0
  NumParticles=1
  NumStates=2		 ! number of electronic states
@@ -14,7 +15,6 @@
  NumTriplets=1
  zAllText=.true.     ! Output all text-based files
  NumInitBasis=1
- SPA1_SOC_model=.true. !First order saddle point approximation for 1D model System
 !---- Stochastic Selection ----!
  Stochastic = .false.
  StochasticSwiss = .false.
