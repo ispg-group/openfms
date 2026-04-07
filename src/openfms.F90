@@ -413,15 +413,20 @@ contains
       DMTemp = 1.0
       if (NumInitBasis > 1) then
 
-         T1(1)%Amplitude=DMTemp
-         !T1(1)%Amplitude=DMTemp / NumInitBasis        ! for equally distributing initial amp
+         !T1(1)%Amplitude=DMTemp
+         T1(1)%Amplitude=DMTemp / NumInitBasis        ! for equally distributing initial amp
 
          do ITraj = 2, NumTraj
             T1(ITraj) = T1(1)
             ! DH: This seems weird???
-            T1(ITraj)%Amplitude=0.0 
-!           T1(ITraj)%Amplitude=DMTemp / NumInitBasis  ! for equally distributing initial amp
+            !T1(ITraj)%Amplitude=0.0 
+            write (fmiout, *) "Theamplitude of traj ", ITraj, " will be set to", DMTemp / NumInitBasis
+            T1(ITraj)%Amplitude=DMTemp / NumInitBasis  ! for equally distributing initial amp
 !           T1(ITraj)%Amplitude = DMTemp
+         end do
+
+         do ITraj = 1, NumTraj
+            write (fmiout, *) "This is the amplitude of traj ", ITraj, "  before adding to Bundle:", T1(ITraj)%Amplitude
          end do
 
       else
@@ -442,10 +447,14 @@ contains
          call B1%add_traj(T1(iTraj))
       end do
 
-      write (fmiout, *) "Trajectories in initially in Bundle: (after adding them)", B1%NumTraj
-      write (fmiout, *) "And their IDs: "
-      write (fmiout, *) "TrajID 1:", B1%Trajectory(1)%TrajID
-      write (fmiout, *) "TrajID 2:", B1%Trajectory(2)%TrajID
+      do ITraj = 1, NumTraj
+         write (fmiout, *) "This is the actual amplitude of traj ", ITraj, " :", B1%Trajectory(ITraj)%Amplitude
+      end do
+
+      !write (fmiout, *) "Trajectories in initially in Bundle: (after adding them)", B1%NumTraj
+      !write (fmiout, *) "And their IDs: "
+      !write (fmiout, *) "TrajID 1:", B1%Trajectory(1)%TrajID
+      !write (fmiout, *) "TrajID 2:", B1%Trajectory(2)%TrajID
 
       do IParticle = 1, NumParticles
          call Particle(IParticle)%destroy()
@@ -457,15 +466,15 @@ contains
       end do
       deallocate (T1)
 
-      write (fmiout, *) "Trajectories in initially in Bundle: (after clean up step)", B1%NumTraj
-      write (fmiout, *) "And their IDs: "
-      write (fmiout, *) "TrajID 1:", B1%Trajectory(1)%TrajID
-      write (fmiout, *) "TrajID 2:", B1%Trajectory(2)%TrajID
-      write (fmiout, *) "And their Amplitudes: "
-      write (fmiout, *) "TrajID 1:", B1%Trajectory(1)%Amplitude
-      write (fmiout, *) "TrajID 2:", B1%Trajectory(2)%Amplitude
-      write (fmiout, *) "Norm of the Bundle: "
-      write (fmiout, *) FMS_Norm(B1)
+      !write (fmiout, *) "Trajectories in initially in Bundle: (after clean up step)", B1%NumTraj
+      !write (fmiout, *) "And their IDs: "
+      !write (fmiout, *) "TrajID 1:", B1%Trajectory(1)%TrajID
+      !write (fmiout, *) "TrajID 2:", B1%Trajectory(2)%TrajID
+      !write (fmiout, *) "And their Amplitudes: "
+      !write (fmiout, *) "TrajID 1:", B1%Trajectory(1)%Amplitude
+      !write (fmiout, *) "TrajID 2:", B1%Trajectory(2)%Amplitude
+      !write (fmiout, *) "Norm of the Bundle: "
+      !write (fmiout, *) FMS_Norm(B1)
 
    end subroutine initialize_bundle
 

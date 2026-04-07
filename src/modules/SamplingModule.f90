@@ -1341,6 +1341,8 @@ contains
       real(defReal) :: B1_norm
       complex(DefComp), dimension(B1%NumTraj) :: S_if ! overlap between initial and final
 
+      write (fmiout, *) "Initializing a swarm of trajectories"
+
       ntraj = B1%NumTraj
       natom = B1%NumParticles
       nstate = B1%NumStates
@@ -1356,18 +1358,42 @@ contains
       P_norm = sqrt(sum(P**2))
 
       ! 2. set up the Bundle trajectories
-      do n = 1, ntraj
 
-         call random_number(dX)
-         dX = sigma * (2.0d0 * dX - 1.d0)
+      ! -- Added just for usage with SOC model and sepSS testing: ---------------------------------------
+      if (gliModel == FMSZERO) then
+         write (fmiout, *) "Initialising for ToyModel in 1D"
+         dX = [0.5d0, 0.d0, 0.d0]
+         dP = [0.d0, 0.d0, 0.d0]
+         write (fmiout, *) "dX, dP: ", dX, dP
 
-         call random_number(dP)
-         dP = sigma / P_norm * (2.0d0 * dP - 1.d0)
+         if (ntraj > 2) then
+            do n = 2, ntraj
+               B1%Trajectory(n)%TrajID = n
+               call B1%Trajectory(n)%set_pos(X + dX)
+               call B1%Trajectory(n)%set_mom(P + dP) ! useless here because dP is zero, but for completeness...
+               dX = [10.0d0, 0.d0, 0.d0]
+            end do
+         else
+            call B1%Trajectory(ntraj)%set_pos(X + dX)
+            call B1%Trajectory(ntraj)%set_mom(P + dP) ! useless here because dP is zero, but for completeness...
+         end if
 
-         B1%Trajectory(n)%TrajID = n
-         call B1%Trajectory(n)%set_pos(X + dX)
-         call B1%Trajectory(n)%set_mom(P + dP)
-      end do
+      ! -------------------------------------------------------------------------------------------------
+
+      else
+         do n = 1, ntraj
+
+            call random_number(dX)
+            dX = sigma * (2.0d0 * dX - 1.d0)
+
+            call random_number(dP)
+            dP = sigma / P_norm * (2.0d0 * dP - 1.d0)
+
+            B1%Trajectory(n)%TrajID = n
+            call B1%Trajectory(n)%set_pos(X + dX)
+            call B1%Trajectory(n)%set_mom(P + dP)
+         end do
+      end if
 
       ! 3. update centroids
 !bfec
@@ -1380,35 +1406,43 @@ contains
          end do
       end if
 
-      ! normalize the Bundle
-      B1_norm = FMS_Norm(B1)
-      ! TODO: This should be a bundle method
-      do n = 1, ntraj
-         B1%Trajectory(n)%Amplitude = B1%Trajectory(n)%Amplitude / sqrt(B1_norm)
+      do n = 1, B1%NumTraj
+         write (fmiout, *) "Before normalising Bundle: Amplitude of traj ", n, " :", B1%Trajectory(n)%Amplitude
       end do
 
-      ! 3. work out the overlaps between the Bundle trajectorirs
-      call FMS_BuildHS(B1)
+      !! normalize the Bundle
+      !B1_norm = FMS_Norm(B1)
+      !! TODO: This should be a bundle method
+      !do n = 1, ntraj
+      !   B1%Trajectory(n)%Amplitude = B1%Trajectory(n)%Amplitude / sqrt(B1_norm)
+      !end do
 
-      ! 4. overlap the intial Gaussian from Geometry.dat onto the Bundle
-      do n = 1, ntraj
-         S_if(n) = overlap(T_init, B1%Trajectory(n))
-      end do
+      !! 3. work out the overlaps between the Bundle trajectories
+      !call FMS_BuildHS(B1)
 
-      ! careful here, matmul( A, B ) = A^* . B
-      S_if = matmul(conjg(FMS_bSInvMat(B1)), S_if)
+      !! 4. overlap the intial Gaussian from Geometry.dat onto the Bundle
+      !do n = 1, ntraj
+      !   S_if(n) = overlap(T_init, B1%Trajectory(n))
+      !end do
 
-      ! 5. set the amplitudes
-      call FMS_Set_Amplitude(B1, S_if)
+      !! careful here, matmul( A, B ) = A^* . B
+      !S_if = matmul(conjg(FMS_bSInvMat(B1)), S_if)
+
+      !! 5. set the amplitudes
+      !call FMS_Set_Amplitude(B1, S_if)
       call T_init%destroy()
 
       B1_norm = FMS_Norm(B1)
-      write (fmiOut, *) "Overlap between Initial Trajectory and the Bundle"
-      write (fmiOut, *) sqrt(B1_norm)
+      !write (fmiOut, *) "Overlap between Initial Trajectory and the Bundle"
+      !write (fmiOut, *) sqrt(B1_norm)
 
       ! normalize the Bundle again
       do n = 1, ntraj
          B1%Trajectory(n)%Amplitude = B1%Trajectory(n)%Amplitude / sqrt(B1_norm)
+      end do
+
+      do n = 1, B1%NumTraj
+         write (fmiout, *) "After normalising Bundle: Amplitude of traj ", n, " :", B1%Trajectory(n)%Amplitude
       end do
    end subroutine FMS_InitialSwarm
 

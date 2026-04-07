@@ -31,6 +31,7 @@
          real(kind=DefReal), intent(in) :: GoalTime, Timestep
 
          integer(kind=DefInt), parameter :: RecursionMax = 4
+         integer(kind=DefInt) :: iTraj
          real(kind=DefReal) :: RedoGoalTime, RedoTimeStep
 
          logical, save :: FirstTime = .true.
@@ -79,9 +80,32 @@
                   !Stochastic collapse nuclear wavefunction
                   !(RemoveDead must be called immediately after)
                   call FMS_StochasticCollapse(Bundle)
+                  write (fmiout, *) "-----------------------------------------------------------"
+                  write (fmiout, *) "FMS_StochasticCollapse was successfully called, leaving now"
+                  write (fmiout, *) "Now the time is: ", Bundle%CurrentTime
+                  write (fmiout, *) "And these are our trajectories: (NumTraj, NCBFs)", Bundle%NumTraj, Bundle%NCBFs
+                  write (fmiout, *) "And these are their centroids: "
+                  do iTraj = 1, (((Bundle%NCBFs - 1) * Bundle%NCBFs) / 2)
+                     write (fmiout, *) iTraj
+                     write (fmiout, *) "is Cen to trajectories: ", Bundle%Centroids(iTraj)%CentID
+                     write (fmiout, *) "Position", Bundle%Centroids(iTraj)%Particle(1)%get_pos()
+                  end do
+                  write (fmiout, *) "-----------------------------------------------------------"
                end if
+               write (fmiout, *) "Now calling RemoveDead... "
                call FMS_RemoveDead(Bundle)
                if (Bundle%NumTraj == 0) return
+               write (fmiout, *) "-----------------------------------------------------------"
+               write (fmiout, *) "Did deleting dead parts of Bundle mess up anything?"
+               write (fmiout, *) "Now the time is: ", Bundle%CurrentTime
+               write (fmiout, *) "And these are our trajectories: (NumTraj, NCBFs)", Bundle%NumTraj, Bundle%NCBFs
+               write (fmiout, *) "And these are their centroids: "
+               do iTraj = 1, (((Bundle%NCBFs - 1) * Bundle%NCBFs) / 2)
+                     write (fmiout, *) iTraj
+                     write (fmiout, *) "is Cen to trajectories: ", Bundle%Centroids(iTraj)%CentID
+                     write (fmiout, *) "Position", Bundle%Centroids(iTraj)%Particle(1)%get_pos()
+               end do
+               write (fmiout, *) "-----------------------------------------------------------"
             end if
 
 !     Write output here only if user requested output at every step

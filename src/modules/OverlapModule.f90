@@ -1,4 +1,3 @@
-! Copyright Todd J. Martinez and Raphael D. Levine, 1994
 module OverlapModule
    use GlobalModule
    use ParticleModule
@@ -627,6 +626,9 @@ contains
 !bfec
          if (glzCentroids .and. (CBFi /= CBFj)) then
             ic = T_c%CentID(1); jc = T_c%CentID(2)
+            write (fmiout, *) " ------------------------------------------------------------ "
+            write (fmiout, *) "In the OverlapModule: getting ic and jc", ic, jc
+            write (fmiout, *) " ------------------------------------------------------------ "
          end if
          is = T_i%StateID; js = T_j%StateID
 
@@ -672,7 +674,8 @@ contains
             ! check that the correct centroid was passed
 !    cent_match = (it==ic .and. jt==jc) .or. (jt==ic .and. it==jc)
             cent_match = (CBFi == ic .and. CBFj == jc) .or. (CBFj == ic .and. CBFi == jc)
-            write (fmiout, *) "(CBFij == ijc .and. CBFji == jic)", "CBFi, ic, CBFj, jc", CBFi, ic, CBFj, jc
+            !write (fmiout, *) "(CBFij == ijc .and. CBFji == jic)", "CBFi, ic, CBFj, jc", CBFi, ic, CBFj, jc
+            !write (fmiout, *) "Which trajectories is T_ij (=T_c) centroid to?", T_c%CentID(1), T_c%CentID(2)
             flush (fmiout)
 !    cent_match = (i==ic .and. j==jc) .or. (j==ic .and. i==jc)
             if (.not. cent_match) then

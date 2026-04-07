@@ -520,6 +520,13 @@ contains
       real(kind=DefReal) :: time_tmp1, time_tmp2
 
       call cpu_time(time_tmp1)
+
+      !write (fmiout, *) " ----------------------------------------------------"
+      !write (fmiout, *) "We are building HS, check NumTraj, NCBFs"
+      !write (fmiout, *) "Number trajs:", Bundle%NumTraj
+      !write (fmiout, *) "Number CBFs:", Bundle%NCBFs
+      !write (fmiout, *) " ----------------------------------------------------"
+
       Threshold = gldRegThresh
 
       ntraj = Bundle%NumTraj
@@ -531,6 +538,15 @@ contains
       S = (0., 0.)
       H = (0., 0.)
       S_dot = (0., 0.)
+
+      !write (fmiout, *) " ----------------------------------------------------"
+      !write (fmiout, *) "Checking Centroid indices before calculating overlap: "
+      !write (fmiout, *) " ----------------------------------------------------"
+      !do i = 1, (((Bundle%NCBFs - 1) * Bundle%NCBFs) / 2)
+      !   write (fmiout, *) "CentID", Bundle%Centroids(i)%TrajID
+      !   write (fmiout, *) "Position", Bundle%Centroids(i)%Particle(1)%get_pos()
+      !end do
+      !write (fmiout, *) " ----------------------------------------------------"
 
 !     Load H,S, and SDot  matrices.
       do i = 1, ntraj
@@ -546,16 +562,18 @@ contains
 !        TBF within the CBF. When the next Ms=2 TBF appears, we
 !        know that a new CBF is reached.
             if (glzCentroids .and. T_i%CBF /= T_j%CBF) then
-!           write(fmiOut,*) "i, j: ", i,j
-!           write(fmiOut,*) "IDi, IDj: ",T_i%StateID,T_j%StateID
-!           write(fmiOut,*) "Msi, Msj: ", T_i%Ms,T_j%Ms
-!           write(fmiOut,*) "CBFi, CBFj: ", T_i%CBF,T_j%CBF
+            write(fmiOut,*) "i, j: ", i,j
+            write(fmiOut,*) "IDi, IDj: ",T_i%StateID,T_j%StateID
+            write(fmiOut,*) "Msi, Msj: ", T_i%Ms,T_j%Ms
+            write(fmiOut,*) "CBFi, CBFj: ", T_i%CBF,T_j%CBF
 
 !!          if( T_i%Ms.eq.2 .and. T_j%Ms.eq.2 ) then
                CBFi = T_i%CBF
                CBFj = T_j%CBF
                ICent = ((CBFi - 2) * (CBFi - 1)) / 2 + CBFj
+               write (fmiout, *) "This is what we are trying to use as CentID in BundleCalcs: ", ICent
                T_ij => Bundle%Centroids(ICent)
+               !write (fmiout, *) "Position", Bundle%Centroids(ICent)%Particle(1)%get_pos()
 !!          endif
             end if
 !        GAIMS changed end
@@ -574,31 +592,41 @@ contains
             end if
 
             S(i, j) = overlap(T_i, T_j)
+            !write (fmiout, *) "I get here!!!"
+            !write (fmiout, *) "Are there Centroids?", glzCentroids
 
 ! Overlap will return elements of the individual overlap, which
 ! can be passed to kinetic.  The overlaps themselves will be
 ! passed to Potential and to CGSDoTT instead of being recalculated.
 ! In case of Split-Operator: no need to calculate diagonal elements of H
+
             if (glzFullyCoupled .or. IState /= JState) then
                ! If the overlap is beneath threshold, set matrix element to 0
                if (abs(S(i, j)) >= FPZero) then
+                  !write (fmiout, *) "----------------------------------------------------------------"
                   if (i == j) then
 
+                     !write (fmiout, *) "Pair of twice the same trajectory: i, j", i, j
                      H(i, j) = overlap_KE(T_i, T_i, S(i, j)) + overlap_V(T_i, S_ij_precalc=S(i, j))
 
                   else
 
                      if (glzCentroids) then
+                        !write (fmiout, *) "Pair of different trajectories: i, j", i, j
+                        !write (fmiout, *) "Calling overlap_V with existing centroids"
+                        !write (fmiout, *) "This is the Centroid: ICent", ICent
                         H(i, j) = overlap_KE(T_i, T_j, S(i, j)) + overlap_V(T_i, T_j, T_ij, S(i, j))
+                        !write (fmiout, *) "Got H(i, j)"
                      else
                         H(i, j) = overlap_KE(T_i, T_j, S(i, j)) + overlap_V(T_i, T_j, S_ij_precalc=S(i, j))
                      end if
 
+                  !write (fmiout, *) "----------------------------------------------------------------"
                   end if
                end if
             end if
 
-            ! fill in the offdiagonl
+            ! fill in the offdiagonal
             H(j, i) = conjg(H(i, j))
             S(j, i) = conjg(S(i, j))
 
