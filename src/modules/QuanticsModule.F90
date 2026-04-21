@@ -9,13 +9,13 @@
 ! Interface to Quantics operator library
 !--------------------------------------------------------------------------------------------------
 module QuanticsModule
-   use GlobalModule, only: FMS_DieError
+   use GlobalModule, only: FMS_DieError, fmiOut
 #ifdef Quantics
    use rddvrmod, only: nspfdof, spfdof, dop, ndof, long, maxdim, nddstate
    use operdef, only: alloc_operdef, hopsdim, ldddb
    use rdopermod, only: operinfo, rdoper
    use iorst, only: rstinfo
-   use dirdyn, only: ndoftsh, dercpdim, ndofddpes, ndofdd, &
+   use dirdyn, only: ndoftsh, & ! dercpdim, ndofddpes, ndofdd, &
                      dbnrec, nactdim, natmtsh, ldbsave, &
                      lupdhes, lnactdb, lddrddb, ddtrajnum, num_gp
    use dirdyn, only: alloc_dirdyn, alloc_dddb, atnam
@@ -210,7 +210,7 @@ contains
          allocate (zgp(1))
          allocate (nsgp(1))
          allocate (rsbaspar(sbaspar, maxdim, 1))
-         call alloc_dirdyn()
+         call alloc_dirdyn(fmiOut)
       end if
 
 !-----------------------------------------------------------------------
@@ -252,7 +252,7 @@ contains
       if (ldddb) then
          call preparedb(1)
          call getdbnrec(dbnrec)
-         call alloc_dddb()
+         call alloc_dddb(fmiOut)
       end if
 
 !-----------------------------------------------------------------------
