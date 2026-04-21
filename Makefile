@@ -59,6 +59,7 @@ SUFFIXES=.f .c .F
 ####################
 
 FMSLIB = src/libfms.a
+MAIN = src/openfms.o
 
 $(FMSLIB): makefmslib
 
@@ -77,7 +78,7 @@ bin:
 bin/$(PROGBASE).zero: $(FMSLIB) $(MAKEFILE) bin
 		@rm -f bin/$(PROGBASE)
 		@echo;echo "Linking $(PROGRAM) ..."
-		$(LD) $(FMSLIB) -I$(MODULEDIR) -o $(TARGET) $(LIBS) $(LDFLAGS)
+		$(LD) $(MAIN) $(FMSLIB) -I$(MODULEDIR) -o $(TARGET) $(LIBS) $(LDFLAGS)
 		@ln -s $(PROGRAM) bin/$(PROGBASE)
 		@echo "done"
 
@@ -85,14 +86,14 @@ bin/$(PROGBASE).zero: $(FMSLIB) $(MAKEFILE) bin
 bin/$(PROGBASE).tc:  $(FMSLIB) $(MAKEFILE) bin
 		@rm -f bin/$(PROGBASE)
 		@echo;echo "Linking $(PROGRAM) ..."
-		$(LD) $(FFLAGS) $(FMSLIB) -o $(TARGET) $(LIBS) $(LDFLAGS)
+		$(LD) $(FFLAGS) $(MAIN) $(FMSLIB) -o $(TARGET) $(LIBS) $(LDFLAGS)
 		@ln -s $(PROGRAM) bin/$(PROGBASE)
 		@echo "done"
 
 bin/$(PROGBASE).quantics: $(FMSLIB) $(MAKEFILE) bin
 		@rm -f bin/$(PROGBASE)
 		@echo;echo "Linking $(PROGRAM) ..."
-		$(LD) $(FMSLIB) -I$(MODULEDIR) -o $(TARGET) $(LIBS) $(LDFLAGS) -J$(QUANTICS_OBJ)/include -L$(QUANTICS_DIR)/bin/dyn_libs -lsrf -lusrf -lsqlite3 -Wl,-rpath=$(QUANTICS_DIR)/bin/dyn_libs
+		$(LD) $(MAIN) $(FMSLIB) -I$(MODULEDIR) -o $(TARGET) $(LIBS) $(LDFLAGS) -J$(QUANTICS_OBJ)/include -L$(QUANTICS_DIR)/bin/dyn_libs -lsrf -lusrf -lsqlite3 -Wl,-rpath=$(QUANTICS_DIR)/bin/dyn_libs
 		@ln -s $(PROGRAM) bin/$(PROGBASE)
 		@echo "done"
 
