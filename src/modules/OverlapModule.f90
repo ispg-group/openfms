@@ -626,9 +626,9 @@ contains
 !bfec
          if (glzCentroids .and. (CBFi /= CBFj)) then
             ic = T_c%CentID(1); jc = T_c%CentID(2)
-            write (fmiout, *) " ------------------------------------------------------------ "
-            write (fmiout, *) "In the OverlapModule: getting ic and jc", ic, jc
-            write (fmiout, *) " ------------------------------------------------------------ "
+            !write (fmiout, *) " ------------------------------------------------------------ "
+            !write (fmiout, *) "In the OverlapModule: getting ic and jc", ic, jc
+            !write (fmiout, *) " ------------------------------------------------------------ "
          end if
          is = T_i%StateID; js = T_j%StateID
 

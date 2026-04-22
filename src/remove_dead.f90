@@ -125,6 +125,7 @@ subroutine FMS_RemoveDead(B1)
          ndead = ndead + 1
          if (ForceDead) then
             write (fmiOut, '(a,i0,a,i0)') "** Force Killing trajectory ", TrajID, " on state ", StateID
+            write (fmiout, *) "Based on gliForceKill: ", gliForceKill
          elseif (OnIgnoreState) then
             write (fmiOut, '(a,i0,a,i0)') "** Killing trajectory ", TrajID, " on state ", StateID
          else

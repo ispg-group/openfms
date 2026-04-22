@@ -3,7 +3,8 @@ module PropagationModule
    use FMSModule
    use GlobalModule, only: DefInt, DefReal, DefComp, DP5, FPZero, &
                            glzConstrain, glzCentroids, glcIntegType, glzFullyCoupled, &
-                           FMS_DieError
+                           FMS_DieError, &
+                           fmiOut
    use TrajectoryModule
    use TrajectoryCalcsModule, only: FMS_GetForce, FMS_PhaseDot, FMS_PosDot, FMS_MomDot
    use BundleModule
@@ -69,7 +70,6 @@ contains
       end do
 
 !     Renormalize if multi-state problem
-
       if (Bundle%Trajectory(1)%NumStates /= 1) then
          call FMS_Renormalize(Bundle, OldNorms, DNorm0)
       end if
@@ -478,6 +478,8 @@ contains
       integer(kind=DefInt), save :: LastDimension
       real(kind=DefReal) :: DNorm
       integer(kind=DefInt) :: IState, ITraj
+
+      write (fmiout, *) "This is OldNorms: ", OldNorms
 
       if (B1%NumStates /= LastDimension) then
          if (LastDimension /= 0) deallocate (NewNorms)

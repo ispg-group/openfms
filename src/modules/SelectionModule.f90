@@ -6,6 +6,7 @@ module SelectionModule
    use BundleCalcsModule, only: FMS_bH, FMS_Norm
    use OverlapModule, only: overlap
    use RandomModule, only: fms_ranb
+   use PropagationModule, only: FMS_Renormalize
    implicit none
 
    private
@@ -71,13 +72,13 @@ contains
       integer(kind=DefInt), dimension(B1%NumTraj + 1, B1%NumTraj + 1) :: blocktrajid
       integer(kind=DefInt), dimension(B1%NumTraj + 1, B1%NumTraj + 1) :: MergedBlockTrajID, MergedSepBlockTrajID
       integer(kind=DefInt), dimension(B1%NumTraj + 1) :: ntrajblock
-      integer(kind=DefInt) :: nblockMerged, DeadID
+      integer(kind=DefInt) :: nblockMerged, DeadID, NumDeadTrajCurr, NumDeadTrajSave
       integer(kind=DefInt), dimension(50) :: SaveForceKill
 ! sepSS: Shall we perform multiplet separated stochastic selection
       integer(kind=DefInt), allocatable :: StoSelMode(:), NumTrajBlock(:)
       logical :: isSing, isTrip, isSingTrip
 ! --- Added 4 sep SS end ---
-      integer(kind=DefInt) :: iTraj, i, j, nblock
+      integer(kind=DefInt) :: iTraj, i, j, k, nblock, totDeadCount
 ! AIMSWISS: Shall we perform stochastic selection
       logical :: performSelection
 ! AIMSWISS: Current selection time
@@ -133,13 +134,14 @@ contains
 
       else if (NTrip /= 0) then
 
+         NumDeadTrajSave = B1%NumDeadTraj
+
          ! (1) getting Coupled matrix to identify separated S only, or T only blocks
 
          ! - get the total converged coupled matrix, and the number of blocks
          write (fmiout, *) "-----------------------------------------------------------"
          write (fmiout, *) "Building coupled matrix for total Bundle (B1, unseparated)"
          Coupled = 0
-         !write (fmiout, *) "This is the total, converged coupled matrix of size ", size(Coupled)
          call FMS_BuildCoupled(B1, Coupled, selectionTime)
          write (fmiout, *) "This is the total, converged coupled matrix of size ", size(Coupled)
          do iTraj = 1, B1%NumTraj
@@ -223,11 +225,20 @@ contains
             end do
 
          end do
+
          MergedBlockTrajID = blocktrajid
          nblockMerged = nblock
+
          ! Generate 2nd version of MergedBlockTrajID w/ indices ref to what will become the sep bundles
          ! This is the MergedSepBlockTrajID matrx (sorry complicated.. :( )
+         ! In MergedSepBlockTrajID every column restarts from 1,
+         ! while in MergedBlockTrajID indices continue
+         ! ------------------------------------------------------------------------------------------------
          ! TODO: this doesn't seem robust at all, go back later and improve
+         ! edit: seems a little more robust now, at least (still problematic: 
+         !                                                 - is it fine to only adjust indices after the
+         !                                                   first column = from the second block onwards??)
+
          MergedSepBlockTrajID = MergedBlockTrajID
          do i = 1, B1%NumTraj + 1
             do j = 2, B1%NumTraj + 1
@@ -236,17 +247,52 @@ contains
             end do
          end do
 
+         ! Make sure that indices in MergedBlockTrajID leave out indices of trajs that died before
+         totDeadCount = 0
+         do i = 1, B1%NumTraj + 1
+            do j = 2, B1%NumTraj + 1
+               if (MergedBlockTrajID(i,j) == 0) cycle
+               do k = 1, B1%NumDeadTraj
+                  if (MergedBlockTrajID(i,j) == B1%DeadTraj(k)%TrajID) then
+                     write (fmiout, *) "This index belongs to a dead traj: ", MergedBlockTrajID(i,j), B1%DeadTraj(k)%TrajID
+                     write (fmiout, *) "totDeadCount increased from ", totDeadCount
+                     totDeadCount = totDeadCount + 1
+                     write (fmiout, *) "to... ", totDeadCount
+                  end if
+               end do
+               MergedBlockTrajID(i,j) = MergedBlockTrajID(i,j) + totDeadCount
+            end do
+         end do
+
+
+         ! ----------------------------- !!! --------------------------------------------------
+         ! 21/04/26: Dead Traj IDs need to be incorporated to MergedBlockTrajID
+         !           
+         ! 22/04/26: Check with unsep SS: does BlockTrajID account for Dead Trajs?
+         !           If so, why does it not in my case?
+         ! ----------------------------- !!! --------------------------------------------------
+
          write (fmiout, *) "This is the S, T, S/T StoSel mode merged blocktrajid: "
          do j = 1, B1%NumTraj + 1
             write (fmiout, *) blocktrajid(j,:)
          end do
          write (fmiout, *) "And these are our StoSel (updated) modes: ", StoSelMode
 
-         write (fmiout, *) "This is the merged sepblocktrajid with what will be sep bundle IDs: "
+         write (fmiout, *) "This is the MergedBlockTrajID: "
+         do j = 1, B1%NumTraj + 1
+            write (fmiout, *) MergedBlockTrajID(j,:)
+         end do
+
+         write (fmiout, *) "This is the MergedSepBlockTrajID with what will be sep bundle IDs: "
          do j = 1, B1%NumTraj + 1
             write (fmiout, *) MergedSepBlockTrajID(j,:)
          end do
          write (fmiout, *) "And these are our StoSel (updated) modes: ", StoSelMode
+
+         ! ----------------------------- !!! --------------------------------------------------
+
+         ! Now we have everything for figuring out in which of the separated bundles selection
+         ! needs to happen, and translating for back from the separated bundles to the total B1
 
          ! (2) Create and fill temp separated bundles
 
@@ -271,6 +317,7 @@ contains
          call getMultBundles(B1, BundlesMult, BundlesMultDim, blocktrajid)
 
          ! (3) Perform SS on the separated bundles
+         NumDeadTrajCurr = 0
          do i = 1, nblock
 
             if (StoSelMode(i) == 1 .or. StoSelMode(i) == 3) then
@@ -323,6 +370,18 @@ contains
                      write (fmiout, *) gliForceKill
                   end if
 
+                  if (B1%NumDeadTraj > 0) then
+
+                     do iTraj = 1, B1%NumDeadTraj
+                        write (fmiout, *) "IDs of dead traj ", iTraj, ": ", B1%DeadTraj(iTraj)%TrajID
+                     end do
+
+                     !if (B1%NumDeadTraj >= 2) then
+                     !   call FMS_DieError("That's enough for now...")
+                     !end if
+
+                  end if
+
                else
                   write (fmiout, *) "No stochastic selection because block Bundle only has one CBF"
                end if
@@ -337,6 +396,7 @@ contains
 
          end do
 
+
          !write (fmiout, *) "Check that Centroids of B1 remain unaffected"
          !write (fmiout, *) "Part 1: B1 Centroids before"
          !do iTraj = 1, (((B1%NCBFs - 1) * B1%NCBFs) / 2)
@@ -347,10 +407,20 @@ contains
 
          ! (4) Set appropriate amplitudes to zero in the original bundle
          ! If selection happened, copy information which trajs died
-         if (any(gliForceKill(:) /= 0)) then
-            call copy_MultBundles_to_original_bundle(B1, BundlesMult, BundlesMultDim, StoSelMode)
-            write (fmiout, *) "States were copied back without error"
-         end if
+
+         !if (any(gliForceKill(:) /= 0)) then ! TODO: use something else here
+                                             ! otherwise copy_MultBundles_to_original_bundle always gets called as soon as 
+                                             ! we have a number in gliForceKill
+                                             ! How to determine if kill happened?
+                                             ! ---
+                                             ! For now, go with setting gliForceKill back to zero at the start of each
+                                             ! StoSel (but not sure if that breaks things somewhere...?)
+
+
+         call copy_MultBundles_to_original_bundle(B1, BundlesMult, BundlesMultDim, StoSelMode)
+         write (fmiout, *) "States were copied back without error"
+
+         !end if
 
          !write (fmiout, *) "Check that Centroids of B1 remain unaffected"
          !write (fmiout, *) "Part 2: B1 Centroids after"
@@ -1402,7 +1472,11 @@ contains
       end do
       write (fmiout, *) " ----------------------------------------------------"
 
-      ! TODO: check that all sep bundles indeed have the right number of Centroids
+      ! Normalise the separate bundles before SS (and keep the og norm, amplitudes?)
+
+      !do iblocks = 1, BundlesMultDim
+      !   call FMS_Renormalize(BundlesMult(i), 
+      !end do
 
    end subroutine getMultBundles
 
@@ -1417,13 +1491,59 @@ contains
       !type(T_TrajectoryBundle), pointer :: BSS_i
       !type(T_Trajectory), pointer :: T_i
       integer(kind=DefInt) :: i, j, iTraj
-      integer(kind=DefInt) :: TrajCount, CBFCount
+      integer(kind=DefInt) :: TrajCount, CBFCount, DeadCount
+      integer(kind=DefInt), dimension(50) :: DeadTrajIDs
+      logical :: hitDead
                              !iSingTraj, iTripTraj, iCBF
       !integer(kind=DefInt) :: TrajIDSing, CBFIDSing, TrajIDTrip, CBFIDTrip
 
       ! I dont actually think we need to copy back the temp separated bundles
       ! All we need to do is to adjust gliForceKill to contain the TrajIDs for B1
       ! not those referring to the temp separated bundles
+
+      do i = 1, B1%NumTraj
+         write (fmiout, *) "These trajs are in the original B1 (before copying back)"
+         write (fmiout, *) "TrajID: ", B1%Trajectory(i)%TrajID, "DeadTime: ", B1%Trajectory(i)%DeadTime
+         write (fmiout, *) "IsDead? (checking if DeadTime < CurrentTime)", B1%Trajectory(i)%DeadTime < B1%CurrentTime
+      end do
+
+      ! How to get the information on which Trajs are dead?
+      !write (fmiout, *) "These trajs are dead in the original B1 (before copying back)"
+      !do i = 1, B1%NumDeadTraj
+      !   write (fmiout, *) "TrajID: ", B1%DeadTraj(i)%TrajID, "DeadTime: ", B1%DeadTraj(i)%DeadTime
+      !end do
+
+      ! Try a different approach to what is (or will be) commented out further down
+
+      DeadCount = 0
+      DeadTrajIDs = 0
+      do iTraj = 1, B1%NumTraj ! Does this loop always account for all dead and alive trajs???
+                               ! Even after several kills in the Bundle?
+                               ! Do we need to add B1%NumDeadTraj somehow asp?
+         write (fmiout, *) " ------------------------"
+         write (fmiout, *) "Current iTraj: ", iTraj
+
+         if (any(B1%Trajectory(:)%TrajID == iTraj)) then
+            write(fmiout, *) "This traj is alive"
+         end if
+
+         if (any(B1%DeadTraj(:)%TrajID == iTraj)) then
+            write(fmiout, *) "This traj is dead"
+            ! This TrajID needs to be remembered and 'left blank' when temp separated Bundles are copied back
+            DeadCount = DeadCount + 1
+            DeadTrajIDs(DeadCount) = iTraj
+         end if
+
+         if (any(B1%DeadTraj(:)%TrajID == iTraj) .and. any(B1%Trajectory(:)%TrajID == iTraj)) then
+            write(fmiout, *) "This traj is dead and alive"
+            call FMS_DieError("This shouldn't happen")
+         end if
+
+         write (fmiout, *) " ------------------------"
+      end do
+      write (fmiout, *) "These are our dead trajectories: ", DeadTrajIDs
+
+      hitDead = .false.
 
       do i = 1, BundlesMultDim
          if (StoSelMode(i) == 1 .or. StoSelMode(i) == 3) then
@@ -1469,8 +1589,23 @@ contains
             do iTraj = 1, BundlesMult(i)%NumTraj
                if (i>1) then
                   B1%Trajectory(iTraj+TrajCount) = BundlesMult(i)%Trajectory(iTraj) !TODO: figure out what original TrajID, CBF ID was
-                  B1%Trajectory(iTraj+TrajCount)%TrajID = BundlesMult(i)%Trajectory(iTraj)%TrajID + BundlesMult(i-1)%NumTraj
+
+                  if (any(BundlesMult(i)%Trajectory(iTraj)%TrajID + BundlesMult(i-1)%NumTraj == DeadTrajIDs(:))) then
+                     write (fmiout, *) "We hit the dead traj (iTraj)", &
+                                       BundlesMult(i)%Trajectory(iTraj)%TrajID + BundlesMult(i-1)%NumTraj
+                     write (fmiout, *) "Adding the DeadCount ", DeadCount, "from now on"
+                     hitDead = .true.
+                  end if
+
+                  if (hitDead) then
+                     B1%Trajectory(iTraj+TrajCount)%TrajID = BundlesMult(i)%Trajectory(iTraj)%TrajID + BundlesMult(i-1)%NumTraj + &
+                     DeadCount
+                  else
+                     B1%Trajectory(iTraj+TrajCount)%TrajID = BundlesMult(i)%Trajectory(iTraj)%TrajID + BundlesMult(i-1)%NumTraj
+                  end if
                   B1%Trajectory(iTraj+TrajCount)%CBF = BundlesMult(i)%Trajectory(iTraj)%CBF + BundlesMult(i-1)%NCBFs
+                  write (fmiout, *) "Traj of index ", iTraj, "was copied over and received ID, ", &
+                                    B1%Trajectory(iTraj+TrajCount)%TrajID
                end if
             end do
 
@@ -1489,6 +1624,15 @@ contains
             end do
          end if
       end do
+
+      write (fmiout, *) " ----------------------------------------------------"
+      write (fmiout, *) "These trajs are in B1 (after copying back)"
+      do i = 1, B1%NumTraj
+         write (fmiout, *) "TrajID: ", B1%Trajectory(i)%TrajID, "CBF: ", B1%Trajectory(i)%CBF
+         write (fmiout, *) "Ms: ", B1%Trajectory(i)%Ms
+         write (fmiout, *) "Amp: ", B1%Trajectory(i)%Amplitude
+      end do
+      write (fmiout, *) " ----------------------------------------------------"
 
    end subroutine copy_MultBundles_to_original_bundle
 

@@ -562,16 +562,16 @@ contains
 !        TBF within the CBF. When the next Ms=2 TBF appears, we
 !        know that a new CBF is reached.
             if (glzCentroids .and. T_i%CBF /= T_j%CBF) then
-            write(fmiOut,*) "i, j: ", i,j
-            write(fmiOut,*) "IDi, IDj: ",T_i%StateID,T_j%StateID
-            write(fmiOut,*) "Msi, Msj: ", T_i%Ms,T_j%Ms
-            write(fmiOut,*) "CBFi, CBFj: ", T_i%CBF,T_j%CBF
+            !write(fmiOut,*) "i, j: ", i,j
+            !write(fmiOut,*) "IDi, IDj: ",T_i%StateID,T_j%StateID
+            !write(fmiOut,*) "Msi, Msj: ", T_i%Ms,T_j%Ms
+            !write(fmiOut,*) "CBFi, CBFj: ", T_i%CBF,T_j%CBF
 
 !!          if( T_i%Ms.eq.2 .and. T_j%Ms.eq.2 ) then
                CBFi = T_i%CBF
                CBFj = T_j%CBF
                ICent = ((CBFi - 2) * (CBFi - 1)) / 2 + CBFj
-               write (fmiout, *) "This is what we are trying to use as CentID in BundleCalcs: ", ICent
+               !write (fmiout, *) "This is what we are trying to use as CentID in BundleCalcs: ", ICent
                T_ij => Bundle%Centroids(ICent)
                !write (fmiout, *) "Position", Bundle%Centroids(ICent)%Particle(1)%get_pos()
 !!          endif
