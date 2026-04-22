@@ -71,8 +71,11 @@ contains
 
       logical :: file_existed
       integer(kind=DefInt) :: IUnit
-      integer :: c, nparticle, ierr
+      integer :: c, nparticle
+      ! integer :: ierr
       character(len=256) :: file_name
+
+      call FMS_DieError("DCD output currently not implemented")
 
       NFILE_POS = 8
       NPRIV_POS = 12
@@ -111,14 +114,15 @@ contains
       NSTEP = NSTEP + NSAVC
       NFILE = NFILE + 1
 
+!     TODO: fseek is a GNU extension and not portable (e.g. doesn't work with Cray compilers)
 !     Go back and update - remeber seek is 0-based
-      call FSEEK(IUnit, NFILE_POS, SEEK_SET, ierr) ! move to OFFSET
-      write (IUnit) NFILE
-      call FSEEK(IUnit, NSTEP_POS, SEEK_SET, ierr) ! move to OFFSET
-      write (IUnit) NSTEP
+!     call FSEEK(IUnit, NFILE_POS, SEEK_SET, ierr) ! move to OFFSET
+!      write (IUnit) NFILE
+!      call FSEEK(IUnit, NSTEP_POS, SEEK_SET, ierr) ! move to OFFSET
+!      write (IUnit) NSTEP
 
 !     Set pointer to the end
-      call FSEEK(IUnit, 0, SEEK_END, ierr) ! move to OFFSET
+!      call FSEEK(IUnit, 0, SEEK_END, ierr)
 
 !     Flush all updates to file
       flush (IUnit)
