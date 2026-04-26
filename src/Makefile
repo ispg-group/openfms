@@ -30,7 +30,7 @@ SUFFIXES=.f .F .f90 .F90
 
 all:		modules $(TARGET)
 
-SRCS		= $(filter-out print_version.F90,$(foreach suffix,$(SUFFIXES),$(wildcard *$(suffix))))
+SRCS		= $(filter-out print_version.F90 openfms.F90,$(foreach suffix,$(SUFFIXES),$(wildcard *$(suffix))))
 MOD_SRCS	= $(foreach suffix,$(SUFFIXES),$(wildcard $(MODULEDIR)/*$(suffix)))
 
 INTFILES        = $(sort $(wildcard *.int))
@@ -78,9 +78,10 @@ DIRTY:=$(shell test -n "$(shell git status --porcelain)" && echo -n '+')
 GIT_VERSION=$(COMMIT)${DIRTY}
 
 # Always recompile print_version.F90 to keep the git commit up-to-date
-print_version.o: print_version.F90 $(OBJS) $(MOD_OBJS)
+print_version.o: print_version.F90 openfms.o $(OBJS) $(MOD_OBJS)
 	$(FC) -c $(FFLAGS) -I $(MODULEDIR) -DGIT_VER="'$(GIT_VERSION)'" $<
 
+openfms.o: $(MOD_OBJS)
 
 %.o : %.F
 	@echo "Compiling $<"
