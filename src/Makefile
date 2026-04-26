@@ -30,7 +30,7 @@ SUFFIXES=.f .F .f90 .F90
 
 all:		modules $(TARGET)
 
-SRCS		= $(filter-out print_version.F90,$(foreach suffix,$(SUFFIXES),$(wildcard *$(suffix))))
+SRCS		= $(filter-out print_version.F90 build_info.F90,$(foreach suffix,$(SUFFIXES),$(wildcard *$(suffix))))
 MOD_SRCS	= $(foreach suffix,$(SUFFIXES),$(wildcard $(MODULEDIR)/*$(suffix)))
 
 INTFILES        = $(sort $(wildcard *.int))
@@ -39,9 +39,9 @@ OBJS		= $(addsuffix .o,$(basename $(SRCS)))
 MOD_OBJS	= $(addsuffix .o,$(basename $(MOD_SRCS)))
 
 
-$(TARGET): print_version.o
+$(TARGET): build_info.o
 	@echo "Creating FMS object library: $(TARGET)"
-	@ar -crus $(TARGET) $(OBJS) print_version.o $(MOD_OBJS)
+	@ar -crus $(TARGET) $(OBJS) build_info.o $(MOD_OBJS)
 ifeq ($(KERNEL),Darwin)
 	ranlib -c $(TARGET)
 endif
@@ -71,15 +71,27 @@ moddepend: $(SRCS) ./Makemoddepend.pl
 ###   Rules      #######
 ########################
 
-COMMIT:=$(shell git rev-parse HEAD)
-# If the git repo is "dirty", we append a '+' to the version
-# to indicate that there might be some changes to the code since the last commit.
-DIRTY:=$(shell test -n "$(shell git status --porcelain)" && echo -n '+')
-GIT_VERSION=$(COMMIT)${DIRTY}
+FC_VERSION:=$(shell $(FC) --version 2>/dev/null | sed -n '1p')
+BUILD_DATE:=$(shell date '+%Y-%m-%d %H:%M:%S %z')
 
-# Always recompile print_version.F90 to keep the git commit up-to-date
-print_version.o: print_version.F90 $(OBJS) $(MOD_OBJS)
-	$(FC) -c $(FFLAGS) -I $(MODULEDIR) -DGIT_VER="'$(GIT_VERSION)'" $<
+.PHONY: FORCE
+
+build_info.F90: FORCE
+	@OPENFMS_SOURCE_DIR=.. \
+	OPENFMS_VERSION='v0.1-alpha' \
+	OPENFMS_BACKEND='$(ESP)' \
+	OPENFMS_BUILD_SYSTEM='Make' \
+	OPENFMS_BUILD_TYPE='Makefile' \
+	OPENFMS_FC='$(FC)' \
+	OPENFMS_FC_ID='$(FC_VERSION)' \
+	OPENFMS_FC_VERSION='' \
+	OPENFMS_FFLAGS='$(FFLAGS)' \
+	OPENFMS_BUILD_DATE='$(BUILD_DATE)' \
+	../cmake/generate_build_info.sh $@
+
+# Always recompile build_info.F90 to keep the git revision up to date.
+build_info.o: build_info.F90 $(OBJS) $(MOD_OBJS)
+	$(FC) -c $(FFLAGS) -I $(MODULEDIR) $<
 
 
 %.o : %.F
@@ -120,5 +132,5 @@ list:
 	@echo "Module sources: " $(MOD_SRCS)
 
 clean:
-	$(RM) $(TARGET) moddepend *.o *.mod
+	$(RM) $(TARGET) moddepend *.o *.mod build_info.F90
 	@cd $(MODULEDIR); make clean

@@ -133,6 +133,38 @@ jobs:
     - name: End-to-end tests
       run: make test
 
+  cmake_build:
+    name: CMake ${{ matrix.toolchain.compiler }}-${{ matrix.toolchain.version }} zero
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain:
+          - {compiler: gcc, version: latest}
+          - {compiler: intel, version: latest}
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - uses: fortran-lang/setup-fortran@v1
+      id: setup-fortran
+      with:
+        compiler: ${{ matrix.toolchain.compiler }}
+        version: ${{ matrix.toolchain.version }}
+
+    - name: Configure
+      run: >
+        cmake -S . -B build-cmake
+        -DOPENFMS_BACKEND=zero
+        -DCMAKE_BUILD_TYPE=Debug
+        -DBUILD_TESTING=ON
+
+    - name: Build
+      run: cmake --build build-cmake --parallel
+
+    - name: Test
+      run: ctest --test-dir build-cmake --output-on-failure
+
   tc_build:
     name: TC build (${{ matrix.mpi }})
     runs-on: ubuntu-22.04

@@ -1,4 +1,6 @@
-set(OPENFMS_SOURCES
+include_guard(GLOBAL)
+
+set(OPENFMS_CORE_SOURCES
   src/modules/GlobalModule.f90
   src/modules/EispackModule.f
   src/modules/RandomModule.f90
@@ -36,6 +38,4 @@ set(OPENFMS_SOURCES
   src/read_namelist.f90
   src/remove_dead.f90
   src/shutdown.f90
-  src/print_version.F90
-  src/openfms.F90
 )

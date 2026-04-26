@@ -39,5 +39,6 @@ tests/*/*.[1-9]
 
 # auto-generated stuff from FMS
 src/moddepend
+src/build_info.F90
 # from fprettify
 __pycache__/
