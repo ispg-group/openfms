@@ -25,7 +25,7 @@ which was copied over from AIMS test.
 ! Output
  zAllText=.true.     ! Output all text-based files
 ! TODO: Currently DCD output has been disabled
-! zDCD=.true.	! Output trajectory in DCD format
+ zDCD=.true.	! Output trajectory in DCD format
  zForce=.true.	! output forces
  nBonds=1
  iBond(1,1)=1

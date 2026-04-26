@@ -13,7 +13,7 @@ module TrajectoryIOModule
    implicit none
 
    private
-   public :: FMS_WriteFXYZ, FMS_WriteFDCD
+   public :: FMS_WriteFXYZ
    public :: FMS_WriteTrajFiles
 
 contains
@@ -56,129 +56,6 @@ contains
 
    end subroutine FMS_WriteFXYZ
 
-!>
-!!    Writes DCD file
-!!    \param comment   Comment to write on comment line
-!!    @ingroup output
-!<
-   subroutine FMS_WriteFDCD(T1, filename)
-      type(T_Trajectory), intent(in) :: T1
-      character(len=*), intent(in) :: filename
-      integer :: NFILE, NSAVC, NSTEP
-      integer :: NFILE_POS, NSAVC_POS, NSTEP_POS, NPRIV_POS
-      integer, parameter :: SEEK_SET = 0, SEEK_CUR = 1, SEEK_END = 2
-      real(DefReal) :: coord
-
-      logical :: file_existed
-      integer(kind=DefInt) :: IUnit
-      integer :: c, nparticle
-      ! integer :: ierr
-      character(len=256) :: file_name
-
-      call FMS_DieError("DCD output currently not implemented")
-
-      NFILE_POS = 8
-      NPRIV_POS = 12
-      NSAVC_POS = 16
-      NSTEP_POS = 20
-
-      file_name = trim(FMSWorkingDir)//filename
-
-!     Check if the file exists already
-      inquire (FILE=file_name, EXIST=file_existed)
-
-      open (newunit=IUnit, file=file_name, access="stream", position="append", form="unformatted")
-
-!     Write the file header if it is a new file
-      if (.not. file_existed) then
-         call FMS_WriteHeaderFDCD(IUnit, T1%NumParticles, 1, 1, 1, 1, 1.0)
-      end if
-
-!     Writes all X's, then all Y's and finally all Z's
-      do c = 1, 3
-         write (IUnit) 4 * T1%NumParticles
-         do nparticle = 1, T1%NumParticles
-!           Convert from AU to Aangstom
-            coord = T1%Particle(nparticle)%get_pos(c) * BohrToAng
-            write (IUnit) coord
-         end do
-         write (IUnit) 4 * T1%NumParticles
-      end do
-
-!     read pos is 1-based
-      read (IUnit, pos=NSAVC_POS + 1) NSAVC
-      read (IUnit, pos=NSTEP_POS + 1) NSTEP
-      read (IUnit, pos=NFILE_POS + 1) NFILE
-
-!     Calculate the new variables
-      NSTEP = NSTEP + NSAVC
-      NFILE = NFILE + 1
-
-!     TODO: fseek is a GNU extension and not portable (e.g. doesn't work with Cray compilers)
-!     Go back and update - remeber seek is 0-based
-!     call FSEEK(IUnit, NFILE_POS, SEEK_SET, ierr) ! move to OFFSET
-!      write (IUnit) NFILE
-!      call FSEEK(IUnit, NSTEP_POS, SEEK_SET, ierr) ! move to OFFSET
-!      write (IUnit) NSTEP
-
-!     Set pointer to the end
-!      call FSEEK(IUnit, 0, SEEK_END, ierr)
-
-!     Flush all updates to file
-      flush (IUnit)
-
-      close (IUnit)
-
-   end subroutine FMS_WriteFDCD
-!>
-!!    Writes DCD Header to the DCD file
-!!    @ingroup output
-!<
-   subroutine FMS_WriteHeaderFDCD(IUnit, N, NFILE, NPRIV, NSAVC, NSTEP, DELTA)
-
-      integer :: IUnit, NFILE, NPRIV, NSAVC, NSTEP, N
-      integer :: i, SEEK_SET
-      real :: DELTA
-      character(len=80) :: remarks
-      SEEK_SET = 0
-
-      remarks = "TEST REMARKS FOR NOW [BLOCK 1]"
-
-      write (IUnit) 84
-      write (IUnit) "CORD"
-      write (IUnit) 0
-      write (IUnit) NPRIV
-      write (IUnit) NSAVC
-      write (IUnit) NPRIV - NSAVC
-
-      write (IUnit) 0
-      write (IUnit) 0
-      write (IUnit) 0
-      write (IUnit) 0
-      write (IUnit) 0
-      write (IUnit) DELTA
-!     IF unit cells are used, write a 1 here
-      write (IUnit) 0
-
-      do i = 0, 7
-         write (IUnit) 0
-      end do
-
-      write (IUnit) 24
-      write (IUnit) 84
-      write (IUnit) 164
-      write (IUnit) 2
-      write (IUnit) remarks
-
-      remarks = "TEST REMARKS FOR NOW [BLOCK 2]"
-      write (IUnit) remarks
-
-      write (IUnit) 164
-      write (IUnit) 4
-      write (IUnit) N
-      write (IUnit) 4
-
-   end subroutine FMS_WriteHeaderFDCD
 !>
 !!    Driver for output for each trajectory
 !!    Writes files for the classical trajectory, appended by '.suffix'.
@@ -271,17 +148,10 @@ contains
 
 !     Write positions.x.xyz files
 1030     format('Time: ', f8.2, ', Trajectory: ')
-         if ((fmzXYZ .or. fmzAllText) .and. (.not. fmzDCD)) then
+         if (fmzXYZ .or. fmzAllText) then
             cfname = 'positions.'//trim(suffix)//'.xyz'
             write (comment, 1030) T1%get_time()
             call FMS_WriteFXYZ(T1, cfname, trim(comment)//trim(suffix))
-         end if
-
-!     Write positions.x.dcd files
-         if (fmzDCD) then
-            cfname = 'positions.'//trim(suffix)//'.dcd'
-            write (comment, 1030) T1%get_time()
-            call FMS_WriteFDCD(T1, cfname) !, trim(comment)//trim(suffix))
          end if
 
 !     Write forces.x.xyz files (in XYZ format)
