@@ -7,10 +7,6 @@ program tester
    use test_trajectory, only: collect_trajectory_suite
    use test_bundle, only: collect_bundle_suite
    use GlobalModule, only: set_error_handler
-#ifndef __GNUC__
-! Needed for isatty intrinsic
-   use ifport, only: isatty
-#endif
    implicit none
    integer :: num_failed_tests, is, num_args, selected_suite_index
    type(testsuite_type), allocatable :: testsuites(:)
@@ -31,11 +27,17 @@ program tester
 
    ! Decide whether the output should be colourful:
    ! 1. Respect the FORCE_COLOR envvar per https://force-color.org/
-   ! 2. Don't color things if the output is not a TTY (e.g. redirected to a file)
+   ! 2. Color things only if the output is a TTY (terminal)
+   ! The latter is currently only checked using the GNU-instrinsic isatty
    call get_environment_variable("FORCE_COLOR", force_color)
-   if (trim(force_color) /= '' .or. (isatty(output_unit) .and. isatty(error_unit))) then
+   if (trim(force_color) /= '') then
       call init_color_output(.true.)
    end if
+#ifdef __GNUC__
+   if (isatty(output_unit) .and. isatty(error_unit)) then
+      call init_color_output(.true.)
+   end if
+#endif
 
    testsuites = [ &
                 new_testsuite("ParticleModule", collect_particle_suite), &

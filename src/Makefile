@@ -30,7 +30,7 @@ SUFFIXES=.f .F .f90 .F90
 
 all:		modules $(TARGET)
 
-SRCS		= $(filter-out print_version.F90 build_info.F90,$(foreach suffix,$(SUFFIXES),$(wildcard *$(suffix))))
+SRCS		= $(filter-out print_version.F90 build_info.F90 openfms.F90,$(foreach suffix,$(SUFFIXES),$(wildcard *$(suffix))))
 MOD_SRCS	= $(foreach suffix,$(SUFFIXES),$(wildcard $(MODULEDIR)/*$(suffix)))
 
 INTFILES        = $(sort $(wildcard *.int))
@@ -39,7 +39,7 @@ OBJS		= $(addsuffix .o,$(basename $(SRCS)))
 MOD_OBJS	= $(addsuffix .o,$(basename $(MOD_SRCS)))
 
 
-$(TARGET): build_info.o
+$(TARGET): build_info.o openfms.o
 	@echo "Creating FMS object library: $(TARGET)"
 	@ar -crus $(TARGET) $(OBJS) build_info.o $(MOD_OBJS)
 ifeq ($(KERNEL),Darwin)
@@ -93,6 +93,7 @@ build_info.F90: FORCE
 build_info.o: build_info.F90 $(OBJS) $(MOD_OBJS)
 	$(FC) -c $(FFLAGS) -I $(MODULEDIR) $<
 
+openfms.o: $(MOD_OBJS)
 
 %.o : %.F
 	@echo "Compiling $<"

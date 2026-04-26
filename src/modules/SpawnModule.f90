@@ -9,7 +9,7 @@ module SpawnModule
    use TrajectoryModule
    use TrajectoryCalcsModule, only: FMS_KineticClass, FMS_PotentialT, &
                                     FMS_Coupling, FMS_SOCoupling, FMS_ClassEnergy
-   use TrajectoryIOModule, only: FMS_WriteFDCD, FMS_WriteFXYZ
+   use TrajectoryIOModule, only: FMS_WriteFXYZ
    use BundleModule
    use BundleCalcsModule, only: FMS_UpdateMulliken
    use OverlapModule, only: overlap
@@ -1058,13 +1058,7 @@ contains
          write (spawn_sum, '(f10.2,3(a,i4))') spawn_time, ' to state ', state_c, &
             ' from traj ', id_p, &
             ' on state ', state_p
-         ! Use DCD file format if given as input arg,
-         ! else default to XYZ
-         if (fmzDCD) then
-            call FMS_WriteFDCD(child_s, file_name)
-         else
-            call FMS_WriteFXYZ(child_s, file_name, spawn_sum)
-         end if
+         call FMS_WriteFXYZ(child_s, file_name, spawn_sum)
          ! set up the file and write the header
          if (u_spawn_log == 0) then
             file_name = trim(FMSWorkingDir)//'Spawn.log'

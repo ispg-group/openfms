@@ -604,7 +604,6 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    fmNAngles = NAngles
    fmNPyrams = NPyrams
    fmzXYZ = zXYZ
-   fmzDCD = zDCD
    fmzTrajFile = zTrajFile
    fmzPotEnFile = zPotEnFile
    fmzMMFile = zMMFile
@@ -790,6 +789,11 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    end if
 
    if (zFatal) call FMS_DieError('Namelist input failed.')
+
+   if (zDCD) then
+      call FMS_DieError('DCD output has been removed. If you need it, please comment on this this GitHub issue:'//NL// &
+                        'https://github.com/ispg-group/openfms/issues/33')
+   end if
 
 !
 !     Make sure output options make sense
