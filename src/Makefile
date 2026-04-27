@@ -30,7 +30,7 @@ SUFFIXES=.f .F .f90 .F90
 
 all:		modules $(TARGET)
 
-SRCS		= $(filter-out print_version.F90 build_info.F90 openfms.F90,$(foreach suffix,$(SUFFIXES),$(wildcard *$(suffix))))
+SRCS		= $(filter-out build_info.F90 openfms.F90,$(foreach suffix,$(SUFFIXES),$(wildcard *$(suffix))))
 MOD_SRCS	= $(foreach suffix,$(SUFFIXES),$(wildcard $(MODULEDIR)/*$(suffix)))
 
 INTFILES        = $(sort $(wildcard *.int))
