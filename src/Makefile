@@ -39,7 +39,7 @@ OBJS		= $(addsuffix .o,$(basename $(SRCS)))
 MOD_OBJS	= $(addsuffix .o,$(basename $(MOD_SRCS)))
 
 
-$(TARGET): build_info.o
+$(TARGET): build_info.o openfms.o
 	@echo "Creating FMS object library: $(TARGET)"
 	@ar -crus $(TARGET) $(OBJS) build_info.o $(MOD_OBJS)
 ifeq ($(KERNEL),Darwin)
