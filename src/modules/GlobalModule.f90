@@ -204,7 +204,6 @@ module GlobalModule
    logical :: fmzAmpFile
    logical :: fmzAllText
    logical :: fmzXYZ
-   logical :: fmzDCD
    logical :: fmzWriteEveryStep
    logical :: fmzPCOlap ! print the overlap (abs, Re, Im) between parent and child
    logical :: fmzSOME ! print the SOME at the centroid position

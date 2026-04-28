@@ -30,7 +30,7 @@ SUFFIXES=.f .F .f90 .F90
 
 all:		modules $(TARGET)
 
-SRCS		= $(filter-out build_info.F90,$(foreach suffix,$(SUFFIXES),$(wildcard *$(suffix))))
+SRCS		= $(filter-out build_info.F90 openfms.F90,$(foreach suffix,$(SUFFIXES),$(wildcard *$(suffix))))
 MOD_SRCS	= $(foreach suffix,$(SUFFIXES),$(wildcard $(MODULEDIR)/*$(suffix)))
 
 INTFILES        = $(sort $(wildcard *.int))
@@ -93,6 +93,7 @@ build_info.F90: FORCE
 build_info.o: build_info.F90 $(OBJS) $(MOD_OBJS)
 	$(FC) -c $(FFLAGS) -I $(MODULEDIR) $<
 
+openfms.o: $(MOD_OBJS)
 
 %.o : %.F
 	@echo "Compiling $<"
