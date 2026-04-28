@@ -21,6 +21,9 @@ program OpenFMS
    use ElecStrucModule, only: FMS_ESInit
    use RestartModule, only: inIRestart, RestartTime, getRestart
    use PropagationModule, only: FMS_SetTimeStep
+
+   use eT_class, only: eT
+
    implicit none
 
    type(T_TrajectoryBundle) :: Bundle
@@ -28,6 +31,13 @@ program OpenFMS
    integer(kind=DefInt) :: numparticles, numstates
    real(kind=DefReal) :: simulationtime, dt
    real(8) :: RndNum
+
+   class(eT), allocatable :: eT_instance
+
+   eT_instance = eT()
+   call eT_instance%initialize()
+
+   call eT_instance%finalize()
 
 !-----------------------------------------------------------------------
 !                          STARTUP
