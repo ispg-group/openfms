@@ -218,10 +218,10 @@ contains
       write (fmiOut, *) '              Courtesy TJM and MBN'
       write (fmiOut, *)
 
-      ! Defined in print_version.F90
-      call print_version(fmiOut)
+      ! Defined in generated build_info.F90
+      call print_build_info(fmiOut)
 
-      write (fmiOut, *) 'host: '//trim(adjustl(host))
+      write (fmiOut, '(a, t25, a)') 'host:', trim(adjustl(host))
       write (fmiOut, *)
       write (fmiOut, *) divider
       write (fmiOut, *)
