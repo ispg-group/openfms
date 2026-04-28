@@ -24,7 +24,7 @@ endfunction()
 
 function(openfms_add_build_info output_variable)
   set(_openfms_build_info_source "${CMAKE_CURRENT_BINARY_DIR}/generated/build_info.F90")
-  set(_openfms_build_info_script "${CMAKE_CURRENT_SOURCE_DIR}/cmake/generate_build_info.sh")
+  set(_openfms_build_info_script "${CMAKE_CURRENT_SOURCE_DIR}/generate_build_info.sh")
   openfms_build_info_environment(_openfms_build_info_environment)
 
   add_custom_command(

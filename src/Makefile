@@ -87,7 +87,7 @@ build_info.F90: FORCE
 	OPENFMS_FC_VERSION='' \
 	OPENFMS_FFLAGS='$(FFLAGS)' \
 	OPENFMS_BUILD_DATE='$(BUILD_DATE)' \
-	../cmake/generate_build_info.sh $@
+	../generate_build_info.sh $@
 
 # Always recompile build_info.F90 to keep the git revision up to date.
 build_info.o: build_info.F90 $(OBJS) $(MOD_OBJS)
