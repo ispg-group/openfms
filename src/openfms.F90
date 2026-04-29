@@ -28,7 +28,7 @@ program OpenFMS
    integer(kind=DefInt) :: NumTraj, l
    integer(kind=DefInt) :: numparticles, numstates
    real(kind=DefReal) :: simulationtime, dt
-   real(8) :: RndNum
+   real(8) :: RndNum 
 
 !-----------------------------------------------------------------------
 !                          STARTUP
