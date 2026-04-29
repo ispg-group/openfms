@@ -3,9 +3,7 @@ include_guard(GLOBAL)
 function(openfms_add_core_library target)
   add_library("${target}" OBJECT
     ${OPENFMS_CORE_SOURCES}
-    "${OPENFMS_BUILD_INFO_SOURCE}"
   )
-  add_dependencies("${target}" openfms_build_info)
 
   set_target_properties("${target}" PROPERTIES
     Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/modules"
@@ -21,7 +19,13 @@ function(openfms_add_core_library target)
 endfunction()
 
 function(openfms_add_driver target core_target)
-  add_executable("${target}" src/openfms.F90)
+  openfms_configure_build_info_source("${OPENFMS_BUILD_INFO_SOURCE}")
+
+  add_executable("${target}"
+    src/openfms.F90
+    "${OPENFMS_BUILD_INFO_SOURCE}"
+  )
+  add_dependencies("${target}" openfms_build_info)
   target_link_libraries("${target}" PRIVATE "${core_target}")
 
   set_target_properties("${target}" PROPERTIES

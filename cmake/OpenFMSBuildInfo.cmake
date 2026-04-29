@@ -4,8 +4,6 @@ function(openfms_build_info_environment output_variable)
   set(_openfms_fortran_flags)
   openfms_collect_fortran_flags(_openfms_fortran_flags)
 
-  string(TIMESTAMP _openfms_build_date "%Y-%m-%d %H:%M:%S %z")
-
   set(_openfms_environment
     "OPENFMS_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
     "OPENFMS_VERSION=${OPENFMS_VERSION}"
@@ -16,7 +14,6 @@ function(openfms_build_info_environment output_variable)
     "OPENFMS_FC_ID=${CMAKE_Fortran_COMPILER_ID}"
     "OPENFMS_FC_VERSION=${CMAKE_Fortran_COMPILER_VERSION}"
     "OPENFMS_FFLAGS=${_openfms_fortran_flags}"
-    "OPENFMS_BUILD_DATE=${_openfms_build_date}"
   )
 
   set("${output_variable}" ${_openfms_environment} PARENT_SCOPE)
@@ -45,4 +42,11 @@ function(openfms_add_build_info output_variable)
   )
 
   set("${output_variable}" "${_openfms_build_info_source}" PARENT_SCOPE)
+endfunction()
+
+function(openfms_configure_build_info_source source)
+  string(TIMESTAMP _openfms_build_date "%Y-%m-%d %H:%M:%S %z")
+  set_source_files_properties("${source}" PROPERTIES
+    COMPILE_DEFINITIONS "OPENFMS_BUILD_DATE=\"${_openfms_build_date}\""
+  )
 endfunction()
