@@ -59,7 +59,7 @@ SUFFIXES=.f .c .F
 ####################
 
 FMSLIB = src/libfms.a
-MAIN = src/openfms.o
+MAIN = src/openfms.o src/build_info.o
 
 $(FMSLIB): makefmslib
 
