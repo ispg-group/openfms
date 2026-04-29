@@ -65,7 +65,6 @@ emit_string() {
    printf '   implicit none\n'
    printf '   integer, intent(in) :: unit\n'
    printf '   integer, parameter :: flag_width = 56\n'
-   printf '   integer :: flag_start, flag_end, flag_len\n'
    printf '\n'
    emit_string FMS_VERSION "$version"
    emit_string GIT_BRANCH "$git_branch"
@@ -81,6 +80,7 @@ emit_string() {
    emit_string OPENFMS_BACKEND "$backend"
    printf '\n'
    printf "   write (unit, '(1x, a, t25, a)') 'OpenFMS version:', trim(FMS_VERSION)\n"
+   printf "   write (unit, '(1x, a, t25, a)') 'backend/interface:', trim(OPENFMS_BACKEND)\n"
    printf "   write (unit, '(1x, a, t25, a)') 'git branch:', trim(GIT_BRANCH)\n"
    printf "   write (unit, '(1x, a, t25, a)') 'git revision:', trim(GIT_REVISION)//trim(GIT_DIRTY)\n"
    printf "   write (unit, '(1x, a, t25, a)') 'configuration date:', trim(BUILD_DATE)\n"
@@ -88,21 +88,7 @@ emit_string() {
    printf "   write (unit, '(1x, a, t25, a)') 'build type:', trim(BUILD_TYPE)\n"
    printf "   write (unit, '(1x, a, t25, a)') 'Fortran compiler:', trim(FORTRAN_COMPILER_ID)//' '//trim(FORTRAN_COMPILER_VERSION)\n"
    printf "   write (unit, '(1x, a, t25, a)') 'Fortran command:', trim(FORTRAN_COMPILER)\n"
-   printf "   flag_len = len_trim(FORTRAN_FLAGS)\n"
-   printf "   if(flag_len == 0) then\n"
-   printf "      write (unit, '(1x, a, t25, a)') 'Fortran flags:', ''\n"
-   printf "   else\n"
-   printf "      flag_start = 1\n"
-   printf "      flag_end = min(flag_len, flag_width)\n"
-   printf "      write (unit, '(1x, a, t25, a)') 'Fortran flags:', FORTRAN_FLAGS(flag_start:flag_end)\n"
-   printf "      flag_start = flag_end + 1\n"
-   printf "      do while(flag_start <= flag_len)\n"
-   printf "         flag_end = min(flag_len, flag_start + flag_width - 1)\n"
-   printf "         write (unit, '(t25, a)') FORTRAN_FLAGS(flag_start:flag_end)\n"
-   printf "         flag_start = flag_end + 1\n"
-   printf "      enddo\n"
-   printf "   endif\n"
-   printf "   write (unit, '(1x, a, t25, a)') 'backend/interface:', trim(OPENFMS_BACKEND)\n"
+   printf "   write (unit, '(1x, a, t25, a)') 'Fortran flags:', trim(FORTRAN_FLAGS)\n"
    printf 'end subroutine print_build_info\n'
    printf '\n'
    printf 'subroutine print_version(unit)\n'
