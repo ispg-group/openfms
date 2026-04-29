@@ -16,10 +16,17 @@ if(NOT CMAKE_CONFIGURATION_TYPES)
   )
 endif()
 
-# Backend selection
+# CMake currently builds the standalone analytical-potential backend only.
+# The Makefile remains the supported path for external interfaces.
 
-include(cmake/OpenFMSBackends.cmake)
-openfms_select_backend(OPENFMS_BACKEND)
+set(OPENFMS_BACKEND "zero" CACHE STRING "OpenFMS backend")
+set_property(CACHE OPENFMS_BACKEND PROPERTY STRINGS zero)
+if(NOT OPENFMS_BACKEND STREQUAL "zero")
+  message(FATAL_ERROR
+    "CMake currently supports only OPENFMS_BACKEND=zero. "
+    "Use the Makefile build for TeraChem or Quantics."
+  )
+endif()
 
 # Source and compiler configuration
 
@@ -33,7 +40,7 @@ include(cmake/OpenFMSTargets.cmake)
 openfms_add_build_info(OPENFMS_BUILD_INFO_SOURCE)
 
 openfms_add_core_library(openfms_core)
-openfms_add_driver(openfms openfms_core)
+openfms_add_driver(openfms openfms_core "${OPENFMS_BUILD_INFO_SOURCE}")
 
 if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
   # EISPACK is old fixed-form Fortran and needs GNU's legacy mode.

@@ -26,7 +26,7 @@ function(openfms_add_unit_tests openfms_core_target)
   )
   openfms_configure_fortran_target(openfms_unit_tests)
 
-  openfms_discover_unit_tests(OPENFMS_UNIT_CTEST_ENTRIES)
+  openfms_discover_unit_tests("${OPENFMS_UNIT_TEST_SUITE_SOURCES}" OPENFMS_UNIT_CTEST_ENTRIES)
   foreach(OPENFMS_UNIT_CTEST_ENTRY IN LISTS OPENFMS_UNIT_CTEST_ENTRIES)
     openfms_add_discovered_unit_test("${OPENFMS_UNIT_CTEST_ENTRY}")
   endforeach()
@@ -131,16 +131,11 @@ function(openfms_discover_unit_source_tests test_source suite_entries output_var
   set("${output_variable}" ${_openfms_unit_ctest_entries} PARENT_SCOPE)
 endfunction()
 
-function(openfms_discover_unit_tests output_variable)
-  file(GLOB OPENFMS_UNIT_TEST_SUITE_SOURCES
-    CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/unit_tests/test_*.F90"
-  )
-
+function(openfms_discover_unit_tests test_sources output_variable)
   openfms_discover_unit_suites(_openfms_unit_suite_entries)
   set(OPENFMS_UNIT_CTEST_NAMES)
   set(OPENFMS_UNIT_CTEST_ENTRIES)
-  foreach(OPENFMS_UNIT_TEST_SOURCE IN LISTS OPENFMS_UNIT_TEST_SUITE_SOURCES)
+  foreach(OPENFMS_UNIT_TEST_SOURCE IN LISTS test_sources)
     openfms_discover_unit_source_tests(
       "${OPENFMS_UNIT_TEST_SOURCE}"
       "${_openfms_unit_suite_entries}"

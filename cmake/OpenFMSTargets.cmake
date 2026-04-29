@@ -18,12 +18,12 @@ function(openfms_add_core_library target)
   openfms_configure_fortran_target("${target}")
 endfunction()
 
-function(openfms_add_driver target core_target)
-  openfms_configure_build_info_source("${OPENFMS_BUILD_INFO_SOURCE}")
+function(openfms_add_driver target core_target build_info_source)
+  openfms_configure_build_info_source("${build_info_source}")
 
   add_executable("${target}"
     src/openfms.F90
-    "${OPENFMS_BUILD_INFO_SOURCE}"
+    "${build_info_source}"
   )
   add_dependencies("${target}" openfms_build_info)
   target_link_libraries("${target}" PRIVATE "${core_target}")

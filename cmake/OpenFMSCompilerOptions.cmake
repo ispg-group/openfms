@@ -56,31 +56,14 @@ function(openfms_collect_fortran_flags output_variable)
   set("${output_variable}" "${_openfms_fortran_flags}" PARENT_SCOPE)
 endfunction()
 
-# Add options for any configuration
-
-function(openfms_add_fortran_options target compiler_ids)
-  target_compile_options("${target}" PRIVATE
-    "$<$<COMPILE_LANG_AND_ID:Fortran,${compiler_ids}>:${ARGN}>"
-  )
-endfunction()
-
-# Add options specific to a configuration (e.g., Release, Debug)
-
-function(openfms_add_fortran_config_options target compiler_ids config)
-  target_compile_options("${target}" PRIVATE
-    "$<$<AND:$<COMPILE_LANG_AND_ID:Fortran,${compiler_ids}>,$<CONFIG:${config}>>:${ARGN}>"
-  )
-endfunction()
-
-# Configure target by calling helpers to add global/config-specific options
-
 function(openfms_configure_fortran_target target)
-  openfms_add_fortran_options("${target}" "GNU" ${OPENFMS_GNU_WARNING_FLAGS})
-  openfms_add_fortran_config_options("${target}" "GNU" Debug ${OPENFMS_GNU_DEBUG_FLAGS})
-  openfms_add_fortran_config_options("${target}" "GNU" Release ${OPENFMS_GNU_RELEASE_FLAGS})
-
-  openfms_add_fortran_config_options("${target}" "Intel,IntelLLVM" Debug ${OPENFMS_INTEL_DEBUG_FLAGS})
-  openfms_add_fortran_config_options("${target}" "Intel,IntelLLVM" Release ${OPENFMS_INTEL_RELEASE_FLAGS})
+  target_compile_options("${target}" PRIVATE
+    "$<$<COMPILE_LANG_AND_ID:Fortran,GNU>:${OPENFMS_GNU_WARNING_FLAGS}>"
+    "$<$<AND:$<COMPILE_LANG_AND_ID:Fortran,GNU>,$<CONFIG:Debug>>:${OPENFMS_GNU_DEBUG_FLAGS}>"
+    "$<$<AND:$<COMPILE_LANG_AND_ID:Fortran,GNU>,$<CONFIG:Release>>:${OPENFMS_GNU_RELEASE_FLAGS}>"
+    "$<$<AND:$<COMPILE_LANG_AND_ID:Fortran,Intel,IntelLLVM>,$<CONFIG:Debug>>:${OPENFMS_INTEL_DEBUG_FLAGS}>"
+    "$<$<AND:$<COMPILE_LANG_AND_ID:Fortran,Intel,IntelLLVM>,$<CONFIG:Release>>:${OPENFMS_INTEL_RELEASE_FLAGS}>"
+  )
 
   if(OPENFMS_ENABLE_NATIVE_OPTIMIZATION)
     target_compile_options("${target}" PRIVATE
