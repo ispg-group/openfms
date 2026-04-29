@@ -22,7 +22,7 @@ MODULEDIR=modules/
 
 SUFFIXES=.f .F .f90 .F90
 
-.PHONY: modules list clean
+.PHONY: FORCE modules list clean
 
 #################################
 ### Sources Headers and Objects #
@@ -65,7 +65,7 @@ include moddepend
 
 moddepend: $(SRCS) ./Makemoddepend.pl
 	@echo "Generating module dependencies"
-	@./Makemoddepend.pl $(SRCS)
+	@./Makemoddepend.pl $(SRCS) openfms.F90
 
 ########################
 ###   Rules      #######
@@ -73,8 +73,6 @@ moddepend: $(SRCS) ./Makemoddepend.pl
 
 FC_VERSION:=$(shell $(FC) --version 2>/dev/null | sed -n '1p')
 BUILD_DATE:=$(shell date '+%Y-%m-%d %H:%M:%S %z')
-
-.PHONY: FORCE
 
 build_info.F90: FORCE
 	@OPENFMS_SOURCE_DIR=.. \
@@ -86,14 +84,11 @@ build_info.F90: FORCE
 	OPENFMS_FC_ID='$(FC_VERSION)' \
 	OPENFMS_FC_VERSION='' \
 	OPENFMS_FFLAGS='$(FFLAGS)' \
-	OPENFMS_BUILD_DATE='$(BUILD_DATE)' \
 	../generate_build_info.sh $@
 
 # Always recompile build_info.F90 to keep the git revision up to date.
 build_info.o: build_info.F90 $(OBJS) $(MOD_OBJS)
-	$(FC) -c $(FFLAGS) -I $(MODULEDIR) $<
-
-openfms.o: $(MOD_OBJS)
+	$(FC) -c $(FFLAGS) -I $(MODULEDIR) -DOPENFMS_BUILD_DATE="'$(BUILD_DATE)'" $<
 
 %.o : %.F
 	@echo "Compiling $<"
