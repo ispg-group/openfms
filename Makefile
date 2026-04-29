@@ -76,9 +76,9 @@ bin:
 
 # This is standalone OpenFMS, without external electronic structure
 bin/$(PROGBASE).zero: $(FMSLIB) $(MAKEFILE) bin
-		@rm -f bin/$(PROGBASE)
 		@echo;echo "Linking $(PROGRAM) ..."
 		$(LD) $(MAIN) $(FMSLIB) -I$(MODULEDIR) -o $(TARGET) $(LIBS) $(LDFLAGS)
+		@rm -f bin/$(PROGBASE)
 		@ln -s $(PROGRAM) bin/$(PROGBASE)
 		@echo "done"
 

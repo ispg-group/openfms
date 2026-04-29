@@ -86,12 +86,11 @@ build_info.F90: FORCE
 	OPENFMS_FC_ID='$(FC_VERSION)' \
 	OPENFMS_FC_VERSION='' \
 	OPENFMS_FFLAGS='$(FFLAGS)' \
-	OPENFMS_BUILD_DATE='$(BUILD_DATE)' \
 	../generate_build_info.sh $@
 
 # Always recompile build_info.F90 to keep the git revision up to date.
 build_info.o: build_info.F90 $(OBJS) $(MOD_OBJS)
-	$(FC) -c $(FFLAGS) -I $(MODULEDIR) $<
+	$(FC) -c $(FFLAGS) -I $(MODULEDIR) -DOPENFMS_BUILD_DATE="'$(BUILD_DATE)'" $<
 
 openfms.o: $(MOD_OBJS)
 
