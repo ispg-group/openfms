@@ -138,7 +138,7 @@ contains
                   id = Bundle%Trajectory(j)%TrajID
                   amp = Bundle%Trajectory(j)%Amplitude
                   ms = Bundle%Trajectory(j)%Ms
-                  ! som=Bundle%Trajectory(j)%ElecStruc%SOMat
+                  ! som=Bundle%Trajectory(j)%ElecStruc%SOMat ! Why is SOMat not copied???
                   cohist = Bundle%Trajectory(j)%CoupHist
 
                   call Bundle%Trajectory(j)%copy_from(Bundle%Trajectory(i))

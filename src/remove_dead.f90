@@ -97,7 +97,7 @@ subroutine FMS_RemoveDead(B1)
       NotCoupled = all(Coupled(:, i) == 0)
       OnIgnoreState = (StateID == glIgnoreState)
       PopBelowThresh = (Population(i) < spdPopToSpawn)
-!        GAIMS changed
+!        GAIMS changed --- using total pop of all sublevels
       pop = 0.d0
       do n = 1, ntraj
          if (B1%Trajectory(n)%CBF == B1%Trajectory(i)%CBF) then
@@ -110,7 +110,7 @@ subroutine FMS_RemoveDead(B1)
                       .or. (PopBelowThresh .and. NotCoupled))
       ForceDead = any(gliForceKill(:) == TrajID)
       if (ForceDead) then
-         B1%Trajectory(i)%DeadTime = -9999.0d0
+              B1%Trajectory(i)%DeadTime = -9999.0d0 ! Why is this done?
       end if
       MarkForDeath = (MarkForDeath .or. ForceDead)
 
@@ -219,6 +219,26 @@ subroutine FMS_RemoveDead(B1)
       BTemp%NCBFs = nCBF
       B1 = BTemp
       call BTemp%destroy()
+
+      write (fmiout, *) "Is Bundle still okay after remove_dead reconstruction?"
+      write (fmiout, *) " ----------------------------------------------------"
+      write (fmiout, *) "These trajs are in B1"
+      do iTraj = 1, B1%NumTraj
+         write (fmiout, *) "TrajID: ", B1%Trajectory(iTraj)%TrajID, "CBF: ", B1%Trajectory(iTraj)%CBF
+         write (fmiout, *) "Ms: ", B1%Trajectory(iTraj)%Ms
+         write (fmiout, *) "Amp: ", B1%Trajectory(iTraj)%Amplitude
+      end do
+      write (fmiout, *) " ----------------------------------------------------"
+
+      write (fmiout, *) "Centroids of B1"
+      write (fmiout, *) "Part 3: after remove_dead"
+      do iTraj = 1, (((B1%NCBFs - 1) * B1%NCBFs) / 2)
+         write (fmiout, *) "Centroid number", iTraj
+         write (fmiout, *) "Is centroid to trajectories", B1%Centroids(iTraj)%CentID
+         write (fmiout, *) "And has position: ", B1%Centroids(iTraj)%Particle(1)%get_pos()
+      end do
+      write (fmiout, *) " ----------------------------------------------------"
+
 
    end if
 
