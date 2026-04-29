@@ -28,7 +28,7 @@ program OpenFMS
    integer(kind=DefInt) :: NumTraj, l
    integer(kind=DefInt) :: numparticles, numstates
    real(kind=DefReal) :: simulationtime, dt
-   real(8) :: RndNum 
+   real(8) :: RndNum
 
 !-----------------------------------------------------------------------
 !                          STARTUP
@@ -208,23 +208,27 @@ contains
 !<
    subroutine print_header()
       character(len=256) :: host
-      character(len=*), parameter :: divider = '--------------------------------------------'
+      character(len=*), parameter :: divider = &
+                                     '--------------------------------------------------------------------------------'
+      character(len=*), parameter :: title = 'OpenFMS'
+      character(len=*), parameter :: subtitle = 'FMS for the Masses...'
+      character(len=*), parameter :: credit = 'Courtesy TJM and MBN'
 
       call hostnm(host)
 
-      write (fmiOut, *) divider
-      write (fmiOut, *) '                    OpenFMS'
+      write (fmiOut, '(a)') divider
+      write (fmiOut, '(a)') repeat(' ', (len(divider) - len(title)) / 2)//title
       write (fmiOut, *)
-      write (fmiOut, *) '              FMS for the Masses...'
-      write (fmiOut, *) '              Courtesy TJM and MBN'
+      write (fmiOut, '(a)') repeat(' ', (len(divider) - len(subtitle)) / 2)//subtitle
+      write (fmiOut, '(a)') repeat(' ', (len(divider) - len(credit)) / 2)//credit
       write (fmiOut, *)
 
       ! Defined in generated build_info.F90
       call print_build_info(fmiOut)
 
-      write (fmiOut, '(a, t25, a)') 'host:', trim(adjustl(host))
+      write (fmiOut, '(1x, a, t25, a)') 'host:', trim(adjustl(host))
       write (fmiOut, *)
-      write (fmiOut, *) divider
+      write (fmiOut, '(a)') divider
       write (fmiOut, *)
 
 !     NOTE(danielhollas): We do not print out the following list
