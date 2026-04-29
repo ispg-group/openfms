@@ -208,7 +208,7 @@ contains
    subroutine print_header()
       character(len=256) :: host
       character(len=*), parameter :: divider = &
-         '--------------------------------------------------------------------------------'
+                                     '--------------------------------------------------------------------------------'
       character(len=*), parameter :: title = 'OpenFMS'
       character(len=*), parameter :: subtitle = 'FMS for the Masses...'
       character(len=*), parameter :: credit = 'Courtesy TJM and MBN'
