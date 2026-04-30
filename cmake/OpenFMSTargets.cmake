@@ -20,6 +20,10 @@ endfunction()
 
 function(openfms_add_executable target core_target build_info_source)
   openfms_configure_build_info_source("${build_info_source}")
+  openfms_refresh_build_info_with("${build_info_source}"
+    src/openfms.F90
+    ${OPENFMS_CORE_SOURCES}
+  )
 
   add_executable("${target}"
     src/openfms.F90
