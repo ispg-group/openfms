@@ -1,6 +1,7 @@
-include_guard(GLOBAL)
-
 function(openfms_add_core_library target)
+  # Adds the core library 
+  # Note: both the main executable and unit-test executable can then link
+  # against the same compiled OpenFMS core
   add_library("${target}" OBJECT
     ${OPENFMS_CORE_SOURCES}
   )
@@ -11,14 +12,13 @@ function(openfms_add_core_library target)
 
   target_include_directories("${target}" PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/modules"
     "${CMAKE_CURRENT_BINARY_DIR}/modules"
   )
 
   openfms_configure_fortran_target("${target}")
 endfunction()
 
-function(openfms_add_driver target core_target build_info_source)
+function(openfms_add_executable target core_target build_info_source)
   openfms_configure_build_info_source("${build_info_source}")
 
   add_executable("${target}"

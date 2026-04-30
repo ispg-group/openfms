@@ -1,5 +1,5 @@
-include_guard(GLOBAL)
-
+# All OpenFMS source files (except main program file)
+# New source files must be added to this list to be compiled via CMake
 set(OPENFMS_CORE_SOURCES
   src/modules/GlobalModule.f90
   src/modules/EispackModule.f

@@ -8,38 +8,26 @@ SOURCE_DIR = Path(__file__).resolve().parent.parent
 OUTPUT = Path.cwd() / "OpenFMSDiscoveredUnitTests.cmake"
 
 TESTSUITE_REGISTRATIONS = re.compile(
-    r"new_testsuite\s*\(\s*\"([^\"]+)\"\s*,\s*([A-Za-z_][A-Za-z0-9_]*)",
-    re.IGNORECASE | re.MULTILINE,
+    r"new_testsuite\s*\(\s*\"([^\"]+)\"\s*,\s*([A-Za-z_][A-Za-z0-9_]*)"
 )
 SUITE_COLLECTOR = re.compile(
-    r"\bsubroutine\s+(collect_[A-Za-z0-9_]+)\s*\(",
-    re.IGNORECASE | re.MULTILINE,
+    r"\bsubroutine\s+(collect_[A-Za-z0-9_]+)\s*\("
 )
 UNITTEST_REGISTRATIONS = re.compile(
-    r"new_unittest\s*\(\s*\"([^\"]+)\"",
-    re.IGNORECASE | re.MULTILINE,
+    r"new_unittest\s*\(\s*\"([^\"]+)\""
 )
-
-
-def cmake_quote(value: str) -> str:
-    return value.replace("\\", "\\\\").replace('"', '\\"')
-
-
-def read_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8")
-
 
 def discover_suites(main_source: Path) -> dict[str, str]:
     return {
         suite_collector.lower(): suite_name
         for suite_name, suite_collector in TESTSUITE_REGISTRATIONS.findall(
-            read_text(main_source)
+            main_source.read_text(encoding="utf-8")
         )
     }
 
 
 def discover_source_tests(test_source: Path) -> tuple[str, list[str]]:
-    contents = read_text(test_source)
+    contents = test_source.read_text(encoding="utf-8")
     suite_collector = SUITE_COLLECTOR.search(contents).group(1)
     test_names = UNITTEST_REGISTRATIONS.findall(contents)
     return suite_collector, test_names
@@ -66,7 +54,7 @@ def write_cmake_include(output: Path, discovered_tests: list[tuple[str, str]]) -
     ]
     for suite_name, test_name in discovered_tests:
         lines.append(
-            f'openfms_add_discovered_unit_test("{cmake_quote(suite_name)}" "{cmake_quote(test_name)}")'
+            f'openfms_add_discovered_unit_test("{suite_name}" "{test_name}")'
         )
     lines.append("")
 
