@@ -26,7 +26,7 @@ function(openfms_add_build_info output_variable)
   set(_openfms_build_info_script "${CMAKE_CURRENT_SOURCE_DIR}/generate_build_info.sh")
   openfms_build_info_environment(_openfms_build_info_environment)
 
-  # Rerun build command when dependencies are never than stamp 
+  # Rerun build command when dependencies are newer than stamp 
   add_custom_command(
     OUTPUT "${_openfms_build_info_stamp}"
     BYPRODUCTS "${_openfms_build_info_source}"
