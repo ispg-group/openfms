@@ -12,7 +12,7 @@ and should live in a separate `test_<suite>.F90` file.
 > [!IMPORTANT]
 > If you don't adhere to this naming style, the new files will not be picked up in Makefile.
 
-All new test suite also need to be registered in `main.F90`, see below for details.
+All new test suites also need to be registered in `main.F90` and in `cmake/OpenFMSUnitTests.cmake`.
 
 The rest of this README is copied over from the
 [test-drive](https://github.com/fortran-lang/test-drive) framework that we utilize here,

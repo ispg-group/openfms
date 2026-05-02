@@ -18,7 +18,11 @@ if [[ $# -ne $NUMPARAM ]]; then
   exit 1
 fi
 
-FMSEXE="$PWD/$1"
+if [[ "$1" = /* ]]; then
+  FMSEXE="$1"
+else
+  FMSEXE="$PWD/$1"
+fi
 FMSOUT="err.out"
 TESTS="$2"
 ACTION="$3"

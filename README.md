@@ -43,6 +43,18 @@ to connect the OpenFMS and TeraChem processes. It is crucial that both TeraChem 
 with the same MPI library. Even then, succesfully establishing the connection between the two processes
 might be tricky. We highly recommend using the provided `run_fms_tc.sh` script for this purpose.
 
+### CMake support
+Currently only the standalone analytical-potential can be compiled and tested with CMake:
+
+```console
+# Configure
+cmake -S . -B build
+# Compile
+cmake --build build -j
+# Run tests
+ctest --test-dir build --output-on-failure
+```
+
 ## Development
 
 Please see the [Contribution Guide](CONTRIBUTING.md).

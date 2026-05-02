@@ -22,7 +22,7 @@ contains
                   new_unittest("set_pos_vec", test_set_pos_vec), &
                   new_unittest("set_mom_vec", test_set_mom_vec), &
                   new_unittest("set_pos_comp", test_set_pos_comp), &
-                  new_unittest("set_pos_comp", test_set_mom_comp), &
+                  new_unittest("set_mom_comp", test_set_mom_comp), &
                   new_unittest("get_comp_wrong_index", test_get_comp_wrong_index), &
                   new_unittest("set_comp_wrong_index", test_set_comp_wrong_index), &
                   new_unittest("set_vec_wrong_size", test_set_vec_wrong_size), &
