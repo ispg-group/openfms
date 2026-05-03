@@ -209,6 +209,7 @@ contains
       write (iunit, 2) T%get_time(), (T%Particle(i)%get_pos(), i=1, T%NumParticles), &
          ((T%Particle(i)%get_mom(j), j=1, T%Particle(i)%NumDimensions), i=1, T%NumParticles), &
          T%Phase, real(T%Amplitude), aimag(T%Amplitude), FMS_Weight(T), dble(T%StateID)
+      flush (iunit)
 
    end subroutine FMS_WriteFTrajDump
 !>
@@ -235,6 +236,7 @@ contains
       end if
 
       write (iunit, '(f10.2,4(f10.4))') T%get_time(), FMS_Weight(T), T%Amplitude
+      flush (iunit)
 
    end subroutine FMS_WriteFAmp
 !>
@@ -548,6 +550,7 @@ contains
       ! 4. Write the couplings
       write (IUnit, 2) T%get_time(), (sqrt(sum(FMS_Coupling(T, i, j)**2)), j=1, nstate), &
          (FMS_CoupDotVel(T, j), j=1, nstate)
+      flush (IUnit)
 
    end subroutine FMS_WriteFCouple
 !>
@@ -613,6 +616,7 @@ contains
       end if
 
       write (IUnit, 2) T%get_time(), Coup(1:k)
+      flush (IUnit)
 
    end subroutine FMS_WriteFSOCouple
 !>
@@ -916,6 +920,7 @@ contains
       ! 4. Write transition dipole
       write (iunit, 2) T%get_time(), (sqrt(sum(FMS_TransDipole(T, j)**2)), j=2, nstate), &
          (FMS_TransDipole(T, j), j=2, nstate)
+      flush (iunit)
 
    end subroutine FMS_WriteFTDipole
 !>
@@ -966,6 +971,7 @@ contains
       else
          write (iunit, 2) time, (Potential(T, j), j=1, nstate), Kinetic(T) + Potential(T, i)
       end if
+      flush (iunit)
 
    end subroutine FMS_WriteFPotEn
 !>

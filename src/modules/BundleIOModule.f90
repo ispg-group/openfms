@@ -57,6 +57,7 @@ contains
       call FMS_Branching(B1, Prob)
 
       write (IUnit, '(1x,f11.2,50(1x,f11.9))') B1%CurrentTime, (Prob(i), i=1, nstate), FMS_Norm(B1)
+      flush (IUnit)
 
    end subroutine FMS_WriteFBranching
 
@@ -100,6 +101,7 @@ contains
 
       ! write energies
       write (IUnit, '(f10.2,6(1x,f14.9))') B1%CurrentTime, PotQM, KinQM, PotQM + KinQM, PotCl, KinCl, PotCl + KinCl
+      flush (IUnit)
 
    end subroutine FMS_WriteFEnergy
 
@@ -182,6 +184,7 @@ contains
 
       Corr = overlap_bundle(B1, B_init)
       write (iUnit, '(f10.2,4(1x,f12.9))') B1%CurrentTime, abs(Corr)**2, Corr
+      flush (IUnit)
 
    contains
 
