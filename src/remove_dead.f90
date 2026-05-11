@@ -218,6 +218,10 @@ subroutine FMS_RemoveDead(B1)
 
       BTemp%NCBFs = nCBF
       B1 = BTemp
+
+      write (fmiout, *) "(After remove_dead)"
+      write (fmiout, *) "Number of Dead Trajs is now: ", B1%NumDeadTraj
+
       call BTemp%destroy()
 
       write (fmiout, *) "Is Bundle still okay after remove_dead reconstruction?"
