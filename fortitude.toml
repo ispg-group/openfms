@@ -1,6 +1,5 @@
 [check]
 ignore = [
-  "use-all", # should use "only:"
   "implicit-external-procedures", # requires Fortran 2018
   "star-kind", # don't use integer*4 et al
   "literal-kind",
@@ -11,9 +10,28 @@ ignore = [
 line-length = 132
 show-fixes = true
 extend-exclude = ["unit_tests/testdrive.F90"]
+
+# In general, we enforce the "use SomeModule, only: xxx, yyy" pattern,
+# to make it explicit which subroutine/variable come from a given module.
+# The below modules are exceptions, either for convenience (GlobalModule)
+# or necessity (Particle|Trajectory|Bundle modules, see check_module_usage.sh for explanation).
+[check.use-statements]
+allow-bare-use = [
+  "GlobalModule",
+  "FMSModule",
+  "ElecStrucModule",
+  "MinSearchModule",
+  "QM_MM_Module",
+  "SamplingModule",
+  "ParticleModule",
+  "TrajectoryModule",
+  "BundleModule",
+]
+
 [check.per-file-ignores]
 # TODO: Add missing intents!
 "src/modules/{Trajectory,Thermo,Terachem,Template,SMD,Bundle,Rattle,MinSearch,Restart,Spawn,Overlap}*.[fF]90" = ["missing-intent"]
+"src/read_namelist.f90" = ["use-all"]
 # TODO: Resolve this!
 "src/modules/SpawnModule.f90" = ["missing-exit-or-cycle-label"]
 # TODO: Would be nice to resolve this

@@ -10,7 +10,7 @@
 module MinSearchModule
    use GlobalModule
    use TrajectoryModule
-   use TrajectoryCalcsModule
+   use TrajectoryCalcsModule, only: FMS_MMForces, FMS_MMPot, FMS_PotentialT, FMS_Forces
    use TrajectoryIOModule, only: FMS_WriteFXYZ
    use QM_MM_Module, only: qczPCharge, qczQMMM, qcNumQM
    implicit none
@@ -55,7 +55,7 @@ contains
    ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    function FMS_MSfunc(P) result(pot)
       ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      use RattleModule
+      use RattleModule, only: nconstraint, cn_type_list, constraint
       use TrajectoryModule
       real(kind=DefReal) :: P(:)
       real(kind=DefReal) :: pot
@@ -91,7 +91,7 @@ contains
    subroutine FMS_MSdfunc(P, grad)
       ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       use TrajectoryModule
-      use RattleModule
+      use RattleModule, only: nconstraint, d_constraint, cn_type_list, constraint
       real(DefReal), intent(in) :: P(:)
       real(DefReal), intent(out) :: grad(size(P))
 
