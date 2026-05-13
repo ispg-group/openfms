@@ -410,7 +410,7 @@ contains
 !     Find dimension index
       if (iParticle > 1) then
          jDim = sum(T1%Particle(1:iParticle - 1)%NumDimensions) + iDim
-      elseif (iParticle == 1) then
+      else if (iParticle == 1) then
          jDim = iDim
       else
          call FMS_DieError("Invalid IParticle passed to FMS_MMForceComp")
@@ -731,9 +731,8 @@ contains
 !! \todo Document
 !<
    function FMS_KineticClass(Trajectory) result(Energy)
-      type(T_Trajectory) :: Trajectory
+      type(T_Trajectory), intent(in) :: Trajectory
       real(kind=DefReal) :: Energy
-      intent(in) Trajectory
       integer(kind=DefInt) :: IDim, IParticle
 
       Energy = 0
@@ -842,7 +841,7 @@ contains
 !     Find dimension index
       if (iParticle > 1) then
          jDim = sum(T1%Particle(1:iParticle - 1)%NumDimensions) + iDim
-      elseif (iParticle == 1) then
+      else if (iParticle == 1) then
          jDim = iDim
       else
          call FMS_DieError("Invalid IParticle passed to FMS_MMForceComp")
@@ -1472,7 +1471,7 @@ contains
       end do
       if (esnBasis > 0 .and. .not. T1%ESFlags%zESExists) then
          call FMS_WriteInput(Geom, T1%StateID, 'template.genorb.write')
-      elseif (esnBasis > 0) then
+      else if (esnBasis > 0) then
          call FMS_WriteInput(Geom, T1%StateID, 'template.write', &
                              Orb=T1%ElecStruc%OldOrbitals, CIVec=T1%ElecStruc%OldCIVecs)
       else
@@ -1735,9 +1734,8 @@ contains
 !!    @ingroup analysis
 !<
    function FMS_KineticT(Trajectory) result(Energy)
-      type(T_Trajectory) :: Trajectory
+      type(T_Trajectory), intent(in) :: Trajectory
       real(kind=DefReal) :: Energy
-      intent(in) Trajectory
       integer(kind=DefInt) :: IDim, IParticle
 
       Energy = 0

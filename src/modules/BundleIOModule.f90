@@ -377,10 +377,8 @@ contains
 !!    For reading complex matrix files
 !<
       subroutine FMS_ReadCMat(A, Unit)
-         complex(kind=DefComp) :: A(:, :)
-         integer(kind=DefInt) :: Unit
-         intent(inout) A
-         intent(in) Unit
+         complex(kind=DefComp), intent(inout) :: A(:, :)
+         integer(kind=DefInt), intent(in) :: Unit
          integer(kind=DefInt) :: i, j
 
          do i = 1, size(A, dim=1)

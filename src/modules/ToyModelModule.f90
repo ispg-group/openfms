@@ -429,8 +429,8 @@ contains
          drsigma = 2.d0
          if (x <= (rsigma - (drsigma / 2.d0))) then
             sigma = 1.d0
-         elseif ((x > (rsigma - (drsigma / 2.d0))) .and. &
-                 (x < (rsigma + (drsigma / 2.d0)))) then
+         else if ((x > (rsigma - (drsigma / 2.d0))) .and. &
+                  (x < (rsigma + (drsigma / 2.d0)))) then
             sigma = 4.d0 * ((x - rsigma) / (drsigma))**3 - &
                     3.d0 * ((x - rsigma) / (drsigma))
          else
