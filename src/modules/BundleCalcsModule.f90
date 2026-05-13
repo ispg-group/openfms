@@ -745,8 +745,7 @@ contains
 !     tjm  Alternative procedure is to build b=HEff1*Amp
 !     tjm  Then solve S x ampdot = b
 !     DH: Deactivate this branch to get rid of dependency on BLAS/LAPACK
-         print*,"GlzIterInv is not supported right now"
-         stop 1
+         call FMS_DieError("GlzIterInv is not supported right now")
 
          call cpu_time(time_tmp1)
 
@@ -852,10 +851,9 @@ contains
 !!    @ingroup analysis
 !<
    function FMS_KineticB(Bundle, Incoherent) result(Energy)
-      type(T_TrajectoryBundle) :: Bundle
+      type(T_TrajectoryBundle), intent(in) :: Bundle
       real(kind=DefReal) :: Energy, EnergyInc
       logical, optional :: Incoherent
-      intent(in) Bundle
       integer(kind=DefInt) :: ITraj, JTraj
       logical :: IncSum
 

@@ -144,7 +144,7 @@ contains
       txt = unitname(7:7)
       if (txt == "a" .or. txt == "A") then ! Angstrom
          GeomInAngs = .true.
-      elseif (txt == "b" .or. txt == "B") then ! Bohr
+      else if (txt == "b" .or. txt == "B") then ! Bohr
          GeomInAngs = .false.
       end if
 

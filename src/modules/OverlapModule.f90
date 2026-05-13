@@ -219,8 +219,9 @@ contains
       ndim_1 = P1%NumDimensions
       ndim_2 = P2%NumDimensions
 
-      if (ndim_1 /= ndim_2) &
+      if (ndim_1 /= ndim_2) then
          call FMS_DieError('overlap_dx_particle: dimension mismatch')
+      end if
 
       a_1 = P1%width
       a_2 = P2%width
@@ -263,8 +264,9 @@ contains
       ndim_1 = P1%NumDimensions
       ndim_2 = P2%NumDimensions
 
-      if (ndim_1 /= ndim_2) &
+      if (ndim_1 /= ndim_2) then
          call FMS_DieError('overlap_dp_particle: dimension mismatch')
+      end if
 
       a_1 = P1%width
       a_2 = P2%width
@@ -307,8 +309,9 @@ contains
       ndim_1 = P1%NumDimensions
       ndim_2 = P2%NumDimensions
 
-      if (ndim_1 /= ndim_2) &
+      if (ndim_1 /= ndim_2) then
          call FMS_DieError('overlap_d2x_particle: Particle Dimensionalities must be the same!')
+      end if
 
       alpha_1 = P1%width
       alpha_2 = P2%width
@@ -636,7 +639,7 @@ contains
             else
                mode = C
             end if
-         elseif (.not. (T_i%triplet .and. T_j%triplet)) then ! (2)
+         else if (.not. (T_i%triplet .and. T_j%triplet)) then ! (2)
             mode = D
          else ! (3)
 !    if( CBFi /= CBFj ) then
@@ -666,8 +669,9 @@ contains
       case (B, C, D, G, H, I)
 !bfec
          if (glzCentroids) then
-            if (.not. present(T_c)) &
+            if (.not. present(T_c)) then
                call FMS_DieError('overlap_V_trajectory :: no centroid passed')
+            end if
 
             ! check that the correct centroid was passed
 !    cent_match = (it==ic .and. jt==jc) .or. (jt==ic .and. it==jc)
@@ -835,7 +839,7 @@ contains
       case (I)
          if (abs(Msi - Msj) > 1) then
             V = (0.d0, 0.d0)
-         elseif (CBFi == CBFj) then
+         else if (CBFi == CBFj) then
             V = (0.d0, 0.d0)
          else
             SOC_ij = FMS_SOCoupling(T_c, is, js, Msi, Msj)
@@ -1050,7 +1054,7 @@ contains
             dE = -0.35d0 * 0.03452d0 * exp(-0.35d0 * x_cent)
          end if
          PotEn = dE * S_ij * roe
-      elseif ((T1%StateID == T2%StateID) .and. (T1%Ms /= T2%Ms)) then !for interstate case F
+      else if ((T1%StateID == T2%StateID) .and. (T1%Ms /= T2%Ms)) then !for interstate case F
          dSOC = (0.0, 0.0)
          PotEn = dSOC * S_ij * roe
       else !for interstate case D
@@ -1064,7 +1068,7 @@ contains
          if (T1%StateID == 1) then
             if (T2%Ms == 1) then
                dSOC = conjg((0.0005, 0.0005) * sigma_G) ! z*  : S,T-1
-            elseif (T2%Ms == 2) then
+            else if (T2%Ms == 2) then
                dSOC = c1i * 0.001d0 * sigma_G ! ib  : S,T0
             else
                dSOC = (0.0005, 0.0005) * sigma_G ! z   : S,T1
@@ -1072,7 +1076,7 @@ contains
          else
             if (T1%Ms == 1) then
                dSOC = (0.0005, 0.0005) * sigma_G ! z   : T-1,S
-            elseif (T1%Ms == 2) then
+            else if (T1%Ms == 2) then
                dSOC = -c1i * 0.001d0 * sigma_G ! -ib : T0,S
             else
                dSOC = conjg((0.0005, 0.0005) * sigma_G) ! z*  : T1,S

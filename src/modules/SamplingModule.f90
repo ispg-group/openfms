@@ -708,7 +708,7 @@ contains
 !    rotate it with our random rotation matrix.
 1        continue
          IOne = int(dble(NPSDim - 1) * FMS_ranb(i4zero) + 1.50d0)
-         if (IOne > NPSDim .or. IOne == 0) go to 1
+         if (IOne > NPSDim .or. IOne == 0) goto 1
 !    Matrix-vector multiplication CRMat*UnitVector
          do i = 1, NPSDim
             UVec(i) = real(CRMat(i, IOne))

@@ -244,7 +244,7 @@ contains
                   call child_f%destroy()
                end if
 
-            elseif (spMultiSpawn == 1) then
+            else if (spMultiSpawn == 1) then
                if (spawn_trajectory(B1%Trajectory(i), cs, spMultiSpawn, COUP_FIELD, COUP_CI)) then
                   call parent_i%create(npart, nstate)
                   call parent_s%create(npart, nstate)

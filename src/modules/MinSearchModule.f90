@@ -140,7 +140,9 @@ contains
       !<
       use TrajectoryModule
       use ElecStrucModule, only: eszPartialCharges
-      use RattleModule
+      use RattleModule, only: nconstraint, all_position_constrained, &
+                              Rattle_ReadConstraints, Rattle_SetConstraints, &
+                              cn_atom_list, cn_type_list
       use QM_MM_Module
       integer(kind=DefInt) :: iter, FMS_Minimizer
       real(kind=DefReal) :: toler

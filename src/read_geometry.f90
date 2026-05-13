@@ -50,7 +50,7 @@ subroutine FMS_ReadGeometry(T1)
    txt = unitname(7:7)
    if (txt == "a" .or. txt == "A") then
       ConUnits = .true.
-   elseif (txt == "b" .or. txt == "B") then
+   else if (txt == "b" .or. txt == "B") then
       ConUnits = .false.
    else ! If this line is absent code will stop
       write (fmiOut, *) 'First line in Geometry.dat must define the units'

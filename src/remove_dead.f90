@@ -125,7 +125,7 @@ subroutine FMS_RemoveDead(B1)
          ndead = ndead + 1
          if (ForceDead) then
             write (fmiOut, '(a,i0,a,i0)') "** Force Killing trajectory ", TrajID, " on state ", StateID
-         elseif (OnIgnoreState) then
+         else if (OnIgnoreState) then
             write (fmiOut, '(a,i0,a,i0)') "** Killing trajectory ", TrajID, " on state ", StateID
          else
             write (fmiOut, '(a,i0,a,f6.5)') "** Killing trajectory ", TrajID, " pop < ", spdPopToSpawn
