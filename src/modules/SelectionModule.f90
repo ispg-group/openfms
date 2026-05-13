@@ -80,7 +80,8 @@ contains
       logical :: isSing, isTrip, isSingTrip
       logical :: IsSelection
 ! --- Added 4 sep SS end ---
-      integer(kind=DefInt) :: iTraj, i, j, k, nblock_outer, totDeadCount
+      integer(kind=DefInt) :: iTraj, i, j, k, nblock_outer, totDeadCount, prev_add_traj
+      integer(kind=DefInt) :: skip_positions
 ! AIMSWISS: Shall we perform stochastic selection
       logical :: performSelection
 ! AIMSWISS: Current selection time
@@ -149,10 +150,10 @@ contains
          !write (fmiout, *) "Building coupled matrix for total Bundle (B1, unseparated)"
          Coupled = 0
          call FMS_BuildCoupled(B1, Coupled, selectionTime)
-         !write (fmiout, *) "This is the total, converged coupled matrix of size ", size(Coupled)
-         !do iTraj = 1, B1%NumTraj
-         !   write (fmiout, *) Coupled(iTraj,:)
-         !end do
+         write (fmiout, *) "This is the total, converged coupled matrix of size ", size(Coupled)
+         do iTraj = 1, B1%NumTraj
+            write (fmiout, *) Coupled(iTraj,:)
+         end do
 
          !write (fmiout, *) "Get number of blocks for total Bundle (B1, unseparated)"
          blocktrajid = 0
@@ -212,24 +213,77 @@ contains
 
          ! Merge blocks depending on isSIng, isTrip
          ! (No action for isSingTrip because not to be touched in StoSel
+         write (fmiout, *) "blocktrajid before merging: "
+         do i = 1, B1%NumTraj + 1
+            write (fmiout, *) blocktrajid(i,:)
+         end do
+
          do i = 1, nblock_outer
+
+            !write (fmiout, *) "Entering loop for i = ", i
+            !write (fmiout, *) "Part of blocktrajid we are using: ", blocktrajid(i,:)
+            !write (fmiout, *) "General question: what is NumTrajBlock???", NumTrajBlock
 
             if (StoSelMode(i) == 0) cycle
 
+            !prev_add_traj = 0
+
             do j = i+1, nblock_outer
+               write (fmiout, *) "Entering loop for j = ", j
 
                if (StoSelMode(i) == StoSelMode(j)) then
+
                   ! Copy over block j TrajIDs to i column of blocktrajid
-                  blocktrajid(NumTrajBlock(i)+1:NumTrajBlock(i)+NumTrajBlock(j), i) = blocktrajid(1:NumTrajBlock(j),j)
+                  ! Set the NumTrajBlock(i:j) positions in the i column to the indices in the jth column
+                  !blocktrajid(NumTrajBlock(i)+1:NumTrajBlock(i)+NumTrajBlock(j), i) = blocktrajid(1:NumTrajBlock(j),j)
+                  !write (fmiout, *) "Copied over ", blocktrajid(1:NumTrajBlock(j),j), " to ",&
+                  !                  blocktrajid( sum(NumTrajBlock(1:j)) : NumTrajBlock(i) + NumTrajBlock(j), i)
+
+                  ! Count how many positions need to be skipped
+                  skip_positions = 0
+                  do k = 1, j-1
+                     if (StoSelMode(k) == StoSelMode(j)) then
+                        skip_positions = skip_positions + NumTrajBlock(k)
+                     end if
+                  end do
+                  !write (fmiout, *) "This many positions ", skip_positions, "need 2 be skipped in col", i
+
+                  prev_add_traj = 0
+                  !write (fmiout, *) "++++++++++++++++++++"
+                  do k = 1, NumTrajBlock(j)
+                     !write (fmiout, *) "Number of trajs added to column", i, "in a previous step: ", prev_add_traj
+                     !write (fmiout, *) "Number of trajs in previous blocks: ", NumTrajBlock(1:j-1), "in sum: ", &
+                     !                  sum(NumTrajBlock(1:j-1))
+                     !write (fmiout, *) "Now replace element ", skip_positions+k, "in ", &
+                     !                   i, "th column by", blocktrajid(k,j)
+                     blocktrajid(skip_positions+k, i) = blocktrajid(k,j)
+                     prev_add_traj = prev_add_traj + 1
+                  end do
+                  !write (fmiout, *) "++++++++++++++++++++"
+
                   ! Set j column to zero
                   blocktrajid(:,j) = 0
-                  ! Set StoSelMode to zero for block copied over (the j column)
-                  StoSelMode(j) = 0
+
+                  !write (fmiout, *) "Part of blocktrajid was modified to: ", blocktrajid(i,:)
+                  !write (fmiout, *) "The ith column is now: ", blocktrajid(:,i)
 
                end if
 
             end do
 
+         end do
+
+         ! Set StoSelMode to zero if column of blocktrajid is fully zero
+         ! i.e. if the block was copied over (the j column)
+         do i = 1, nblock_outer
+            if (all(blocktrajid(:,i) == 0)) then
+               StoSelMode(i) = 0
+            end if
+         end do
+
+         write (fmiout, *) "blocktrajid after merging: "
+         do i = 1, B1%NumTraj + 1
+            write (fmiout, *) blocktrajid(i,:)
          end do
 
          MergedBlockTrajID = blocktrajid
@@ -314,6 +368,7 @@ contains
             end if
          end do
          nblockMerged = BundlesMultDim
+         write (fmiout, *) "nblock_outer = ", nblock_outer, "StoSelMode = ", StoSelMode
          !write (fmiout, *) "BundlesMultDim based on merged blocktrajid: ", BundlesMultDim
          !write (fmiout, *) "nblock based on merged blocktrajid: ", nblockMerged
 
@@ -323,6 +378,7 @@ contains
 
          ! Create BundlesMultDim many temp bundles and fill them up
          ! with corresponding trajs from B1
+         write (fmiout, *) "This is the blocktrajid to be used in getMultBundles: ", blocktrajid
          call getMultBundles(B1, BundlesMult, BundlesMultDim, blocktrajid)
 
          ! Set the norm of each temporary bundle to one (for SS)
@@ -1364,7 +1420,12 @@ contains
       do iblocks = 1, bundlesmultdim
 
          CBFcount = 0
+         !CBFcurr = 1 + CBFCount
          do iTraj =1, B1%NumTraj
+
+            !write (fmiout, *) "Counting NCBFs in block ", iblocks
+            !write (fmiout, *) "The current CBF is: ", CBFcurr
+            !write (fmiout, *) "This is blocktrajid", blocktrajid
 
             ! count traj if its ID is in the current block
             if (any(blocktrajid(:, iblocks) == iTraj)) then
@@ -1379,8 +1440,9 @@ contains
 
          end do
 
-         !write (fmiout, *) "Number of Trajs and CBFs in block ", iblocks
-         !write (fmiout, *) NumTrajBlock(iblocks), NumCBFBlock(iblocks)
+         ! useful printing --> keep!
+         write (fmiout, *) "Number of Trajs and CBFs in block ", iblocks
+         write (fmiout, *) NumTrajBlock(iblocks), NumCBFBlock(iblocks)
 
       end do
 
@@ -1402,13 +1464,14 @@ contains
 
       end do
 
-      !write (fmiout, *) " ----------------------------------------------------"
-      !write (fmiout, *) "These are the empty, separated Bundles we created: "
-      !do iblocks = 1, BundlesMultDim
-      !   write (fmiout, *) "Block number ", iblocks
-      !   write (fmiout, *) "Number trajs, Number CBFs:", BundlesMult(iblocks)%NumTraj, BundlesMult(iblocks)%NCBFs
-      !end do
-      !write (fmiout, *) " ----------------------------------------------------"
+      ! useful printing --> keep!
+      write (fmiout, *) " ----------------------------------------------------"
+      write (fmiout, *) "These are the empty, separated Bundles we created: "
+      do iblocks = 1, BundlesMultDim
+         write (fmiout, *) "Block number ", iblocks
+         write (fmiout, *) "Number trajs, Number CBFs:", BundlesMult(iblocks)%NumTraj, BundlesMult(iblocks)%NCBFs
+      end do
+      write (fmiout, *) " ----------------------------------------------------"
 
       ! Copy over to the temp, separated bundles:
       ! - matching trajs according 2 BlockTrajID column
