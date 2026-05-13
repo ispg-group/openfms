@@ -41,7 +41,7 @@ hooks = [
     id = "module-usage",
     name = "Check module usage",
     language = "system",
-    entry = "./check_modules.sh",
+    entry = "./check_module_usage.sh",
     files = ".[fF]90$",
     pass_filenames = true
   },
