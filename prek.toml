@@ -15,7 +15,7 @@ hooks = [
 [[repos]]
 # fortitude: A Fortran linter, https://fortitude.readthedocs.io/
 repo = "https://github.com/PlasmaFAIR/fortitude-pre-commit"
-rev = "v0.8.0"
+rev = "v0.9.0"
 hooks = [
   {
     id = "fortitude",
