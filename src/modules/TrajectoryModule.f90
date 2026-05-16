@@ -43,6 +43,7 @@ module TrajectoryModule
 !--------------------------------------------------------------------!
 
    type T_ESFlags
+!     private
 !!    Flags to track electronic structure status
 
       logical :: zIgnoreErrors
@@ -82,6 +83,7 @@ module TrajectoryModule
 !---------------------------------------------------------------------!
 
    type T_BFlags
+!     private
 !!    Flags to track bundle status
 
       logical :: zBundleCurrent
