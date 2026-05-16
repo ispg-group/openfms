@@ -28,8 +28,22 @@ jobs:
     - name: Run prek hooks
       run: prek run --all-files --show-diff-on-failure --color always
 
+  docs-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      SKIP: 'no-commit-to-branch'
+
+    steps:
+    - uses: actions/checkout@v6
+
     - name: Install FORD
       run: pip install ford
 
     - name: Build docs
       run: ford openfms_docs.md
+
+    - uses: actions/upload-artifact@v7
+      with:
+        name: Docs artifact
+        path: ./docs/ 
