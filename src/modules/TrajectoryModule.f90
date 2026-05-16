@@ -47,31 +47,31 @@ module TrajectoryModule
 !!    Flags to track electronic structure status
 
       logical :: zIgnoreErrors
-      !! For the first timestep of centroids only - we can ignore 
+      !! For the first timestep of centroids only - we can ignore
       !! phasing and diabatization errors.
-      logical :: zESExists 
+      logical :: zESExists
       !! Does a wavefunction exist to restart from?
-      logical :: ZPotEnCurrent 
+      logical :: ZPotEnCurrent
       !! Is the potential calculated for the current geometry
       logical :: ZTransDipsCurrent
       !! If transition dipoles are calculated for this geometry
-      logical :: ZTransDipsCurrentxf 
+      logical :: ZTransDipsCurrentxf
       !! xf added (TODO: Needs more thorough documentation!)
-      logical :: ZDipolesCurrent 
+      logical :: ZDipolesCurrent
       !! If dipoles are calculated for this geometry
       logical :: ZQuadpolesCurrent
       !! If quadrupoles are calculated for this geometry
-      logical :: zMMPotCurrent 
+      logical :: zMMPotCurrent
       !! If MM potential is calculated for the current geometry
       logical :: zMMForceCurrent
       !! If MM forces are calculated for the current geometry
-      logical :: zModPotCurrent 
+      logical :: zModPotCurrent
       !! Are external force modifications current?
 
-      ! TODO: Add appropriate documentation here! Also the name 
-      ! DerivCurrent is rather misleding, as it contains information 
+      ! TODO: Add appropriate documentation here! Also the name
+      ! DerivCurrent is rather misleding, as it contains information
       ! on if the forces/couplings are up-to-date. Maybe splitting it
-      ! up into two flags? 
+      ! up into two flags?
       !< Is the coupling current with the geometry for this state?
       !< Are the derivatives current with the geometry for this state?
       logical, allocatable :: ZDerivCurrent(:, :)
@@ -88,7 +88,7 @@ module TrajectoryModule
 
       logical :: zBundleCurrent
       !! Has the trajectory changed since the last bundle calculation?
-      logical :: ZAmpDotCurrent 
+      logical :: ZAmpDotCurrent
       !! Is AmpDot current?
 
    end type T_BFlags
