@@ -1,5 +1,10 @@
-!  Copyright Todd J. Martinez and Raphael D. Levine, 1994
-!>
+module TrajectoryModule
+!---------------------------------------------------------------------!
+!                                                                     !
+!  Copyright Todd J. Martinez and Raphael D. Levine, 1994             !
+!                                                                     !
+!---------------------------------------------------------------------!
+!!
 !! @brief Trajectory class specification and related methods
 !!
 !! This module specifies the trajectory type, and all related
@@ -18,8 +23,7 @@
 !! are in TrajectoryIOModule.
 !!
 !! \image latex "../sources/TrajModule.png"
-!<
-module TrajectoryModule
+!!
 
    use GlobalModule, only: D2, Pi, DefInt, DefReal, DefComp, fmiOut, FPZero, &
                            glzStoSwiss, gldDecoherenceTime, FMS_DieError
@@ -37,37 +41,57 @@ module TrajectoryModule
 !--------------------------------------------------------------------!
 
 !--------------------------------------------------------------------!
-! Flags to track electronic structure status
-   type T_ESFlags
-!        private
-      logical :: zIgnoreErrors, & !< For the first timestep of centroids only - we can ignore phasing and diabatization errors.
-                 zESExists, & !< Does a wavefunction exist to restart from?
-                 ZPotEnCurrent, & !< Is the potential calculated for the current geometry
-                 ZTransDipsCurrent, & !< If transition dipoles are calculated for this geometry
-                 ZTransDipsCurrentxf, & !< xf added
-                 ZDipolesCurrent, & !< If dipoles are calculated for this geometry
-                 ZQuadpolesCurrent, & !< If quadrupoles are calculated for this geometry
-                 zMMPotCurrent, & !< If MM potential is calculated for the current geometry
-                 zMMForceCurrent, & !< If MM forces are calculated for the current geometry
-                 zModPotCurrent !< Are external force modifications current?
 
+   type T_ESFlags
+!!    Flags to track electronic structure status
+
+      logical :: zIgnoreErrors
+      !! For the first timestep of centroids only - we can ignore 
+      !! phasing and diabatization errors.
+      logical :: zESExists 
+      !! Does a wavefunction exist to restart from?
+      logical :: ZPotEnCurrent 
+      !! Is the potential calculated for the current geometry
+      logical :: ZTransDipsCurrent
+      !! If transition dipoles are calculated for this geometry
+      logical :: ZTransDipsCurrentxf 
+      !! xf added (TODO: Needs more thorough documentation!)
+      logical :: ZDipolesCurrent 
+      !! If dipoles are calculated for this geometry
+      logical :: ZQuadpolesCurrent
+      !! If quadrupoles are calculated for this geometry
+      logical :: zMMPotCurrent 
+      !! If MM potential is calculated for the current geometry
+      logical :: zMMForceCurrent
+      !! If MM forces are calculated for the current geometry
+      logical :: zModPotCurrent 
+      !! Are external force modifications current?
+
+      ! TODO: Add appropriate documentation here! Also the name 
+      ! DerivCurrent is rather misleding, as it contains information 
+      ! on if the forces/couplings are up-to-date. Maybe splitting it
+      ! up into two flags? 
       !< Is the coupling current with the geometry for this state?
       !< Are the derivatives current with the geometry for this state?
       logical, allocatable :: ZDerivCurrent(:, :)
       logical, allocatable :: ZSOMCurrent(:, :, :, :)
       !< This should be replaced by zForcesCurrent
+
    end type T_ESFlags
 
 !---------------------------------------------------------------------!
-!>
-!!    Flags to track bundle status
-!<
+
    type T_BFlags
-!     private
-      logical :: zBundleCurrent, & !< Has the trajectory changed since the last bundle calculation?
-                 ZAmpDotCurrent !< Is AmpDot current?
+!!    Flags to track bundle status
+
+      logical :: zBundleCurrent
+      !! Has the trajectory changed since the last bundle calculation?
+      logical :: ZAmpDotCurrent 
+      !! Is AmpDot current?
 
    end type T_BFlags
+
+!---------------------------------------------------------------------!
 
 !----------------------------------------------------------------------------
 !>
