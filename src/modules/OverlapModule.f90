@@ -853,7 +853,7 @@ contains
 !   write(fmiOut,*) '#########################'
 
       case default
-         call FMS_DieError("Invalid mode in overlap_V_trajectory")
+         call FMS_DieError('Invalid mode in overlap_V_trajectory')
 
       end select
 
@@ -979,7 +979,7 @@ contains
                             delta_x, delta_p, x_cent, charge
 
       if (P1%NumDimensions /= 3) then
-         call FMS_DieError("nuc_dip_particlexf only implemented for 3D systems")
+         call FMS_DieError('nuc_dip_particlexf only implemented for 3D systems')
       end if
 
       a_1 = P1%width
@@ -1032,7 +1032,7 @@ contains
       complex(kind=DefComp) :: PotEn, dE, dSOC, roe
 
       if (glIMethod /= 4) then
-         call FMS_DieError("SPA1 only available for GAIMS 1D Toy Model")
+         call FMS_DieError('SPA1 only available for GAIMS 1D Toy Model')
       end if
 
       x_1 = T1%Particle(1)%get_pos(1)

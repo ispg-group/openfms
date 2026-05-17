@@ -117,18 +117,18 @@ subroutine FMS_RemoveDead(B1)
       if (.not. MarkForDeath) then
          B1%Trajectory(i)%DeadTime = B1%CurrentTime
       else
-         write (fmiOut, '(a,i0,a)') "Traj ", TrajID, " was marked for death"
+         write (fmiOut, '(a,i0,a)') 'Traj ', TrajID, ' was marked for death'
       end if
 
 !        Workout who is getting killed
       if (B1%Trajectory(i)%is_dead()) then
          ndead = ndead + 1
          if (ForceDead) then
-            write (fmiOut, '(a,i0,a,i0)') "** Force Killing trajectory ", TrajID, " on state ", StateID
+            write (fmiOut, '(a,i0,a,i0)') '** Force Killing trajectory ', TrajID, ' on state ', StateID
          else if (OnIgnoreState) then
-            write (fmiOut, '(a,i0,a,i0)') "** Killing trajectory ", TrajID, " on state ", StateID
+            write (fmiOut, '(a,i0,a,i0)') '** Killing trajectory ', TrajID, ' on state ', StateID
          else
-            write (fmiOut, '(a,i0,a,f6.5)') "** Killing trajectory ", TrajID, " pop < ", spdPopToSpawn
+            write (fmiOut, '(a,i0,a,f6.5)') '** Killing trajectory ', TrajID, ' pop < ', spdPopToSpawn
          end if
       end if
    end do
@@ -153,7 +153,7 @@ subroutine FMS_RemoveDead(B1)
       iLive = 0
       iDead = 0
       nCBF = 0
-      write (fmiOut, '(a,/,a)') "Reconstructing trajectory bundle. Living trajectories:"
+      write (fmiOut, '(a,/,a)') 'Reconstructing trajectory bundle. Living trajectories:'
 
       do iTraj = 1, B1%NumTraj
          if (.not. B1%Trajectory(iTraj)%is_dead()) then

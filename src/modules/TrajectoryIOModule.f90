@@ -191,7 +191,7 @@ contains
 
          inquire (file=file_name, exist=file_existed)
          if (file_existed) then
-            open (newunit=iunit, file=trim(file_name), position="append")
+            open (newunit=iunit, file=trim(file_name), position='append')
          else
             open (newunit=iunit, file=trim(file_name))
             write (iunit, 1) '# Time', ([ &
@@ -260,7 +260,7 @@ contains
       logical :: file_existed
 
       !         time             angle
-1     format(a15, 20(4x, i3, ",", i3, ",", i3)) ! header format
+1     format(a15, 20(4x, i3, ',', i3, ',', i3)) ! header format
 2     format(3x, f12.2, 20(1x, f14.6)) ! angle format
 
       long_file_name = trim(FMSWorkingDir)//file_name
@@ -638,7 +638,7 @@ contains
       logical :: file_existed
 
       !         time             angle
-1     format(a15, 20(2x, i3, 3(",", i3))) ! header format
+1     format(a15, 20(2x, i3, 3(',', i3))) ! header format
 2     format(3x, f12.2, 20(1x, f16.6)) ! angle  format
 
       long_file_name = trim(FMSWorkingDir)//file_name
@@ -678,7 +678,7 @@ contains
       logical :: file_existed
 
       !         time             angle
-1     format(a15, 20(3x, i3, ",", i3)) ! header format
+1     format(a15, 20(3x, i3, ',', i3)) ! header format
 2     format(3x, f12.2, 20(1x, f9.4)) ! bond   format
 
       long_file_name = trim(FMSWorkingDir)//file_name

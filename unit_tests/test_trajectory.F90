@@ -16,15 +16,15 @@ contains
       type(unittest_type), allocatable, intent(out) :: testsuite(:)
 
       testsuite = [ &
-                  new_unittest("create", test_create), &
-                  new_unittest("create_errors", test_create_errors), &
-                  new_unittest("setget_time", test_setget_time), &
-                  new_unittest("get_mass", test_get_mass), &
-                  new_unittest("get_width", test_get_width), &
-                  new_unittest("setget_pos_comp", test_setget_pos_comp), &
-                  new_unittest("setget_mom_comp", test_setget_mom_comp), &
-                  new_unittest("setget_vec", test_setget_vec), &
-                  new_unittest("setget_all", test_setget_all) &
+                  new_unittest('create', test_create), &
+                  new_unittest('create_errors', test_create_errors), &
+                  new_unittest('setget_time', test_setget_time), &
+                  new_unittest('get_mass', test_get_mass), &
+                  new_unittest('get_width', test_get_width), &
+                  new_unittest('setget_pos_comp', test_setget_pos_comp), &
+                  new_unittest('setget_mom_comp', test_setget_mom_comp), &
+                  new_unittest('setget_vec', test_setget_vec), &
+                  new_unittest('setget_all', test_setget_all) &
                   ]
 
    end subroutine collect_trajectory_suite
@@ -36,28 +36,28 @@ contains
 
       call T%create(numparticles=num_particles, numstates=num_states)
 
-      call check(error, T%NumStates == num_states, "Invalid number of states")
+      call check(error, T%NumStates == num_states, 'Invalid number of states')
       if (allocated(error)) return
 
-      call check(error, size(T%Particle) == num_particles, "Invalid number of particles")
+      call check(error, size(T%Particle) == num_particles, 'Invalid number of particles')
       if (allocated(error)) return
-      call check(error, T%NumParticles == num_particles, "Invalid number of particles")
+      call check(error, T%NumParticles == num_particles, 'Invalid number of particles')
       if (allocated(error)) return
 
       ! Currently the number of dimensions is harcoded to 3 in FMS_Create_Trajectory
-      call check(error, T%Particle(1)%NumDimensions == 3, "Invalid particle dimensions")
+      call check(error, T%Particle(1)%NumDimensions == 3, 'Invalid particle dimensions')
       if (allocated(error)) return
 
-      call check(error, T%NumDimensions == 3 * num_particles, "Invalid trajectory dimension")
+      call check(error, T%NumDimensions == 3 * num_particles, 'Invalid trajectory dimension')
       if (allocated(error)) return
 
       ! Check that we can destroy "empty" Trajectory
       call T%destroy()
 
-      call check(error,.not. allocated(T%Particle), "Destroy failed to deallocate T%Particle array")
+      call check(error,.not. allocated(T%Particle), 'Destroy failed to deallocate T%Particle array')
       if (allocated(error)) return
 
-      call check(error, T%NumParticles == 0, "Destroyed trajectory should have no particles!")
+      call check(error, T%NumParticles == 0, 'Destroyed trajectory should have no particles!')
       if (allocated(error)) return
 
    end subroutine test_create
@@ -68,11 +68,11 @@ contains
 
       call T%create(numparticles=0, numstates=1)
 
-      call check_dieerror_called(error, "CreateTrajectory: NumParticles must be > 0")
+      call check_dieerror_called(error, 'CreateTrajectory: NumParticles must be > 0')
 
       call T%create(numparticles=1, numstates=-1)
 
-      call check_dieerror_called(error, "CreateTrajectory: NumStates must be > 0")
+      call check_dieerror_called(error, 'CreateTrajectory: NumStates must be > 0')
       if (allocated(error)) return
    end subroutine test_create_errors
 
@@ -83,11 +83,11 @@ contains
 
       call T%create(numparticles=num_particles, numstates=num_states)
 
-      call check(error, T%get_time() == 0.0d0, "Initial time is not 0")
+      call check(error, T%get_time() == 0.0d0, 'Initial time is not 0')
       if (allocated(error)) return
 
       call T%set_time(10.0d0)
-      call check(error, T%get_time() == 10.d0, "Failed to set current time")
+      call check(error, T%get_time() == 10.d0, 'Failed to set current time')
       if (allocated(error)) return
 
    end subroutine test_setget_time
@@ -101,19 +101,19 @@ contains
 
       call T%create(numparticles=num_particles, numstates=num_states)
 
-      call check(error, all(T%get_mass() == [(0.0d0, i=1, traj_dim)]), "Initial masses should be 0")
+      call check(error, all(T%get_mass() == [(0.0d0, i=1, traj_dim)]), 'Initial masses should be 0')
       if (allocated(error)) return
 
       T%Particle(2)%mass = 2.0d0
 
       ! Note: T%get_mass() returns a npart*numdim array due convenience reasons
-      call check(error, all(T%get_mass() == [0.d0, 0.d0, 0.d0, 2.d0, 2.d0, 2.d0]), "Some masses should be non-zero!")
+      call check(error, all(T%get_mass() == [0.d0, 0.d0, 0.d0, 2.d0, 2.d0, 2.d0]), 'Some masses should be non-zero!')
       if (allocated(error)) return
 
-      call check(error, T%get_mass(1) == 0.0d0, "mass of particle 1 should still be 0")
+      call check(error, T%get_mass(1) == 0.0d0, 'mass of particle 1 should still be 0')
       if (allocated(error)) return
 
-      call check(error, T%get_mass(2) == 2.0d0, "mass of particle 2 should be non-zero")
+      call check(error, T%get_mass(2) == 2.0d0, 'mass of particle 2 should be non-zero')
       if (allocated(error)) return
    end subroutine test_get_mass
 
@@ -126,17 +126,17 @@ contains
 
       call T%create(numparticles=num_particles, numstates=num_states)
 
-      call check(error, all(T%get_width() == [(0.0d0, i=1, traj_dim)]), "Initial widths should be 0")
+      call check(error, all(T%get_width() == [(0.0d0, i=1, traj_dim)]), 'Initial widths should be 0')
       if (allocated(error)) return
 
       T%Particle(2)%width = 2.0d0
-      call check(error, all(T%get_width() == [0.d0, 0.d0, 0.d0, 2.d0, 2.d0, 2.d0]), "Some widths should be non-zero!")
+      call check(error, all(T%get_width() == [0.d0, 0.d0, 0.d0, 2.d0, 2.d0, 2.d0]), 'Some widths should be non-zero!')
       if (allocated(error)) return
 
-      call check(error, T%get_width(1) == 0.0d0, "width of particle 1 should still be 0")
+      call check(error, T%get_width(1) == 0.0d0, 'width of particle 1 should still be 0')
       if (allocated(error)) return
 
-      call check(error, T%get_width(2) == 2.0d0, "width of particle 2 should be non-zero")
+      call check(error, T%get_width(2) == 2.0d0, 'width of particle 2 should be non-zero')
       if (allocated(error)) return
    end subroutine test_get_width
 
@@ -149,7 +149,7 @@ contains
 
       call T%create(numparticles=num_particles, numstates=num_states)
 
-      call check(error, all(T%get_pos() == [(0.0d0, i=1, traj_dim)]), "Initial positions should be 0")
+      call check(error, all(T%get_pos() == [(0.0d0, i=1, traj_dim)]), 'Initial positions should be 0')
       if (allocated(error)) return
 
       ipart = 2
@@ -159,9 +159,9 @@ contains
       do i = 1, num_particles
          do j = 1, 3
             if (i == ipart .and. j == idim) then
-               call check(error, T%get_pos(i, j) == 1.0d0, "Expected position 1.0")
+               call check(error, T%get_pos(i, j) == 1.0d0, 'Expected position 1.0')
             else
-               call check(error, T%get_pos(i, j) == 0.0d0, "Expected position 0.0")
+               call check(error, T%get_pos(i, j) == 0.0d0, 'Expected position 0.0')
             end if
             if (allocated(error)) return
          end do
@@ -178,7 +178,7 @@ contains
 
       call T%create(numparticles=num_particles, numstates=num_states)
 
-      call check(error, all(T%get_mom() == [(0.0d0, i=1, traj_dim)]), "Initial positions should be 0")
+      call check(error, all(T%get_mom() == [(0.0d0, i=1, traj_dim)]), 'Initial positions should be 0')
       if (allocated(error)) return
 
       ipart = 2
@@ -188,9 +188,9 @@ contains
       do i = 1, num_particles
          do j = 1, 3
             if (i == ipart .and. j == idim) then
-               call check(error, T%get_mom(i, j) == 1.0d0, "Expected momentum 1.0")
+               call check(error, T%get_mom(i, j) == 1.0d0, 'Expected momentum 1.0')
             else
-               call check(error, T%get_mom(i, j) == 0.0d0, "Expected momentum 0.0")
+               call check(error, T%get_mom(i, j) == 0.0d0, 'Expected momentum 0.0')
             end if
             if (allocated(error)) return
          end do
@@ -207,11 +207,11 @@ contains
 
       call T%create(numparticles=num_particles, numstates=num_states)
 
-      call check(error, all(T%get_pos() == [(0.0d0, i=1, traj_dim)]), "Initial positions should be 0")
+      call check(error, all(T%get_pos() == [(0.0d0, i=1, traj_dim)]), 'Initial positions should be 0')
       if (allocated(error)) return
-      call check(error, all(T%get_mom() == [(0.0d0, i=1, traj_dim)]), "Initial momentum should be 0")
+      call check(error, all(T%get_mom() == [(0.0d0, i=1, traj_dim)]), 'Initial momentum should be 0')
       if (allocated(error)) return
-      call check(error, all(T%get_mom2() == [(0.0d0, i=1, traj_dim)]), "Initial momentum should be 0")
+      call check(error, all(T%get_mom2() == [(0.0d0, i=1, traj_dim)]), 'Initial momentum should be 0')
       if (allocated(error)) return
 
       ipart = 2
@@ -219,19 +219,19 @@ contains
       call T%set_mom(ipart, [4.0d0, 5.0d0, 6.0d0])
       call T%set_mom2(ipart, [7.0d0, 8.0d0, 9.0d0])
 
-      call check(error, all(T%get_pos(1) == [0.0d0, 0.0d0, 0.0d0]), "Expected position 0.0")
+      call check(error, all(T%get_pos(1) == [0.0d0, 0.0d0, 0.0d0]), 'Expected position 0.0')
       if (allocated(error)) return
-      call check(error, all(T%get_pos(2) == [1.0d0, 2.0d0, 3.0d0]), "Expected positions 1 2 3")
-      if (allocated(error)) return
-
-      call check(error, all(T%get_mom(1) == [0.0d0, 0.0d0, 0.0d0]), "Expected momentum 0.0")
-      if (allocated(error)) return
-      call check(error, all(T%get_mom(2) == [4.0d0, 5.0d0, 6.0d0]), "Expected momentum 4 5 6")
+      call check(error, all(T%get_pos(2) == [1.0d0, 2.0d0, 3.0d0]), 'Expected positions 1 2 3')
       if (allocated(error)) return
 
-      call check(error, all(T%get_mom2(1) == [0.0d0, 0.0d0, 0.0d0]), "Expected momentum2 0.0")
+      call check(error, all(T%get_mom(1) == [0.0d0, 0.0d0, 0.0d0]), 'Expected momentum 0.0')
       if (allocated(error)) return
-      call check(error, all(T%get_mom2(2) == [7.0d0, 8.0d0, 9.0d0]), "Expected momentum2 7 8 9")
+      call check(error, all(T%get_mom(2) == [4.0d0, 5.0d0, 6.0d0]), 'Expected momentum 4 5 6')
+      if (allocated(error)) return
+
+      call check(error, all(T%get_mom2(1) == [0.0d0, 0.0d0, 0.0d0]), 'Expected momentum2 0.0')
+      if (allocated(error)) return
+      call check(error, all(T%get_mom2(2) == [7.0d0, 8.0d0, 9.0d0]), 'Expected momentum2 7 8 9')
       if (allocated(error)) return
    end subroutine test_setget_vec
 
@@ -252,15 +252,15 @@ contains
       mom2 = [100.0d0, 200.0d0, 300.0d0, 400.0d0, 500.0d0, 600.0d0]
 
       call T%set_pos(pos)
-      call check(error, all(T%get_pos() == pos), "Unexpected position")
+      call check(error, all(T%get_pos() == pos), 'Unexpected position')
 
       if (allocated(error)) return
       call T%set_mom(mom)
-      call check(error, all(T%get_mom() == mom), "Unexpected momentum")
+      call check(error, all(T%get_mom() == mom), 'Unexpected momentum')
       if (allocated(error)) return
 
       call T%set_mom2(mom2)
-      call check(error, all(T%get_mom2() == mom2), "Unexpected momentum2")
+      call check(error, all(T%get_mom2() == mom2), 'Unexpected momentum2')
       if (allocated(error)) return
 
       do i = 1, num_particles
@@ -268,17 +268,17 @@ contains
       end do
 
       call T%set_vel(mom)
-      call check(error, all(T%get_vel() == mom), "Unexpected velocity")
+      call check(error, all(T%get_vel() == mom), 'Unexpected velocity')
       if (allocated(error)) return
 
       call T%set_vel2(mom2)
-      call check(error, all(T%get_vel2() == mom2), "Unexpected velocity2")
+      call check(error, all(T%get_vel2() == mom2), 'Unexpected velocity2')
       if (allocated(error)) return
 
       ! Momentum should be twice the velocity now!
-      call check(error, all(T%get_mom() == mom * mass), "Unexpected momentum after setting velocity")
+      call check(error, all(T%get_mom() == mom * mass), 'Unexpected momentum after setting velocity')
       if (allocated(error)) return
-      call check(error, all(T%get_mom2() == mom2 * mass), "Unexpected momentum2 after setting velocity2")
+      call check(error, all(T%get_mom2() == mom2 * mass), 'Unexpected momentum2 after setting velocity2')
       if (allocated(error)) return
 
    end subroutine test_setget_all

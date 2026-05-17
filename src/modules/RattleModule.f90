@@ -318,9 +318,9 @@ contains
       integer(kind=DefInt) :: i, j, k, l ! atom counters
 
       if (nc < 1 .or. nconstraint < nc) then
-         write (fmiOUT, *) "nc          ", nc
-         write (fmiOUT, *) "nconstraint ", nconstraint
-         call FMS_DieError("constraint : nc out of range ")
+         write (fmiOUT, *) 'nc          ', nc
+         write (fmiOUT, *) 'nconstraint ', nconstraint
+         call FMS_DieError('constraint : nc out of range ')
       end if
 
       select case (cn_type_list(nc))
@@ -347,8 +347,8 @@ contains
 
       case default
          const = 0.0d0
-         write (fmiOut, *) "cn_type_list(nc)", cn_type_list(nc)
-         call FMS_DieError("Invalid cn_type_list")
+         write (fmiOut, *) 'cn_type_list(nc)', cn_type_list(nc)
+         call FMS_DieError('Invalid cn_type_list')
 
       end select
 
@@ -369,7 +369,7 @@ contains
       real(kind=DefReal) :: D_const(T1%NumDimensions)
 
       if (nc < 1 .or. nconstraint < nc) then
-         call FMS_DieError("constraint: nc out of range")
+         call FMS_DieError('constraint: nc out of range')
       end if
 
       D_const = 0.d0
@@ -397,7 +397,7 @@ contains
          D_const = D_COM_constraint(T1, nc)
 
       case default
-         call FMS_DieError("Invalid cn_type_list in D_constraint")
+         call FMS_DieError('Invalid cn_type_list in D_constraint')
 
       end select
 

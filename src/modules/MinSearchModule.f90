@@ -217,7 +217,7 @@ contains
 
          mniStartPtcle = qcNumQM
          mnNumPartSearch = qcNumMM
-         ctype = "Fx"
+         ctype = 'Fx'
          qczPCharge = .true.
 
       case default

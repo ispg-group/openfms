@@ -38,7 +38,7 @@
 
 !     Initialize backup bundle
          if (FirstTime) then
-            write (fmiOut, *) "Saving the first bundle"
+            write (fmiOut, *) 'Saving the first bundle'
             call BSave%create(numtraj=Bundle%NumTraj, &
                               numdeadtraj=Bundle%NumDeadTraj, &
                               numstates=Bundle%NumStates, &
@@ -195,9 +195,9 @@
          subroutine RecursionCrash()
             ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-            call FMS_PrintMessg("ERROR in FMS_Dynamics.")
-            call FMS_PrintMessg("Timestep below minimum timestep.")
-            call FMS_PrintMessg("Simulation will stop ...")
+            call FMS_PrintMessg('ERROR in FMS_Dynamics.')
+            call FMS_PrintMessg('Timestep below minimum timestep.')
+            call FMS_PrintMessg('Simulation will stop ...')
             call BSave%destroy()
             call FMS_Shutdown(B1=Bundle)
 
