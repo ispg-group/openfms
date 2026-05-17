@@ -16,22 +16,22 @@ contains
       type(unittest_type), allocatable, intent(out) :: testsuite(:)
 
       testsuite = [ &
-                  new_unittest("create", test_create), &
-                  new_unittest("destroy", test_destroy), &
-                  new_unittest("assign", test_assign), &
-                  new_unittest("set_pos_vec", test_set_pos_vec), &
-                  new_unittest("set_mom_vec", test_set_mom_vec), &
-                  new_unittest("set_pos_comp", test_set_pos_comp), &
-                  new_unittest("set_mom_comp", test_set_mom_comp), &
-                  new_unittest("get_comp_wrong_index", test_get_comp_wrong_index), &
-                  new_unittest("set_comp_wrong_index", test_set_comp_wrong_index), &
-                  new_unittest("set_vec_wrong_size", test_set_vec_wrong_size), &
-                  new_unittest("vec_norm", test_vec_norm), &
-                  new_unittest("cross", test_cross), &
-                  new_unittest("distance", test_distance_particle), &
-                  new_unittest("angle", test_angle_particle), &
-                  new_unittest("dihedral", test_dihedral_particle), &
-                  new_unittest("distance_angle_wrong_dims", test_distance_angle_wrong_dims) &
+                  new_unittest('create', test_create), &
+                  new_unittest('destroy', test_destroy), &
+                  new_unittest('assign', test_assign), &
+                  new_unittest('set_pos_vec', test_set_pos_vec), &
+                  new_unittest('set_mom_vec', test_set_mom_vec), &
+                  new_unittest('set_pos_comp', test_set_pos_comp), &
+                  new_unittest('set_mom_comp', test_set_mom_comp), &
+                  new_unittest('get_comp_wrong_index', test_get_comp_wrong_index), &
+                  new_unittest('set_comp_wrong_index', test_set_comp_wrong_index), &
+                  new_unittest('set_vec_wrong_size', test_set_vec_wrong_size), &
+                  new_unittest('vec_norm', test_vec_norm), &
+                  new_unittest('cross', test_cross), &
+                  new_unittest('distance', test_distance_particle), &
+                  new_unittest('angle', test_angle_particle), &
+                  new_unittest('dihedral', test_dihedral_particle), &
+                  new_unittest('distance_angle_wrong_dims', test_distance_angle_wrong_dims) &
                   ]
 
    end subroutine collect_particle_suite
@@ -46,19 +46,19 @@ contains
       call check(error, P%ParticleID, ID)
       if (allocated(error)) return
 
-      call check(error, P%NumDimensions == NUMDIM, "Invalid particle dimensions")
+      call check(error, P%NumDimensions == NUMDIM, 'Invalid particle dimensions')
       if (allocated(error)) return
 
       ! The allocatable arrays should be allocated upon Particle creation
       ! and be initialized to 0.0
-      call check(error, size(P%get_pos()) == NUMDIM, "Invalid particle position dimensions")
+      call check(error, size(P%get_pos()) == NUMDIM, 'Invalid particle position dimensions')
       if (allocated(error)) return
-      call check(error, all(P%get_pos() == [0.0d0, 0.0d0, 0.0d0]), "Expected zero particle momenta")
+      call check(error, all(P%get_pos() == [0.0d0, 0.0d0, 0.0d0]), 'Expected zero particle momenta')
       if (allocated(error)) return
 
-      call check(error, size(P%get_mom()) == numdim, "Invalid particle momenta dimensions")
+      call check(error, size(P%get_mom()) == numdim, 'Invalid particle momenta dimensions')
       if (allocated(error)) return
-      call check(error, all(P%get_mom() == [0.0d0, 0.0d0, 0.0d0]), "Expected zero particle momenta")
+      call check(error, all(P%get_mom() == [0.0d0, 0.0d0, 0.0d0]), 'Expected zero particle momenta')
       if (allocated(error)) return
 
    end subroutine test_create
@@ -69,7 +69,7 @@ contains
       integer, parameter :: ID = 100, NUMDIM = 3
 
       call P%create(id=id, numdim=numdim)
-      P%elmnt = "AB"
+      P%elmnt = 'AB'
       P%mass = 10.0d0
       P%width = 10.0d0
       P%charge = 10.0d0
@@ -83,7 +83,7 @@ contains
       call check(error, P%NumDimensions, 0)
       if (allocated(error)) return
 
-      call check(error, P%elmnt, "XX")
+      call check(error, P%elmnt, 'XX')
       if (allocated(error)) return
 
       call check(error, P%mass, 0.0d0)
@@ -115,7 +115,7 @@ contains
       call P1%set_pos([1.0d0, 1.0d0])
       call P1%set_mom([2.0d0, 2.0d0])
       call P1%set_mom2([3.0d0, 3.0d0])
-      P1%Elmnt = "YY"
+      P1%Elmnt = 'YY'
       P1%mass = 10.0d0
       P1%Width = 11.0d0
       P1%AtomicNum = 12.0d0
@@ -133,7 +133,7 @@ contains
       call check(error, P2%NumDimensions, NUMDIM1)
       if (allocated(error)) return
 
-      call check(error, P2%Elmnt, "YY")
+      call check(error, P2%Elmnt, 'YY')
       if (allocated(error)) return
       call check(error, P2%mass, 10.d0)
       if (allocated(error)) return
@@ -163,9 +163,9 @@ contains
       call P%set_pos([0.0d0, 1.0d0])
       positions = P%get_pos()
 
-      call check(error, size(positions) == 2, "Invalid particle position dimensions")
+      call check(error, size(positions) == 2, 'Invalid particle position dimensions')
       if (allocated(error)) return
-      call check(error, all(positions == [0.0d0, 1.0d0]), "Invalid particle positions")
+      call check(error, all(positions == [0.0d0, 1.0d0]), 'Invalid particle positions')
       if (allocated(error)) return
 
    end subroutine test_set_pos_vec
@@ -179,21 +179,21 @@ contains
 
       ! The allocatable arrays should be allocated upon Particle creation
       ! and be initialized to 0.0
-      call check(error, size(P%get_mom()) == 2, "Invalid particle momenta dimensions")
+      call check(error, size(P%get_mom()) == 2, 'Invalid particle momenta dimensions')
       if (allocated(error)) return
-      call check(error, size(P%get_mom2()) == 2, "Invalid particle momenta2 dimensions")
+      call check(error, size(P%get_mom2()) == 2, 'Invalid particle momenta2 dimensions')
       if (allocated(error)) return
 
-      call check(error, all(P%get_mom() == [0.0d0, 0.0d0]), "Expected zero particle momenta")
+      call check(error, all(P%get_mom() == [0.0d0, 0.0d0]), 'Expected zero particle momenta')
       if (allocated(error)) return
-      call check(error, all(P%get_mom2() == [0.0d0, 0.0d0]), "Expected zero particle momenta2")
+      call check(error, all(P%get_mom2() == [0.0d0, 0.0d0]), 'Expected zero particle momenta2')
       if (allocated(error)) return
 
       call P%set_mom([-2.0d0, 2.0d0])
       call P%set_mom2([-1.0d0, 1.0d0])
 
-      call check(error, all(P%get_mom() == [-2.0d0, 2.0d0]), "Invalid particle momenta")
-      call check(error, all(P%get_mom2() == [-1.0d0, 1.0d0]), "Invalid particle momenta")
+      call check(error, all(P%get_mom() == [-2.0d0, 2.0d0]), 'Invalid particle momenta')
+      call check(error, all(P%get_mom2() == [-1.0d0, 1.0d0]), 'Invalid particle momenta')
       if (allocated(error)) return
    end subroutine test_set_mom_vec
 
@@ -206,10 +206,10 @@ contains
 
       call P%set_pos(2, -1.0d0)
 
-      call check(error, size(P%get_pos()) == numdim, "Invalid particle position dimensions")
+      call check(error, size(P%get_pos()) == numdim, 'Invalid particle position dimensions')
       if (allocated(error)) return
 
-      call check(error, all(P%get_pos() == [0.0d0, -1.0d0]), "Invalid particle positions")
+      call check(error, all(P%get_pos() == [0.0d0, -1.0d0]), 'Invalid particle positions')
       if (allocated(error)) return
    end subroutine test_set_pos_comp
 
@@ -222,10 +222,10 @@ contains
 
       call P%set_mom(2, -2.0d0)
 
-      call check(error, size(P%get_mom()) == numdim, "Invalid particle momentum dimensions")
+      call check(error, size(P%get_mom()) == numdim, 'Invalid particle momentum dimensions')
       if (allocated(error)) return
 
-      call check(error, all(P%get_mom() == [0.0d0, -2.0d0]), "Invalid particle momenta")
+      call check(error, all(P%get_mom() == [0.0d0, -2.0d0]), 'Invalid particle momenta')
       if (allocated(error)) return
    end subroutine test_set_mom_comp
 
@@ -238,14 +238,14 @@ contains
 
       ! These should fail, passing an array of wrong size!
       call P%set_pos([0.0d0, 0.0d0])
-      call check_dieerror_called(error, "Particle%set_position_vec: wrong array size")
+      call check_dieerror_called(error, 'Particle%set_position_vec: wrong array size')
       if (allocated(error)) return
 
       call P%set_mom([0.0d0, 0.0d0])
-      call check_dieerror_called(error, "Particle%set_momentum_vec: wrong array size")
+      call check_dieerror_called(error, 'Particle%set_momentum_vec: wrong array size')
 
       call P%set_mom2([0.0d0, 0.0d0])
-      call check_dieerror_called(error, "Particle%set_momentum2_vec: wrong array size")
+      call check_dieerror_called(error, 'Particle%set_momentum2_vec: wrong array size')
    end subroutine test_set_vec_wrong_size
 
    subroutine test_get_comp_wrong_index(error)
@@ -257,19 +257,19 @@ contains
       call P%create(id=id, numdim=NUMDIM)
 
       pos = P%get_pos(0)
-      call check_dieerror_called(error, "Particle%get_position_component: index out of range")
+      call check_dieerror_called(error, 'Particle%get_position_component: index out of range')
       if (allocated(error)) return
 
       pos = P%get_pos(NUMDIM + 1)
-      call check_dieerror_called(error, "Particle%get_position_component: index out of range")
+      call check_dieerror_called(error, 'Particle%get_position_component: index out of range')
       if (allocated(error)) return
 
       pos = P%get_mom(0)
-      call check_dieerror_called(error, "Particle%get_momentum_component: index out of range")
+      call check_dieerror_called(error, 'Particle%get_momentum_component: index out of range')
       if (allocated(error)) return
 
       pos = P%get_mom(NUMDIM + 1)
-      call check_dieerror_called(error, "Particle%get_momentum_component: index out of range")
+      call check_dieerror_called(error, 'Particle%get_momentum_component: index out of range')
       if (allocated(error)) return
    end subroutine test_get_comp_wrong_index
 
@@ -281,19 +281,19 @@ contains
       call P%create(id=id, numdim=NUMDIM)
 
       call P%set_pos(0, 1.0d0)
-      call check_dieerror_called(error, "Particle%set_position_component: index out of range")
+      call check_dieerror_called(error, 'Particle%set_position_component: index out of range')
       if (allocated(error)) return
 
       call P%set_pos(NUMDIM + 1, 1.0d0)
-      call check_dieerror_called(error, "Particle%set_position_component: index out of range")
+      call check_dieerror_called(error, 'Particle%set_position_component: index out of range')
       if (allocated(error)) return
 
       call P%set_mom(0, 1.0d0)
-      call check_dieerror_called(error, "Particle%set_momentum_component: index out of range")
+      call check_dieerror_called(error, 'Particle%set_momentum_component: index out of range')
       if (allocated(error)) return
 
       call P%set_mom(NUMDIM + 1, 1.0d0)
-      call check_dieerror_called(error, "Particle%set_momentum_component: index out of range")
+      call check_dieerror_called(error, 'Particle%set_momentum_component: index out of range')
       if (allocated(error)) return
    end subroutine test_set_comp_wrong_index
 
@@ -303,7 +303,7 @@ contains
       real(DefReal) :: norm
 
       norm = vector_norm(test_vec)
-      call check(error, norm == 3.0, "Value of vector norm is incorrect")
+      call check(error, norm == 3.0, 'Value of vector norm is incorrect')
       if (allocated(error)) return
    end subroutine test_vec_norm
 
@@ -315,10 +315,10 @@ contains
       real(DefReal) :: cross_vec(3)
 
       cross_vec = cross(test_vec1, test_vec2)
-      call check(error, size(cross_vec) == NUMDIM, "Invalid cross product vector dimension")
+      call check(error, size(cross_vec) == NUMDIM, 'Invalid cross product vector dimension')
       if (allocated(error)) return
 
-      call check(error, all(cross_vec == [0.0d0, 0.0d0, 1.0d0]), "Invalid cross product")
+      call check(error, all(cross_vec == [0.0d0, 0.0d0, 1.0d0]), 'Invalid cross product')
       if (allocated(error)) return
    end subroutine test_cross
 
@@ -334,7 +334,7 @@ contains
       call P2%set_pos([0.0d0, 1.0d0, 1.0d0])
 
       distance = FMS_Distance(P1, P2)
-      call check(error, distance == 3.0, "Distance between particles is incorrect")
+      call check(error, distance == 3.0, 'Distance between particles is incorrect')
       if (allocated(error)) return
    end subroutine test_distance_particle
 
@@ -352,7 +352,7 @@ contains
       call P3%set_pos([-1.0d0, 0.0d0, 0.0d0])
 
       angle = FMS_Angle(P1, P2, P3)
-      call check(error, angle == acos(-1.0d0), "Angle between particles is incorrect")
+      call check(error, angle == acos(-1.0d0), 'Angle between particles is incorrect')
       if (allocated(error)) return
    end subroutine test_angle_particle
 
@@ -386,15 +386,15 @@ contains
       call P3%create(id=3, numdim=3)
 
       result = FMS_Distance(P1, P2)
-      call check_dieerror_called(error, "Distance: Particles must have same dim!")
+      call check_dieerror_called(error, 'Distance: Particles must have same dim!')
       if (allocated(error)) return
 
       result = FMS_Angle(P1, P2, P3)
-      call check_dieerror_called(error, "Angle: Particles must have same dim!")
+      call check_dieerror_called(error, 'Angle: Particles must have same dim!')
       if (allocated(error)) return
 
       result = FMS_Angle(P1, P1, P3)
-      call check_dieerror_called(error, "Angle: Particles must have same dim!")
+      call check_dieerror_called(error, 'Angle: Particles must have same dim!')
       if (allocated(error)) return
 
    end subroutine test_distance_angle_wrong_dims

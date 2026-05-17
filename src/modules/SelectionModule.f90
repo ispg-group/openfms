@@ -157,7 +157,7 @@ contains
 ! There should be at least one block of trajectories
       if (nblock == 0) then
          write (fmiOut, *) 'Number of trajectory basis blocks is zero'
-         call FMS_DieError("ERROR in FMS_StochasticCollapse")
+         call FMS_DieError('ERROR in FMS_StochasticCollapse')
       end if
 ! If just a single block then no more work to be done
       if (nblock == 1) return
@@ -258,7 +258,7 @@ contains
 ! multi-state spawning (may change in the future)
       if (childSt == parentSt) then
          write (fmiOut, *) "SWISS: States don't differ, decoherence not possible"
-         call FMS_DieError("ERROR in FMS_CalculateDecoherenceTime")
+         call FMS_DieError('ERROR in FMS_CalculateDecoherenceTime')
       end if
 
       decoherenceRate2 = 0.d0

@@ -99,12 +99,12 @@ contains
 
       ! Read the "tc_options" file and send its contents to TeraChem
       ! If `tc_options` does not exist, try `misc_options` for backward compatibility
-      tc_options_file = "tc_options"
+      tc_options_file = 'tc_options'
       inquire (file=tc_options_file, exist=file_exists)
       if (.not. file_exists) then
-         tc_options_file = "misc_options"
+         tc_options_file = 'misc_options'
       end if
-      open (newunit=iunit, file=tc_options_file, status="old", action="read", iostat=ierr, iomsg=errmsg)
+      open (newunit=iunit, file=tc_options_file, status='old', action='read', iostat=ierr, iomsg=errmsg)
       if (ierr /= 0) then
          call FMS_DieError(trim(errmsg))
       end if
@@ -137,14 +137,14 @@ contains
 
       ! Read initial coordinates from file
       ! TODO: Use the existing subroutine for this!
-      open (newunit=iunit, file="Geometry.dat", action='read', status='old')
+      open (newunit=iunit, file='Geometry.dat', action='read', status='old')
 
       GeomInAngs = .false.
       read (iunit, *) unitname
       txt = unitname(7:7)
-      if (txt == "a" .or. txt == "A") then ! Angstrom
+      if (txt == 'a' .or. txt == 'A') then ! Angstrom
          GeomInAngs = .true.
-      else if (txt == "b" .or. txt == "B") then ! Bohr
+      else if (txt == 'b' .or. txt == 'B') then ! Bohr
          GeomInAngs = .false.
       end if
 
@@ -232,19 +232,19 @@ contains
       character(len=MPI_MAX_PORT_NAME) :: port_name
       integer :: ierr
 
-      write (*, *) "Terachem MPI Initialization"
+      write (*, *) 'Terachem MPI Initialization'
 
       ! Initialize MPI.
       call MPI_Init(ierr)
       if (ierr /= 0) then
-         call FMS_DieError("MPI_Init failed!")
+         call FMS_DieError('MPI_Init failed!')
       end if
 
       ! Check the number of processes, only 1 is allowed!
       call MPI_Comm_size(MPI_COMM_WORLD, nproc, ierr)
       if (nproc /= 1) then
          write (*, '(A,I0)') 'Number of MPI processes: ', nproc
-         call FMS_DieError("Only one MPI process should be running")
+         call FMS_DieError('Only one MPI process should be running')
       end if
 
       ! -----------------------------------
@@ -671,7 +671,7 @@ contains
       logical :: ImportantState
 
 1999  format('========================================================')
-2000  format("WARNING: Trajectory jumped an intersection.")
+2000  format('WARNING: Trajectory jumped an intersection.')
 
 !     Don't bother correcting phase if there was no electronic structure previously stored
       if (.not. T1%ESFlags%zESExists) then
@@ -695,7 +695,7 @@ contains
             SCI_IJ = SMat(IState, JState)
             SCI_JI = SMat(JState, IState)
 
-            write (*, *) "Overlap matrix for states:", IState, JState
+            write (*, *) 'Overlap matrix for states:', IState, JState
             write (*, *) SCI_II, SCI_JI
             write (*, *) SCI_IJ, SCI_JJ
             write (*, *)
@@ -840,7 +840,7 @@ contains
       c_err = usleep(usec)
       ! DH: If you ever see this warning, please report it!
       if (c_err /= 0) then
-         write (error_unit, '(a,i0)') "WARNING: usleep syscall returned an error: ", c_err
+         write (error_unit, '(a,i0)') 'WARNING: usleep syscall returned an error: ', c_err
       end if
    end subroutine milisleep
 

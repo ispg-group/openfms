@@ -212,7 +212,7 @@ contains
       case (QUANTICS)
          call RunQuantics(T1, iCalcState, jCalcState, zCalcCoup)
       case default
-         call FMS_DieError("Invalid iModel variable")
+         call FMS_DieError('Invalid iModel variable')
 
       end select
 
@@ -413,7 +413,7 @@ contains
       else if (iParticle == 1) then
          jDim = iDim
       else
-         call FMS_DieError("Invalid IParticle passed to FMS_MMForceComp")
+         call FMS_DieError('Invalid IParticle passed to FMS_MMForceComp')
          return
       end if
 
@@ -577,7 +577,7 @@ contains
       real(kind=DefReal) :: TDip(3)
 
       if (IState <= 1 .or. IState > T1%NumStates) then
-         call FMS_DieError("No transition dipole for requested state")
+         call FMS_DieError('No transition dipole for requested state')
       end if
 
       if (.not. eszTransDipole) then
@@ -844,7 +844,7 @@ contains
       else if (iParticle == 1) then
          jDim = iDim
       else
-         call FMS_DieError("Invalid IParticle passed to FMS_MMForceComp")
+         call FMS_DieError('Invalid IParticle passed to FMS_MMForceComp')
       end if
 
       ForceComp = T1%ElecStruc%MMForce(jDim)
@@ -926,7 +926,7 @@ contains
       logical :: ImportantState
 
 1999  format('========================================================')
-2000  format("WARNING: Trajectory jumped an intersection.")
+2000  format('WARNING: Trajectory jumped an intersection.')
 
 !     Don't bother correcting phase if there was no electronic structure previously stored
       if (.not. T1%ESFlags%zESExists) then

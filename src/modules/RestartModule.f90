@@ -31,11 +31,11 @@ contains
 ! . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ! Setup the file names
       if (time > 0) then
-         short_name = "Checkpoint.txt"
-         write (fmiOut, '(a,f10.2)') "Searching for time=", time, " in Checkpoint.txt"
+         short_name = 'Checkpoint.txt'
+         write (fmiOut, '(a,f10.2)') 'Searching for time=', time, ' in Checkpoint.txt'
       else
-         short_name = "Last_Bundle.txt"
-         write (fmiOut, *) "Taking restart from Last_Bundle.txt"
+         short_name = 'Last_Bundle.txt'
+         write (fmiOut, *) 'Taking restart from Last_Bundle.txt'
       end if
       long_name = trim(FMSWorkingDir)//trim(short_name)
 !temp_name = trim(FMSWorkingDir)//".tmp."//trim(short_name)
@@ -56,7 +56,7 @@ contains
             call ReadBundle(B, nfile)
 
             if (B%numtraj == 0) then
-               call FMS_DieError("GetRestart: end of Checkpoint.txt reached, requested time not found")
+               call FMS_DieError('GetRestart: end of Checkpoint.txt reached, requested time not found')
             end if
 
             if (abs(B%CurrentTime - time) < 0.25) exit
@@ -71,12 +71,12 @@ contains
          close (unit=nfile)
       else
          open (newunit=nfile, file=long_name, action='read', status='old')
-         write (fmiOut, '(a)') "Reading from: "//trim(long_name)
+         write (fmiOut, '(a)') 'Reading from: '//trim(long_name)
          call B%destroy()
          call ReadBundle(B, nfile)
 
          if (B%NumTraj == 0) then
-            call FMS_DieError("could not read Last_Bundle.txt")
+            call FMS_DieError('could not read Last_Bundle.txt')
          end if
 
          close (unit=nfile)
@@ -222,7 +222,7 @@ contains
          end if
 
       case default
-         call FMS_DieError("Whoops, we should not be here!")
+         call FMS_DieError('Whoops, we should not be here!')
 
       end select
 
@@ -244,9 +244,9 @@ contains
       character(len=200) :: temp_file, last_file, check_file
       integer(Defint) :: nfile
 
-      temp_file = trim(FMSWorkingDir)//"tmp.Last_Bundle.txt"
-      last_file = trim(FMSWorkingDir)//"Last_Bundle.txt"
-      check_file = trim(FMSWorkingDir)//"Checkpoint.txt"
+      temp_file = trim(FMSWorkingDir)//'tmp.Last_Bundle.txt'
+      last_file = trim(FMSWorkingDir)//'Last_Bundle.txt'
+      check_file = trim(FMSWorkingDir)//'Checkpoint.txt'
 
 ! . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ! Write the temp file
@@ -258,7 +258,7 @@ contains
       call FMS_DeleteFile('Last_Bundle.txt')
 
 ! Copy temp bundle to new bundle
-      call system("cp "//trim(temp_file)//" "//trim(last_file))
+      call system('cp '//trim(temp_file)//' '//trim(last_file))
 
 ! Kill temp bundle
       call FMS_DeleteFile('tmp.Last_Bundle.txt')
@@ -301,22 +301,22 @@ contains
       npart = B%NumParticles
       nCBFs = B%NCBFs
 
-      write (nf, *) "############### START BUNDLE #################"
-      write (nf, 2) B%CurrentTime, " / Current time"
-      write (nf, 1) ntraj, " / Number of Live Trajectories"
-      write (nf, 1) ndead, " / Number of Dead Trajectories"
-      write (nf, 1) B%NumStates, " / Number of States"
-      write (nf, 1) NSing, " / Number of Singlet States"
-      write (nf, 1) npart, " / Number of Particles"
-      write (nf, 1) NCBFs, " / Number of Contracted Basis Functions"
+      write (nf, *) '############### START BUNDLE #################'
+      write (nf, 2) B%CurrentTime, ' / Current time'
+      write (nf, 1) ntraj, ' / Number of Live Trajectories'
+      write (nf, 1) ndead, ' / Number of Dead Trajectories'
+      write (nf, 1) B%NumStates, ' / Number of States'
+      write (nf, 1) NSing, ' / Number of Singlet States'
+      write (nf, 1) npart, ' / Number of Particles'
+      write (nf, 1) NCBFs, ' / Number of Contracted Basis Functions'
 
-      write (nf, *) "############ Common Particle info ###########"
+      write (nf, *) '############ Common Particle info ###########'
       do n = 1, npart
          call WriteParticle(B%Trajectory(1)%Particle(n), nf)
       end do
 
       do n = 1, ntraj
-         write (nf, '(a,i4,a)') "############### Live trajectory ", n, " ############"
+         write (nf, '(a,i4,a)') '############### Live trajectory ', n, ' ############'
          call WriteTraj(B%Trajectory(n), nf)
       end do
 
@@ -324,13 +324,13 @@ contains
       if (glzCentroids) then
 ! do n = 1, ntraj*(ntraj-1)/2
          do n = 1, nCBFs * (nCBFs - 1) / 2
-            write (nf, '(a,i4,a)') "###############   Centroid      ", n, " ############"
+            write (nf, '(a,i4,a)') '###############   Centroid      ', n, ' ############'
             call WriteTraj(B%Centroids(n), nf)
          end do
       end if
 
       do n = 1, ndead
-         write (nf, '(a,i4,a)') "############### Dead trajectory ", n, " ############"
+         write (nf, '(a,i4,a)') '############### Dead trajectory ', n, ' ############'
          call WriteTraj(B%DeadTraj(n), nf)
       end do
 
@@ -418,7 +418,7 @@ contains
       return
 
 20    continue
-      write (fmiout, *) "error reading Bundle"
+      write (fmiout, *) 'error reading Bundle'
       call B%destroy()
    end subroutine ReadBundle
 
@@ -483,50 +483,50 @@ contains
          write (nf, 2) T1%SWISS%BirthDate, ' / Birth date '
          write (nf, 3) T1%SWISS%ParentOverlap, ' / Overlap with Parent'
       end if
-      write (nf, *) "# Last spawn"
+      write (nf, *) '# Last spawn'
       write (nf, 13) T1%LastSpawn
-      write (nf, *) "# Spawn time"
+      write (nf, *) '# Spawn time'
       write (nf, 13) T1%SpawnTime
 
-      write (nf, *) "# Positions"
+      write (nf, *) '# Positions'
       do n = 1, npart
          write (nf, 11) T1%Particle(n)%get_pos()
       end do
-      write (nf, *) "# Momenta"
+      write (nf, *) '# Momenta'
       do n = 1, npart
          write (nf, 11) T1%Particle(n)%get_mom()
       end do
 
-      write (nf, *) "# Energies"
+      write (nf, *) '# Energies'
       write (nf, 11) T1%ElecStruc%PotEn
 
-      write (nf, *) "# Dipoles Current"
+      write (nf, *) '# Dipoles Current'
       write (nf, 14) T1%ESFlags%ZDipolesCurrent
       if (T1%ESFlags%ZDipolesCurrent) then
          do i = 1, nstate
-            write (nf, *) "# Dipole", i
+            write (nf, *) '# Dipole', i
             write (nf, 11) T1%ElecStruc%Dipole(i, :)
          end do
       end if
 
-      write (nf, *) "# Transition Dipoles Current"
+      write (nf, *) '# Transition Dipoles Current'
       write (nf, 14) T1%ESFlags%ZTransDipsCurrent
       if (T1%ESFlags%ZTransDipsCurrent) then
          do i = 2, nstate
-            write (nf, *) "# Transition Dipole ", i
+            write (nf, *) '# Transition Dipole ', i
             write (nf, 11) T1%ElecStruc%TransDipole(i, :)
          end do
       end if
 
-      write (nf, *) "# Force "
+      write (nf, *) '# Force '
       write (nf, 11) ForceVector
 
-      write (nf, *) "# Coupling status array"
+      write (nf, *) '# Coupling status array'
       write (nf, 14) ZCouplingCurrent
 
       do i = 1, nstate
          if (i == ns) cycle
-         write (nf, *) "# Coupling history ", ns, i
+         write (nf, *) '# Coupling history ', ns, i
          write (nf, 11) T1%CoupHist(:, i)
       end do
 
@@ -535,13 +535,13 @@ contains
          if (i == ns) cycle
          ns2 = ns2 + 1
          if (ZCouplingCurrent(i)) then
-            write (nf, *) "# coupling ", ns, i
+            write (nf, *) '# coupling ', ns, i
             write (nf, 11) Coupling(ns2, :)
          end if
       end do
 
-      write (nf, 3) T1%Phase, " / Phase"
-      write (nf, *) T1%Amplitude, " / Amplitude"
+      write (nf, 3) T1%Phase, ' / Phase'
+      write (nf, *) T1%Amplitude, ' / Amplitude'
 
       call WriteElecStruc(T1%ElecStruc, nf)
 
@@ -699,17 +699,17 @@ contains
 
 3     format(10(1x, es15.8))
 
-      write (nf, *) "# Orbitals"
+      write (nf, *) '# Orbitals'
       write (nf, 3, iostat=ierr) ES%OldOrbitals
-      write (nf, *) "# CI vectors"
+      write (nf, *) '# CI vectors'
       write (nf, 3, iostat=ierr) ES%OldCIVecs
-      write (nf, *) "# Overlap matrix"
+      write (nf, *) '# Overlap matrix'
       write (nf, 3, iostat=ierr) ES%OverlapMatrix
-      write (nf, *) "# TC Blob"
+      write (nf, *) '# TC Blob'
       write (nf, 3, iostat=ierr) ES%OldBlob
-      write (nf, *) "# MSPT2 Coeffs"
+      write (nf, *) '# MSPT2 Coeffs'
       write (nf, 3, iostat=ierr) ES%OldMSPT2C
-      write (nf, *) "# Electronic Phases"
+      write (nf, *) '# Electronic Phases'
       write (nf, *, iostat=ierr) ES%ElecPhase
 
       return
@@ -767,12 +767,12 @@ contains
 1     format(i6, 34x, a) ! integer   format with label
 3     format(e17.10, 24x, a) ! real      format with label
 
-      write (nf, 1) P%ParticleID, " / Particle ID"
-      write (nf, *) P%Elmnt, " / Element"
-      write (nf, 3) P%Width, " / Width"
-      write (nf, 3) P%Mass, " / Mass"
-      write (nf, 3) P%Charge, " / Charge"
-      write (nf, 3) P%AtomicNum, " / Atomic number"
+      write (nf, 1) P%ParticleID, ' / Particle ID'
+      write (nf, *) P%Elmnt, ' / Element'
+      write (nf, 3) P%Width, ' / Width'
+      write (nf, 3) P%Mass, ' / Mass'
+      write (nf, 3) P%Charge, ' / Charge'
+      write (nf, 3) P%AtomicNum, ' / Atomic number'
 
    end subroutine WriteParticle
 

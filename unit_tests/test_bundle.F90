@@ -17,9 +17,9 @@ contains
       type(unittest_type), allocatable, intent(out) :: testsuite(:)
 
       testsuite = [ &
-                  new_unittest("create", test_create), &
-                  new_unittest("assign", test_assign), &
-                  new_unittest("destroy", test_destroy) &
+                  new_unittest('create', test_create), &
+                  new_unittest('assign', test_assign), &
+                  new_unittest('destroy', test_destroy) &
                   ]
 
    end subroutine collect_bundle_suite
@@ -61,7 +61,7 @@ contains
       call check(error, B%CurrentTime, 0.0d0)
       if (allocated(error)) return
 
-      call check(error, size(B%BMatrices%H), NUM_TRAJ * NUM_TRAJ, "Create failed to allocate H matrix")
+      call check(error, size(B%BMatrices%H), NUM_TRAJ * NUM_TRAJ, 'Create failed to allocate H matrix')
       if (allocated(error)) return
 
       call check(error, size(B%BMatrices%S), NUM_TRAJ * NUM_TRAJ)
@@ -136,7 +136,7 @@ contains
       end do
 
       NUM_TRAJ_SQUARED = NUM_TRAJ(1) * NUM_TRAJ(1)
-      call check(error, size(B2%BMatrices%H), NUM_TRAJ_SQUARED, "Create failed to allocate H matrix")
+      call check(error, size(B2%BMatrices%H), NUM_TRAJ_SQUARED, 'Create failed to allocate H matrix')
       if (allocated(error)) return
 
       call check(error, size(B2%BMatrices%S), NUM_TRAJ_SQUARED)
@@ -176,16 +176,16 @@ contains
 
       call B%destroy()
 
-      call check(error,.not. allocated(B%Trajectory), "Destroy failed to deallocate B%Trajectory array")
+      call check(error,.not. allocated(B%Trajectory), 'Destroy failed to deallocate B%Trajectory array')
       if (allocated(error)) return
 
-      call check(error,.not. allocated(B%DeadTraj), "Destroy failed to deallocate B%DeadTraj array")
+      call check(error,.not. allocated(B%DeadTraj), 'Destroy failed to deallocate B%DeadTraj array')
       if (allocated(error)) return
 
-      call check(error,.not. allocated(B%Centroids), "Destroy failed to deallocate B%Centroids array")
+      call check(error,.not. allocated(B%Centroids), 'Destroy failed to deallocate B%Centroids array')
       if (allocated(error)) return
 
-      call check(error,.not. allocated(B%BMatrices%H), "Destroy failed to deallocate H matrix")
+      call check(error,.not. allocated(B%BMatrices%H), 'Destroy failed to deallocate H matrix')
       if (allocated(error)) return
 
       call check(error,.not. allocated(B%DeadH))
@@ -208,7 +208,7 @@ contains
       call check(error,.not. allocated(B%BMatrices%AmpDot))
       if (allocated(error)) return
 
-      call check(error, B%NumParticles, 0, "Destroyed trajectory should have no particles!")
+      call check(error, B%NumParticles, 0, 'Destroyed trajectory should have no particles!')
       if (allocated(error)) return
 
       call check(error, B%NumStates, 0)

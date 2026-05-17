@@ -922,13 +922,13 @@ contains
 
       npart = T1%NumParticles
       if (i < 1 .or. npart < i) then
-         call FMS_DieError("Distance: index i out of range")
+         call FMS_DieError('Distance: index i out of range')
       end if
       if (j < 1 .or. npart < j) then
-         call FMS_DieError("Distance: index j out of range")
+         call FMS_DieError('Distance: index j out of range')
       end if
       if (i == j) then
-         call FMS_DieError("Distance: i and j the same ")
+         call FMS_DieError('Distance: i and j the same ')
       end if
 
       R = FMS_Distance(T1%Particle(i), T1%Particle(j))
@@ -963,9 +963,9 @@ contains
       integer(kind=DefInt) :: npart
 
       npart = T1%NumParticles
-      if (i < 1 .or. npart < i) call FMS_DieError("FMS_Angle_Trajectory : index i out of range")
-      if (j < 1 .or. npart < j) call FMS_DieError("FMS_Angle_Trajectory : index j out of range")
-      if (k < 1 .or. npart < k) call FMS_DieError("FMS_Angle_Trajectory : index k out of range")
+      if (i < 1 .or. npart < i) call FMS_DieError('FMS_Angle_Trajectory : index i out of range')
+      if (j < 1 .or. npart < j) call FMS_DieError('FMS_Angle_Trajectory : index j out of range')
+      if (k < 1 .or. npart < k) call FMS_DieError('FMS_Angle_Trajectory : index k out of range')
 
       theta = FMS_Angle(T1%Particle(i), T1%Particle(j), T1%Particle(k))
 
@@ -1011,16 +1011,16 @@ contains
 
       npart = T1%NumParticles
       if (i < 1 .or. npart < i) then
-         call FMS_DieError("Dihedral: index i out of range")
+         call FMS_DieError('Dihedral: index i out of range')
       end if
       if (j < 1 .or. npart < j) then
-         call FMS_DieError("Dihedral: index j out of range")
+         call FMS_DieError('Dihedral: index j out of range')
       end if
       if (k < 1 .or. npart < k) then
-         call FMS_DieError("Dihedral: index k out of range")
+         call FMS_DieError('Dihedral: index k out of range')
       end if
       if (l < 1 .or. npart < l) then
-         call FMS_DieError("Dihedral: index l out of range")
+         call FMS_DieError('Dihedral: index l out of range')
       end if
 
       phi = FMS_Dihedral(T1%Particle(i), T1%Particle(j), T1%Particle(k), T1%Particle(l))

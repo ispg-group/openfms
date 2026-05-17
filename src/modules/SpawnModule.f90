@@ -171,7 +171,7 @@ contains
             do j = 1, ntraj
                if (B1%Trajectory(j)%StateID == cs) then
                   if (abs(overlap(B1%Trajectory(i), B1%Trajectory(j))) > spdOMax_inter) then
-                     write (fmiOut, *) "Significant overlap with traj", j
+                     write (fmiOut, *) 'Significant overlap with traj', j
                      cycle state_loop
                   end if
                end if
@@ -191,8 +191,8 @@ contains
                   ! create a new trajectory
                   parent_i = B1%Trajectory(i)
                   write (fmiOut, '(20("*"))')
-                  write (fmiOut, '(a,i0,a)') "SPAWNING: Trajectory ", parent_i%TrajID, " exceeded threshold"
-                  write (fmiOut, '(2(a,i2))') "Parent on state ", ps, " spawning to state", cs
+                  write (fmiOut, '(a,i0,a)') 'SPAWNING: Trajectory ', parent_i%TrajID, ' exceeded threshold'
+                  write (fmiOut, '(2(a,i2))') 'Parent on state ', ps, ' spawning to state', cs
                   ! new way
                   l_spawn = .true.
                   l_overlap = .true.
@@ -228,8 +228,8 @@ contains
                         if (glzStochastic) gldLastSpawnSto = spawn_time
 
                      else
-                        write (fmiOut, *) "Overlap with exisiting trajectories in Bundle too large"
-                        write (fmiOut, *) "No trajectory will be spawned"
+                        write (fmiOut, *) 'Overlap with exisiting trajectories in Bundle too large'
+                        write (fmiOut, *) 'No trajectory will be spawned'
                      end if
                   end if
 
@@ -256,8 +256,8 @@ contains
                   ! create a new trajectory
                   parent_i = B1%Trajectory(i)
                   write (fmiOut, '(20("*"))')
-                  write (fmiOut, '(a,i0,a)') "SPAWNING: Trajectory ", parent_i%TrajID, " exceeded threshold"
-                  write (fmiOut, '(2(a,i2))') "Parent on state ", ps, " spawning to state ", cs
+                  write (fmiOut, '(a,i0,a)') 'SPAWNING: Trajectory ', parent_i%TrajID, ' exceeded threshold'
+                  write (fmiOut, '(2(a,i2))') 'Parent on state ', ps, ' spawning to state ', cs
 
                   ! new way
                   l_spawn = .true.
@@ -302,8 +302,8 @@ contains
                         if (glzStochastic) gldLastSpawnSto = spawn_time
 
                      else
-                        write (fmiOut, *) "Overlap with exisiting trajectories in Bundle too large"
-                        write (fmiOut, *) "No trajectory will be spawned"
+                        write (fmiOut, *) 'Overlap with exisiting trajectories in Bundle too large'
+                        write (fmiOut, *) 'No trajectory will be spawned'
                      end if
                   end if
 
@@ -488,8 +488,8 @@ contains
 
       call child_a%create(npart, nstate)
 
-      write (fmiOut, *) " time    coup    overlap  new"
-      created_this_step = " "
+      write (fmiOut, *) ' time    coup    overlap  new'
+      created_this_step = ' '
 
       ! attempt to set up the child
       child_a = parent_f
@@ -512,7 +512,7 @@ contains
          success = .true.
          child_created = .true.
 !            success           = .true.
-         created_this_step = "*"
+         created_this_step = '*'
 
          child_a%SpawnTime(ps) = curr_time
          child_s = child_a
@@ -531,7 +531,7 @@ contains
          write (fmiOut, '(f8.2,1x,f8.4,1x,f5.3,1x,a)') parent_f%get_time(), coup, abs(S), created_this_step
 
       else
-         write (fmiOut, '(f8.2,1x,f8.4,1x,a)') parent_f%get_time(), coup, "  NA "
+         write (fmiOut, '(f8.2,1x,f8.4,1x,a)') parent_f%get_time(), coup, '  NA '
 
       end if
 
@@ -599,9 +599,9 @@ contains
 
       call child_a%create(npart, nstate)
 
-      write (fmiOut, *) " time    coup    overlap  new"
+      write (fmiOut, *) ' time    coup    overlap  new'
       do
-         created_this_step = " "
+         created_this_step = ' '
 
 ! xf changed
          if (glzxfaims) then
@@ -621,9 +621,9 @@ contains
          if (all(coup_prev(1) < coup_prev(2:))) then
             write (fmiOut, '(f8.2,1x,f8.4,1x,A)') parent_f%get_time(), coup, '-'
             if (.not. child_created) then
-               write (fmiOut, *) "Spawn failed : coupling peaked but child could not be created"
+               write (fmiOut, *) 'Spawn failed : coupling peaked but child could not be created'
             else
-               write (fmiOut, '(a,g0.2)') "Spawn successful: child created at t = ", parent_s%get_time()
+               write (fmiOut, '(a,g0.2)') 'Spawn successful: child created at t = ', parent_s%get_time()
             end if
             exit
          end if
@@ -649,7 +649,7 @@ contains
                   success = .true.
                   child_created = .true.
                   success = .true.
-                  created_this_step = "*"
+                  created_this_step = '*'
 
                   child_a%SpawnTime(ps) = curr_time
                   child_s = child_a
@@ -666,8 +666,8 @@ contains
 ! xf changed
             if (COUP_FIELD) then
                if (.not. child_created) then
-                  write (fmiOut, *) "Coup FIELD Spawn fail : coupling dropped below threshold"
-                  write (fmiOut, *) "Coup FIELD              and no child could be created"
+                  write (fmiOut, *) 'Coup FIELD Spawn fail : coupling dropped below threshold'
+                  write (fmiOut, *) 'Coup FIELD              and no child could be created'
                   success = .false.
                   exit
                end if
@@ -675,8 +675,8 @@ contains
 
             if (COUP_CI) then
                if (.not. child_created .and. coup < spdCFThresh) then
-                  write (fmiOut, *) "Spawn fail : coupling dropped below threshold"
-                  write (fmiOut, *) "             and no child could be created"
+                  write (fmiOut, *) 'Spawn fail : coupling dropped below threshold'
+                  write (fmiOut, *) '             and no child could be created'
                   success = .false.
                   exit
                end if
@@ -685,8 +685,8 @@ contains
          else
 
             if (.not. child_created .and. coup < spdCFThresh) then
-               write (fmiOut, *) "Spawn fail : coupling dropped below threshold"
-               write (fmiOut, *) "             and no child could be created"
+               write (fmiOut, *) 'Spawn fail : coupling dropped below threshold'
+               write (fmiOut, *) '             and no child could be created'
                success = .false.
                exit
             end if
@@ -737,14 +737,14 @@ contains
       call cpu_time(time_tmp1)
 ! work out the number of time steps to step back
       nstep = int(abs(TotalTime / TimeStep))
-      write (fmiOut, '(a,i0,a)') "Propagating child backwards for ", nstep, " steps"
+      write (fmiOut, '(a,i0,a)') 'Propagating child backwards for ', nstep, ' steps'
       do n = 1, nstep
-         write (fmiOut, '(a,g0.2)') " --Time: ", T1%get_time()
+         write (fmiOut, '(a,g0.2)') ' --Time: ', T1%get_time()
          flush (fmiOut)
          call propagate_recursive(T1, TimeStep)
          call T1%set_time(T1%get_time() + TimeStep)
       end do
-      write (fmiOut, *) "Done backpropagating"
+      write (fmiOut, *) 'Done backpropagating'
 
       call cpu_time(time_tmp2)
       btime = btime + time_tmp2 - time_tmp1
@@ -774,8 +774,8 @@ contains
 
       if (abs(E2 - E1) > gldEnergyStepCons) then
          write (fmiOut, '(A,g0.4,A,i0)') &
-            "WARNING: Energy jumped by ", E2 - E1, &
-            " Hartrees for trajectory #", T2%TrajID
+            'WARNING: Energy jumped by ', E2 - E1, &
+            ' Hartrees for trajectory #', T2%TrajID
          call FMS_RejectStep(.true.)
       end if
 !If current timestep is at min step and step is still rejected then die
@@ -983,7 +983,7 @@ contains
 
          Delta = b**2 - 4.*a * c
          if (Delta < 0.) then
-            write (fmiOut, *) "Unable to scale the parallel component"
+            write (fmiOut, *) 'Unable to scale the parallel component'
             return
          end if
 
@@ -1064,9 +1064,9 @@ contains
             file_name = trim(FMSWorkingDir)//'Spawn.log'
             inquire (file=file_name, exist=file_exists)
             if (file_exists) then
-               open (newunit=u_spawn_log, file=file_name, position="append", action="write", status="old")
+               open (newunit=u_spawn_log, file=file_name, position='append', action='write', status='old')
             else
-               open (newunit=u_spawn_log, file=file_name, action="write", status="new")
+               open (newunit=u_spawn_log, file=file_name, action='write', status='new')
                write (u_spawn_log, '(A)') '#EntryTime SpawnTime  ExitTime  CID'// &
                   '  CSt  PID  PSt   ChildKE   ChildPE  '// &
                   'ParentKE  ParentPE '
@@ -1087,9 +1087,9 @@ contains
             file_name = trim(FMSWorkingDir)//'FailSpawn.log'
             inquire (file=file_name, exist=file_exists)
             if (file_exists) then
-               open (newunit=u_fail_log, file=file_name, action="write", position="append", status="old")
+               open (newunit=u_fail_log, file=file_name, action='write', position='append', status='old')
             else
-               open (newunit=u_fail_log, file=file_name, action="write", status="new")
+               open (newunit=u_fail_log, file=file_name, action='write', status='new')
                write (u_fail_log, '(A)') '#Entry time  ExitTime  PID  PSt'// &
                   'ParentKE  ParentPE  spawn fail overlap fail'
             end if
@@ -1214,7 +1214,7 @@ contains
       integer(kind=DefInt) :: IParticle, IDim, Index
       save Scaling, PPar, PPerp, Mass, PTotal
 
-2003  format("Cannot adjust child kinetic energy to parent.")
+2003  format('Cannot adjust child kinetic energy to parent.')
 
 !     Dynamic allocation
       Success = .true.
@@ -1230,9 +1230,9 @@ contains
 !
       Energy = Kinetic(TChild) + Potential(TChild)
       GoalEnergy = Kinetic(TParent) + Potential(TParent)
-2000  format("Energy of parent trajectory: ", d12.3)
+2000  format('Energy of parent trajectory: ', d12.3)
       write (fmiOut, 2000) GoalEnergy
-2002  format("Energy of child trajectory:  ", d12.3)
+2002  format('Energy of child trajectory:  ', d12.3)
       write (fmiOut, 2002) Energy
       flush (fmiOut)
 
@@ -1325,7 +1325,7 @@ contains
             Index = Index + 1
          end do
       end do
-2001  format("Scaling child momentum by: ", g0.8)
+2001  format('Scaling child momentum by: ', g0.8)
       write (fmiOut, 2001) ScaleFactor
 
    end function FMS_AdjustEnergy

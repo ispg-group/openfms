@@ -326,7 +326,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    IMethod = 1
    InitBright = .false.
    InitDark = .false.
-   InitialCond = "NOSAMPLE"
+   InitialCond = 'NOSAMPLE'
    ForceKill(:) = 0
    IzmOmegax = 0.009557d0
    IzmOmegay = 0.0033515d0
@@ -365,7 +365,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    MinSearch = .false.
    MirrorBasis = .false.
    MirrorState = 1
-   Model = "UNDEF"
+   Model = 'UNDEF'
    MoldenStep = 200
    MultiSpawn = 1
    NCycles = 0
@@ -493,7 +493,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
 
 !     Copy global parameters into Global_Module
    select case (trim(lower_case(Model)))
-   case ("undef")
+   case ('undef')
       write (error_unit, *) '"Model" must be defined in Control.dat'// &
          NL//'Available models:'//NL//'  '//AVAILABLE_MODELS
       zFatal = .true.

@@ -26,7 +26,7 @@ program tester
    ! 1. Respect the FORCE_COLOR envvar per https://force-color.org/
    ! 2. Color things only if the output is a TTY (terminal)
    ! The latter is currently only checked using the GNU-instrinsic isatty
-   call get_environment_variable("FORCE_COLOR", force_color)
+   call get_environment_variable('FORCE_COLOR', force_color)
    if (trim(force_color) /= '') then
       call init_color_output(.true.)
    end if
@@ -37,9 +37,9 @@ program tester
 #endif
 
    testsuites = [ &
-                new_testsuite("ParticleModule", collect_particle_suite), &
-                new_testsuite("TrajectoryModule", collect_trajectory_suite), &
-                new_testsuite("BundleModule", collect_bundle_suite) &
+                new_testsuite('ParticleModule', collect_particle_suite), &
+                new_testsuite('TrajectoryModule', collect_trajectory_suite), &
+                new_testsuite('BundleModule', collect_bundle_suite) &
                 ]
 
    ! Swap the default FMS_DieError handler for a unit-test friendly
@@ -99,7 +99,7 @@ contains
       type(testsuite_type), intent(in) :: testsuite
       integer, intent(inout) :: num_failed_tests
 
-      write (error_unit, fmt) "Testing:", testsuite%name
+      write (error_unit, fmt) 'Testing:', testsuite%name
       call run_testsuite(testsuite%collect, error_unit, num_failed_tests)
 
       ! Make sure FMS_DieError was not called unexpectedly.

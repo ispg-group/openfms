@@ -89,7 +89,7 @@ program OpenFMS
    ! Construct initial system state
    if (inIRestart == 0) then
       call FMS_InitialCond(Bundle)
-      call FMS_DeleteFile("Checkpoint.txt")
+      call FMS_DeleteFile('Checkpoint.txt')
    else
       call GetRestart(Bundle, RestartTime)
       call FMS_UpdateBundle(Bundle)

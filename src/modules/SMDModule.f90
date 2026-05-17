@@ -218,11 +218,11 @@ contains
 
 !     Input error checking
       if (smNDummy /= smNAtoms .and. (.not. smautodirect)) then
-         call FMS_DieError("Number of dummy and SMD atoms not equal")
+         call FMS_DieError('Number of dummy and SMD atoms not equal')
       end if
 
       if (mod(smNAtoms, 2) /= 0) then
-         call FMS_DieError("Number of SMD atoms must be even")
+         call FMS_DieError('Number of SMD atoms must be even')
       end if
 
 !     Determine if elongation factor is bigger than cutoff
@@ -313,7 +313,7 @@ contains
 
       do iPtcle = 1, smnAtoms / 2
          if (smElongFac(iPtcle) > smElongCut) then
-            call FMS_PrintMessg("SMD: Elongation Factor cutoff reached")
+            call FMS_PrintMessg('SMD: Elongation Factor cutoff reached')
             completed = .true.
             return
          end if

@@ -3,13 +3,15 @@ ignore = [
   "implicit-external-procedures", # requires Fortran 2018
   "star-kind", # don't use integer*4 et al
   "literal-kind",
-  "bad-quote-string",
   "unchecked-stat",  # TODO: Fix this!
   "nonportable-shortcircuit-inquiry",  # TODO: Fix this!
 ]
 line-length = 132
 show-fixes = true
 extend-exclude = ["unit_tests/testdrive.F90"]
+
+[check.strings]
+quotes = 'single'
 
 # In general, we enforce the "use SomeModule, only: xxx, yyy" pattern,
 # to make it explicit which subroutine/variable come from a given module.

@@ -456,7 +456,7 @@ contains
       filePath = trim(FMSWorkingDir)//trim(fileName)
       inquire (file=filePath, exist=fileExists)
       if (fileExists) then
-         open (newunit=iunit, file=filePath, position="append")
+         open (newunit=iunit, file=filePath, position='append')
       else
          open (newunit=iunit, file=filePath)
       end if

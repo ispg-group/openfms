@@ -630,7 +630,7 @@ contains
 !
       if (smSMD) then
          if (Bundle%NumTraj > 1) then
-            call FMS_DieError("SMD should only have 1 trajectory")
+            call FMS_DieError('SMD should only have 1 trajectory')
          end if
          if (SMD_Completed()) then
             call FMS_Shutdown(B1=Bundle)

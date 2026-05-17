@@ -745,7 +745,7 @@ contains
 !     tjm  Alternative procedure is to build b=HEff1*Amp
 !     tjm  Then solve S x ampdot = b
 !     DH: Deactivate this branch to get rid of dependency on BLAS/LAPACK
-         call FMS_DieError("GlzIterInv is not supported right now")
+         call FMS_DieError('GlzIterInv is not supported right now')
 
          call cpu_time(time_tmp1)
 
