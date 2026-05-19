@@ -77,7 +77,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-         gcc_v: [14]
+         gcc_v: [15]
          os: [ubuntu-24.04]
 
     steps:
@@ -134,7 +134,7 @@ jobs:
       run: make test
 
   cmake_build:
-    name: CMake ${{ matrix.toolchain.compiler }}-${{ matrix.toolchain.version }} zero
+    name: CMake ${{ matrix.toolchain.compiler }}-${{ matrix.toolchain.version }}
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
