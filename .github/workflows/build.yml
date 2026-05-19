@@ -43,8 +43,6 @@ jobs:
 
     - name: Configure
       run: ./configure.sh
-      env:
-        FC: gfortran${{ matrix.os == 'macos-15-intel' && '-14' || '' }}
 
     - name: Build
       run: make -j
@@ -100,17 +98,20 @@ jobs:
       run: make test
 
 
-  non_gfortran_build:
+  non_gcc_build:
     name: ${{ matrix.toolchain.compiler }}-${{ matrix.toolchain.version }} build
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-24.04]
         toolchain:
           - {compiler: intel, version: latest}
           - {compiler: nvidia-hpc, version: latest}
           - {compiler: aocc, version: latest}
-          - {compiler: intel-classic, version: '2022.11'}
+        include:
+          - os: ubuntu-22.04
+            toolchain: {compiler: intel-classic, version: latest}
 
     steps:
     - uses: actions/checkout@v6
