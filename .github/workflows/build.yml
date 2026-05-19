@@ -111,7 +111,7 @@ jobs:
           - {compiler: aocc, version: latest}
         include:
           - os: ubuntu-22.04
-            toolchain: {compiler: intel-classic, version: latest}
+            toolchain: {compiler: intel-classic, version: '2022.10'}
 
     steps:
     - uses: actions/checkout@v6
