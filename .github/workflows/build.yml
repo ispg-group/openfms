@@ -24,7 +24,7 @@ jobs:
           - {compiler: aocc, version: latest}
         include:
           - os: ubuntu-22.04
-            toolchain: {compiler: intel-classic, version: '2022.10'}
+            toolchain: {compiler: intel-classic, version: '2021.10'}
           - os: macos-26
             toolchain: {compiler: gcc, version: '15'}
           - os: ubuntu-22.04
