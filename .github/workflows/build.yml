@@ -100,17 +100,17 @@ jobs:
       run: make test
 
 
-  intel_build:
+  non_gfortran_build:
     name: ${{ matrix.toolchain.compiler }}-${{ matrix.toolchain.version }} build
-    runs-on: ubuntu-22.04
-    env:
-      FFLAGS: -O1 -g0
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         toolchain:
           - {compiler: intel, version: latest}
-          - {compiler: intel-classic, version: '2021.10'}
+          - {compiler: nvidia-hpc, version: latest}
+          - {compiler: aocc, version: latest}
+          - {compiler: intel-classic, version: latest}
 
     steps:
     - uses: actions/checkout@v6
