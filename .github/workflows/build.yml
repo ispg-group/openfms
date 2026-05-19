@@ -10,20 +10,25 @@ env:
 
 jobs:
 
-  gcc_build:
-    name: GCC-${{ matrix.gcc_v}} (${{ matrix.os }})
+  build:
+    name: ${{ matrix.toolchain.compiler }}-${{ matrix.toolchain.version }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    env:
-      FFLAGS: --coverage -fprofile-abs-path
-      LDFLAGS: --coverage
     strategy:
       fail-fast: false
       matrix:
-         gcc_v: [15]
-         os: [ubuntu-24.04, macos-26, macos-26-intel]
-         include:
+        os: [ubuntu-24.04]
+        toolchain:
+          - {compiler: gcc, version: '15'}
+          - {compiler: intel, version: latest}
+          - {compiler: nvidia-hpc, version: latest}
+          - {compiler: aocc, version: latest}
+        include:
           - os: ubuntu-22.04
-            gcc_v: 9
+            toolchain: {compiler: intel-classic, version: '2022.10'}
+          - os: macos-26
+            toolchain: {compiler: gcc, version: '15'}
+          - os: ubuntu-22.04
+            toolchain: {compiler: gcc, version: '9'}
 
     steps:
     - uses: actions/checkout@v6
@@ -33,8 +38,8 @@ jobs:
     - uses: fortran-lang/setup-fortran@v1
       id: setup-fortran
       with:
-        compiler: gcc
-        version: ${{ matrix.gcc_v }}
+        compiler: ${{ matrix.toolchain.compiler }}
+        version: ${{ matrix.toolchain.version }}
 
       # Python is needed for tests
     - uses: actions/setup-python@v6
@@ -43,6 +48,10 @@ jobs:
 
     - name: Configure
       run: ./configure.sh
+      env:
+        # Only collect test coverage for with gfortran
+        FFLAGS: ${{ matrix.toolchain.compiler == 'gcc' && '--coverage -fprofile-abs-path' || '' }}
+        LDFLAGS: ${{ matrix.toolchain.compiler == 'gcc' && '--coverage' || '' }}
 
     - name: Build
       run: make -j
@@ -97,42 +106,6 @@ jobs:
     - name: End-to-end tests
       run: make test
 
-
-  non_gcc_build:
-    name: ${{ matrix.toolchain.compiler }}-${{ matrix.toolchain.version }} build
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-24.04]
-        toolchain:
-          - {compiler: intel, version: latest}
-          - {compiler: nvidia-hpc, version: latest}
-          - {compiler: aocc, version: latest}
-        include:
-          - os: ubuntu-22.04
-            toolchain: {compiler: intel-classic, version: '2022.10'}
-
-    steps:
-    - uses: actions/checkout@v6
-
-    - uses: fortran-lang/setup-fortran@v1
-      id: setup-fortran
-      with:
-        compiler: ${{ matrix.toolchain.compiler }}
-        version: ${{ matrix.toolchain.version }}
-
-    - name: Configure
-      run: ./configure.sh
-
-    - name: Build
-      run: make -j
-
-    - name: Unit tests
-      run: make unittest
-
-    - name: End-to-end tests
-      run: make test
 
   cmake_build:
     name: CMake ${{ matrix.toolchain.compiler }}-${{ matrix.toolchain.version }}
