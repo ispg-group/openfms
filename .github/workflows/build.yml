@@ -110,7 +110,7 @@ jobs:
           - {compiler: intel, version: latest}
           - {compiler: nvidia-hpc, version: latest}
           - {compiler: aocc, version: latest}
-          - {compiler: intel-classic, version: latest}
+          - {compiler: intel-classic, version: '2022.10'}
 
     steps:
     - uses: actions/checkout@v6
