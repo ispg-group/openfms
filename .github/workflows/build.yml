@@ -13,6 +13,10 @@ jobs:
   build:
     name: ${{ matrix.toolchain.compiler }}-${{ matrix.toolchain.version }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    env:
+      # Only collect test coverage with gfortran
+      FFLAGS: ${{ matrix.toolchain.compiler == 'gcc' && '--coverage -fprofile-abs-path' || '' }}
+      LDFLAGS: ${{ matrix.toolchain.compiler == 'gcc' && '--coverage' || '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -48,11 +52,6 @@ jobs:
 
     - name: Configure
       run: ./configure.sh
-      env:
-        # Only collect test coverage for with gfortran
-        FFLAGS: ${{ matrix.toolchain.compiler == 'gcc' && '--coverage -fprofile-abs-path' || '' }}
-        LDFLAGS: ${{ matrix.toolchain.compiler == 'gcc' && '--coverage' || '' }}
-
     - name: Build
       run: make -j
 
