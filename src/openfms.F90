@@ -122,7 +122,7 @@ program OpenFMS
    end if
 
    write (fmiOut, '(a,F0.3,a)') 'Propagate until t = ', SimulationTime, ' a.u.'
-   flush (fmiOut)
+   !flush (fmiOut)
 
    do while (Bundle%CurrentTime < SimulationTime)
 

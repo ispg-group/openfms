@@ -1371,7 +1371,9 @@ contains
                B1%Trajectory(n)%TrajID = n
                call B1%Trajectory(n)%set_pos(X + dX)
                call B1%Trajectory(n)%set_mom(P + dP) ! useless here because dP is zero, but for completeness...
-               dX = [10.0d0, 0.d0, 0.d0]
+               dX = [10.0d0, 0.d0, 0.d0]             ! used for placing two Gaussians in front of, one after
+                                                     ! the crossing point
+               !dX = [-0.25d0, 0.d0, 0.d0]            ! for having three Gaussians in front of crossing
             end do
          else
             call B1%Trajectory(ntraj)%set_pos(X + dX)

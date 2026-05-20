@@ -405,7 +405,8 @@ contains
          write (fmiout, *) "Norm: ", FMS_Norm(B1)
          write (fmiout, *) "and the corresponding amplitudes are"
          do iTraj = 1, B1%NumTraj
-            write (fmiout, *) "Trajectory ", iTraj, "AMplitude: ", B1%Trajectory(iTraj)%Amplitude
+            write (fmiout, *) "Trajectory ", iTraj, "TrajID ", B1%Trajectory(iTraj)%TrajID, &
+                              "AMplitude: ", B1%Trajectory(iTraj)%Amplitude
          end do
 
          write (fmiout, *) "----------------------------"
@@ -429,51 +430,61 @@ contains
             if (StoSelMode(i) == 1 .or. StoSelMode(i) == 3) then
 
                write (fmiout, *) "StoSelMode for block ", i, "is ", StoSelMode(i)
+               IsSelection = .false.
                ! Do the stochastic selection
                if (BundlesMult(i)%NCBFs > 1 ) then
                   write (fmiout, *) "Performing stochastic selection for block Bundle", i, &
                                     "with", BundlesMult(i)%NCBFs, "CBFs"
 
-                  IsSelection = .false.
                   call perform_stochastic_selection(BundlesMult(i), selectionTime, IsSelection)
 
                   ! Adjust gliForceKill only if selection actually happened
-                  if (i>1 .and. IsSelection) then
-                     !write (fmiout, *) "Adjusting gliForceKill using MergedSepBlockTrajID (this is the full matrix): "
-                     !do j = 1, B1%NumTraj + 1
-                     !   write (fmiout, *) MergedSepBlockTrajID(j,:)
-                     !end do
+                  if (IsSelection) then
 
-                     !write (fmiout, *) "and MergedBlockTrajID (this is the full matrix): "
-                     !do j = 1, B1%NumTraj + 1
-                     !   write (fmiout, *) MergedBlockTrajID(j,:)
-                     !end do
-
-                     write (fmiout, *) "gliForcKill for block Bundle", i
-                     write (fmiout, *) gliForceKill
-                     !write (fmiout, *) "adjusting to B1 indiced..."
-
-                     SaveForceKill = gliForceKill
-
-                     do iTraj = 1, B1%NumTraj + 1                       ! Why did I ever start this one from 2??
-                        do j = 1, B1%NumTraj + 1
-                           if (MergedSepBlockTrajID(iTraj,j) == 0) cycle
-                           do DeadID = 1, size(SaveForceKill)
-                              !write (fmiout, *) "many numbers (?)", SaveForceKill(DeadID)
-                              if (MergedSepBlockTrajID(iTraj,j) == SaveForceKill(DeadID)) then
-                                 write (fmiout, *) "Match for gliForceKill: ", SaveForceKill(DeadID)
-                                 write (fmiout, *) "with MergedSepblock: ", MergedSepBlockTrajID(iTraj,j)
-                                 write (fmiout, *) "i and j are: ", iTraj, j
-                                 write (fmiout, *) "Corresponding MergedBlock: ", MergedBlockTrajID(iTraj,j)
-                                 gliForceKill(DeadID) = MergedBlockTrajID(iTraj,j)
-                              end if
-                           end do
-                        end do
+                     write (fmiout, *) "Number of dead trajs: ", B1%NumDeadTraj
+                     do j = 1, B1%NumDeadTraj
+                        write (fmiout, *) "TrajID of dead traj", j, ": ", B1%DeadTraj(j)%TrajID
                      end do
 
-                     write (fmiout, *) "Adjusted gliForcKill for block Bundle", i, "and obtained"
-                     write (fmiout, *) gliForceKill
                   end if
+
+                  ! Adjust gliForceKill only if selection actually happened
+                  !if (i>1 .and. IsSelection) then
+                  !   !write (fmiout, *) "Adjusting gliForceKill using MergedSepBlockTrajID (this is the full matrix): "
+                  !   !do j = 1, B1%NumTraj + 1
+                  !   !   write (fmiout, *) MergedSepBlockTrajID(j,:)
+                  !   !end do
+
+                  !   !write (fmiout, *) "and MergedBlockTrajID (this is the full matrix): "
+                  !   !do j = 1, B1%NumTraj + 1
+                  !   !   write (fmiout, *) MergedBlockTrajID(j,:)
+                  !   !end do
+
+                  !   write (fmiout, *) "gliForcKill for block Bundle", i
+                  !   write (fmiout, *) gliForceKill
+                  !   !write (fmiout, *) "adjusting to B1 indiced..."
+
+                  !   SaveForceKill = gliForceKill
+
+                  !   do iTraj = 1, B1%NumTraj + 1                       ! Why did I ever start this one from 2??
+                  !      do j = 1, B1%NumTraj + 1
+                  !         if (MergedSepBlockTrajID(iTraj,j) == 0) cycle
+                  !         do DeadID = 1, size(SaveForceKill)
+                  !            !write (fmiout, *) "many numbers (?)", SaveForceKill(DeadID)
+                  !            if (MergedSepBlockTrajID(iTraj,j) == SaveForceKill(DeadID)) then
+                  !               write (fmiout, *) "Match for gliForceKill: ", SaveForceKill(DeadID)
+                  !               write (fmiout, *) "with MergedSepblock: ", MergedSepBlockTrajID(iTraj,j)
+                  !               write (fmiout, *) "i and j are: ", iTraj, j
+                  !               write (fmiout, *) "Corresponding MergedBlock: ", MergedBlockTrajID(iTraj,j)
+                  !               gliForceKill(DeadID) = MergedBlockTrajID(iTraj,j)
+                  !            end if
+                  !         end do
+                  !      end do
+                  !   end do
+
+                  !   write (fmiout, *) "Adjusted gliForcKill for block Bundle", i, "and obtained"
+                  !   write (fmiout, *) gliForceKill
+                  !end if
 
                   if (IsSelection) then
                      write (fmiout, *) "(Before copying back to original Bundle)"
@@ -539,7 +550,8 @@ contains
          do i = 1, BundlesMultDim
             write (fmiout, *) "Block: ", i
             do iTraj = 1, BundlesMult(i)%NumTraj
-               write (fmiout, *) "Trajectory ", iTraj, "AMplitude: ", BundlesMult(i)%Trajectory(iTraj)%Amplitude
+               write (fmiout, *) "Trajectory ", iTraj, "TrajID ", BundlesMult(i)%Trajectory(iTraj)%TrajID, & 
+                                 "AMplitude: ", BundlesMult(i)%Trajectory(iTraj)%Amplitude
             end do
          end do
          write (fmiout, *) "----------------------------"
@@ -556,8 +568,25 @@ contains
                                              ! StoSel (but not sure if that breaks things somewhere...?)
 
 
+         write (fmiout, *) "blocktrajid right before copy_MultBundles_to_B1: "
+         do i = 1, B1%NumTraj + 1
+            write (fmiout, *) blocktrajid(i,:)
+         end do
+
+         write (fmiout, *) "MergedBlockTrajID: "
+         do i = 1, B1%NumTraj + 1
+            write (fmiout, *) MergedBlockTrajID(i,:)
+         end do
+
+         write (fmiout, *) "MergedSepBlockTrajID: "
+         do i = 1, B1%NumTraj + 1
+            write (fmiout, *) MergedBlockTrajID(i,:)
+         end do
+
          if (IsSelection) then
-            call copy_MultBundles_to_original_bundle(B1, BundlesMult, BundlesMultDim, StoSelMode)
+            call copy_MultBundles_to_original_bundle(B1, BundlesMult, BundlesMultDim, StoSelMode, &
+                                                     MergedBlockTrajID, MergedSepBlockTrajID)
+            ! 18/05/26: Don't we need to normalise here ???!!?!?!
             write (fmiout, *) "States were copied back without error"
          end if
 
@@ -664,7 +693,9 @@ contains
       ntrajblock = 0
       nblock = 0
       call FMS_GroupIntoBlocks(B1, Coupled, blocktrajid, ntrajblock, nblock)
+      write (fmiout, *) "Right before performing SS:"
       write (fmiout, *) "Number of Blocks: ", nblock
+      write (fmiout, *) "Coupled is: ", Coupled
 
 ! There should be at least one block of trajectories
       if (nblock == 0) then
@@ -1106,10 +1137,10 @@ contains
 
       end do
 
-      !write (fmiout, *) "This is the finished blocktrajid: "
-      !do j = 1, B1%NumTraj + 1
-      !   write (fmiout, *) blocktrajid(j,:)
-      !end do
+      write (fmiout, *) "This is the finished blocktrajid: "
+      do j = 1, B1%NumTraj + 1
+         write (fmiout, *) blocktrajid(j,:)
+      end do
 
       !write (fmiout, *) "These trajectories are in the first block: ", blocktrajid(:,1)
       !write (fmiout, *) "and these are in the second block: ", blocktrajid(:,2)
@@ -1263,8 +1294,8 @@ contains
       integer(kind=DefInt) :: i, j, l, jtraj
 ! Mark all other trajectories for death
       l = 0
-      !write (fmiout, *) "-----------------------------------------------"
-      !write (fmiout, *) "Marking trajectories for death"
+      write (fmiout, *) "-----------------------------------------------"
+      write (fmiout, *) "Marking trajectories for death"
       do i = 1, nblock
          !write (fmiout, *) "Current block: ", i
          !write (fmiout, *) "was it selected? ", i == iblockslct
@@ -1274,12 +1305,12 @@ contains
             l = l + 1
             jtraj = blocktrajid(j, i)
             gliForceKill(l) = B1%Trajectory(jtraj)%TrajID
-            !write (fmiout, *) "Trajectory will be killed (TrajID, CBF): ", B1%Trajectory(jtraj)%TrajID, B1%Trajectory(jtraj)%CBF
+            write (fmiout, *) "Trajectory will be killed (TrajID, CBF): ", B1%Trajectory(jtraj)%TrajID, B1%Trajectory(jtraj)%CBF
             B1%Trajectory(jtraj)%Amplitude = dcmplx(0.0d0, 0.0d0)
          end do
       end do
-      !write (fmiout, *) "Array of TrajIDs for dead/ non dead Trajs: ", gliForceKill, "size is: ", size(gliForceKill)
-      !write (fmiout, *) "-----------------------------------------------"
+      write (fmiout, *) "Array of TrajIDs for dead/ non dead Trajs: ", gliForceKill, "size is: ", size(gliForceKill)
+      write (fmiout, *) "-----------------------------------------------"
 
 ! Remove any dead trajectory amplitudes
       do jtraj = 1, B1%NumDeadTraj
@@ -1510,10 +1541,10 @@ contains
             ! iTraj --> ID traj will have in temp bundle
             ! addTraj --> ID of corresponding traj in B1
 
-            !write (fmiout, *) "iTraj ", iTraj
-            !write (fmiout, *) "represents traj", addTraj
-            !write (fmiout, *) "The BlockCBFID for current block: ", BlockCBFID(:, iblocks)
-            !write (fmiout, *) "has actual CBF", B1%Trajectory(addTraj)%CBF, "the BlockCBFID CBF is:", BlockCBFID(CBFcount,iblocks)
+            write (fmiout, *) "iTraj ", iTraj
+            write (fmiout, *) "represents traj", addTraj
+            write (fmiout, *) "The BlockCBFID for current block: ", BlockCBFID(:, iblocks)
+            write (fmiout, *) "has actual CBF", B1%Trajectory(addTraj)%CBF, "the BlockCBFID CBF is:", BlockCBFID(CBFcount,iblocks)
 
             !if (iblocks>1) then
             !   write (fmiout, *) "in sep Bundle, needs to have CBF", B1%Trajectory(addTraj)%CBF - NumCBFBlock(iblocks-1)
@@ -1539,7 +1570,9 @@ contains
             ! set TrajID to iTraj to make sure indices in temp bundle start at 1
             call BundlesMult(iblocks)%Trajectory(iTraj)%create(npart, B1%NumStates)
             BundlesMult(iblocks)%Trajectory(iTraj) = B1%Trajectory(addTraj)
-            BundlesMult(iblocks)%Trajectory(iTraj)%TrajID = iTraj
+            !BundlesMult(iblocks)%Trajectory(iTraj)%TrajID = iTraj
+            !BundlesMult(iblocks)%Trajectory(iTraj)%TrajID = addTraj
+            BundlesMult(iblocks)%Trajectory(iTraj)%TrajID = B1%Trajectory(addTraj)%TrajID
 
             ! check if CBF IDs need to be reset to 1 (the case if we are not in the first separated block)
             ! to make sure CBF IDs also start at 1
@@ -1649,18 +1682,18 @@ contains
 
       !write (fmiout, *) " ----------------------------------------------------"
 
-      !write (fmiout, *) "What we filled into the separated bundle: "
-      !do iblocks = 1, BundlesMultDim
-      !   do iTraj = 1, BundlesMult(iblocks)%NumTraj
+      write (fmiout, *) "What we filled into the separated bundle: "
+      do iblocks = 1, BundlesMultDim
+         do iTraj = 1, BundlesMult(iblocks)%NumTraj
 
-      !         write (fmiout, *) "Info for trajectory with ID ", BundlesMult(iblocks)%Trajectory(iTraj)%TrajID
-      !         write (fmiout, *) "Triplet?", BundlesMult(iblocks)%Trajectory(iTraj)%triplet
-      !         write (fmiout, *) "Ms", BundlesMult(iblocks)%Trajectory(iTraj)%Ms
-      !         write (fmiout, *) "CBF", BundlesMult(iblocks)%Trajectory(iTraj)%CBF
+               write (fmiout, *) "Info for trajectory with ID ", BundlesMult(iblocks)%Trajectory(iTraj)%TrajID
+               write (fmiout, *) "Triplet?", BundlesMult(iblocks)%Trajectory(iTraj)%triplet
+               write (fmiout, *) "Ms", BundlesMult(iblocks)%Trajectory(iTraj)%Ms
+               write (fmiout, *) "CBF", BundlesMult(iblocks)%Trajectory(iTraj)%CBF
 
-      !   end do
-      !end do
-      !write (fmiout, *) " ----------------------------------------------------"
+         end do
+      end do
+      write (fmiout, *) " ----------------------------------------------------"
 
       ! Normalise the separate bundles before SS (and keep the og norm, amplitudes?)
 
@@ -1676,16 +1709,18 @@ contains
 ! Copy over trajectories after the selection from BundlesMult
 ! to the original bundle. Note that we must copy over
 ! also the trajectories marked for death.
-   subroutine copy_MultBundles_to_original_bundle(B1, BundlesMult, BundlesMultDim, StoSelMode)
+   subroutine copy_MultBundles_to_original_bundle(B1, BundlesMult, BundlesMultDim, StoSelMode, &
+                                                           MergedBlockTrajID, MergedSepBlockTrajID)
       integer(kind=DefInt), intent(in) :: BundlesMultDim
       integer(kind=DefInt), dimension(BundlesMultDim), intent(in) :: StoSelMode
       type(T_TrajectoryBundle), intent(inout) :: B1
       type(T_TrajectoryBundle), intent(in) :: BundlesMult(BundlesMultDim)
-      !type(T_TrajectoryBundle), pointer :: BSS_i
-      !type(T_Trajectory), pointer :: T_i
-      integer(kind=DefInt) :: i, j, iTraj
+      integer(kind=DefInt), dimension(B1%NumTraj + 1, B1%NumTraj + 1), intent(in) :: &
+                                                   MergedBlockTrajID, MergedSepBlockTrajID
+      integer(kind=DefInt) :: i, j, iTraj, B1TrajID, sepBTrajID
       integer(kind=DefInt) :: TrajCount, CBFCount, DeadCount
       integer(kind=DefInt), dimension(50) :: DeadTrajIDs
+      integer(kind=DefInt) :: add_DeadTraj, iDeadTraj
       logical :: hitDead
                              !iSingTraj, iTripTraj, iCBF
       !integer(kind=DefInt) :: TrajIDSing, CBFIDSing, TrajIDTrip, CBFIDTrip
@@ -1708,132 +1743,199 @@ contains
 
       ! Try a different approach to what is (or will be) commented out further down
 
-      DeadCount = 0
-      DeadTrajIDs = 0
-      do iTraj = 1, B1%NumTraj ! Does this loop always account for all dead and alive trajs???
-                               ! Even after several kills in the Bundle?
-                               ! Do we need to add B1%NumDeadTraj somehow asp?
-         !write (fmiout, *) " ------------------------"
-         !write (fmiout, *) "Current iTraj: ", iTraj
-
-         !if (any(B1%Trajectory(:)%TrajID == iTraj)) then
-         !   write(fmiout, *) "This traj is alive"
-         !end if
-
-         if (any(B1%DeadTraj(:)%TrajID == iTraj)) then
-            !write(fmiout, *) "This traj is dead"
-            ! This TrajID needs to be remembered and 'left blank' when temp separated Bundles are copied back
-            DeadCount = DeadCount + 1
-            DeadTrajIDs(DeadCount) = iTraj
-         end if
-
-         if (any(B1%DeadTraj(:)%TrajID == iTraj) .and. any(B1%Trajectory(:)%TrajID == iTraj)) then
-            !write(fmiout, *) "This traj is dead and alive"
-            call FMS_DieError("This shouldn't happen")
-         end if
-
-         !write (fmiout, *) " ------------------------"
-      end do
-      !write (fmiout, *) "These are our dead trajectories: ", DeadTrajIDs
-
-      hitDead = .false.
-
       do i = 1, BundlesMultDim
-         if (StoSelMode(i) == 1 .or. StoSelMode(i) == 3) then
-            !write (fmiout, *) "Killing happened in block Bundle ", i
-            !write (fmiout, *) "Trajs need to be copied back to B1 to keep track of who died"
 
-            !do iTraj = 1, BundlesMult(i)%NumTraj
-            !   write (fmiout, *) " ------------------------"
-            !   write (fmiout, *) "Copying back Traj ", iTraj
-            !   write (fmiout, *) "Ms", BundlesMult(i)%Trajectory(iTraj)%Ms
-            !   write (fmiout, *) "CBF", BundlesMult(i)%Trajectory(iTraj)%CBF
-            !   write (fmiout, *) "What is the amplitude?", BundlesMult(i)%Trajectory(iTraj)%Amplitude
-            !   write (fmiout, *) " ------------------------"
-            !   write (fmiout, *) "Is this traj still the same in B1?", B1%Trajectory(iTraj)%TrajID
-            !   write (fmiout, *) "Ms", B1%Trajectory(iTraj)%Ms
-            !   write (fmiout, *) "CBF", B1%Trajectory(iTraj)%CBF
-            !   write (fmiout, *) "What is the amplitude?", B1%Trajectory(iTraj)%Amplitude
-            !   write (fmiout, *) " ------------------------"
-            !end do
-            !write (fmiout, *) " ----------------------------------------------------"
-            !write (fmiout, *) "Now, actually copy and check again: "
-            !write (fmiout, *) " ----------------------------------------------------"
+         write (fmiout, *) "i (the how manyth block)= ", i
+         do j = 1, BundlesMult(i)%NumTraj
 
-            ! Copy back trajectories, adjust temp bundle TrajID, CBF back to refer to B1 
-            !write (fmiout, *) "Copying trajs for block bundle ", i
+            write (fmiout, *) "j (the how manyth traj)= ", j
+            write(fmiout, *) "TrajID in sepB: ", BundlesMult(i)%Trajectory(j)%TrajID
 
-            TrajCount = 0
-            CBFCount = 0
-            if (i>1) then                                   ! Problem here: we reduce BundlesMultDim
-                                                            ! when merging Coupled, so BundlesMultDim
-                                                            ! does not represent the total number of
-                                                            ! blocks anymore
-                                                            ! can we store the Coupled(B1) and use here?
-                                                            ! TODO: 27/04/26: this problem is still relevant!!
-               do j = 1, i - 1
-                  TrajCount = TrajCount + BundlesMult(j)%NumTraj
-                  CBFCount = CBFCount + BundlesMult(j)%NCBFs
-               end do
-               !write (fmiout, *) "The", i-1, "previous bundles had: "
-               !write (fmiout, *) TrajCount, "Trajs and", CBFcount, "CBFs"
+            do iTraj = 1, B1%NumTraj + B1%NumDeadTraj
 
-            end if
+               add_DeadTraj = 0
 
-            do iTraj = 1, BundlesMult(i)%NumTraj
-               if (i>1) then
-                  B1%Trajectory(iTraj+TrajCount) = BundlesMult(i)%Trajectory(iTraj) !TODO: figure out what original TrajID, CBF ID was
+               if (BundlesMult(i)%Trajectory(j)%TrajID == iTraj) then
+                  write (fmiout, *) "It's a match! for ", BundlesMult(i)%Trajectory(j)%TrajID, &
+                                    "(sepB TrajID)", "and", iTraj, "(B1 TrajID)"
 
-                  if (any(BundlesMult(i)%Trajectory(iTraj)%TrajID + BundlesMult(i-1)%NumTraj == DeadTrajIDs(:))) then
-                     write (fmiout, *) "We hit the dead traj (iTraj)", &
-                                       BundlesMult(i)%Trajectory(iTraj)%TrajID + BundlesMult(i-1)%NumTraj
-                     write (fmiout, *) "Adding the DeadCount ", DeadCount, "from now on"
-                     hitDead = .true.
-                  end if
+                  do iDeadTraj = 1, B1%NumDeadTraj
+                     if (B1%DeadTraj(iDeadTraj)%TrajID < iTraj) then
+                        add_DeadTraj = add_DeadTraj + 1
+                     end if
+                  end do
 
-                  if (hitDead) then
-                     B1%Trajectory(iTraj+TrajCount)%TrajID = BundlesMult(i)%Trajectory(iTraj)%TrajID + BundlesMult(i-1)%NumTraj + &
-                     DeadCount
-                     !B1%Trajectory(iTraj+TrajCount)%CBF = BundlesMult(i)%Trajectory(iTraj)%CBF
-                     ! TODO: 30/04/26: Do we have to adjust CBF IDs just like for TrajID??
-                     B1%Trajectory(iTraj+TrajCount)%Amplitude = BundlesMult(i)%Trajectory(iTraj)%Amplitude  ! used to break stuff
-                  else
-                     B1%Trajectory(iTraj+TrajCount)%TrajID = BundlesMult(i)%Trajectory(iTraj)%TrajID + BundlesMult(i-1)%NumTraj
-                     B1%Trajectory(iTraj+TrajCount)%Amplitude = BundlesMult(i)%Trajectory(iTraj)%Amplitude  ! used to break stuff
-                     !B1%Trajectory(iTraj+TrajCount)%CBF = BundlesMult(i)%Trajectory(iTraj)%CBF
-                  end if
-                  B1%Trajectory(iTraj+TrajCount)%CBF = BundlesMult(i)%Trajectory(iTraj)%CBF + BundlesMult(i-1)%NCBFs
-                  write (fmiout, *) "Traj of index ", iTraj, "was copied over and received ID, ", &
-                                    B1%Trajectory(iTraj+TrajCount)%TrajID
-
-               ! copy over amplitudes for first block as well:
-               ! as it's the first block we don't need to worry about:
-               ! - how many trajs we had in previous blocks (for sure)
-               ! - how many dead trajs (not too sure, but we pray for it each night)
-               else if (i==1) then
-                  B1%Trajectory(iTraj)%Amplitude = BundlesMult(i)%Trajectory(iTraj)%Amplitude
+                  write (fmiout, *) "The amplitude ", B1%Trajectory(iTraj - add_DeadTraj)%Amplitude, &
+                                    "will be overwritten to", BundlesMult(i)%Trajectory(j)%Amplitude
+                  B1%Trajectory(iTraj - add_DeadTraj)%Amplitude = BundlesMult(i)%Trajectory(j)%Amplitude
                end if
 
             end do
 
-            ! 23/04/26: Definitely go back here and check that copying back is done correctly
-            !           also apart from amplitudes
+         end do
 
-            !do iTraj = 1, BundlesMult(i)%NumTraj
-            !   write (fmiout, *) " ------------------------"
-            !   write (fmiout, *) "Copying back Traj ", iTraj
-            !   write (fmiout, *) "Ms", BundlesMult(i)%Trajectory(iTraj)%Ms
-            !   write (fmiout, *) "CBF", BundlesMult(i)%Trajectory(iTraj)%CBF
-            !   write (fmiout, *) "What is the amplitude?", BundlesMult(i)%Trajectory(iTraj)%Amplitude
-            !   write (fmiout, *) " ------------------------"
-            !   write (fmiout, *) "Is this traj still the same in B1?", B1%Trajectory(iTraj)%TrajID
-            !   write (fmiout, *) "Ms", B1%Trajectory(iTraj)%Ms
-            !   write (fmiout, *) "CBF", B1%Trajectory(iTraj)%CBF
-            !   write (fmiout, *) "What is the amplitude?", B1%Trajectory(iTraj)%Amplitude
-            !   write (fmiout, *) " ------------------------"
-            !end do
-         end if
       end do
+
+      !DeadCount = 0
+      !DeadTrajIDs = 0
+      !do iTraj = 1, B1%NumTraj ! Does this loop always account for all dead and alive trajs???
+      !                         ! Even after several kills in the Bundle?
+      !                         ! Do we need to add B1%NumDeadTraj somehow asp?
+      !   !write (fmiout, *) " ------------------------"
+      !   !write (fmiout, *) "Current iTraj: ", iTraj
+
+      !   !if (any(B1%Trajectory(:)%TrajID == iTraj)) then
+      !   !   write(fmiout, *) "This traj is alive"
+      !   !end if
+
+      !   if (any(B1%DeadTraj(:)%TrajID == iTraj)) then
+      !      !write(fmiout, *) "This traj is dead"
+      !      ! This TrajID needs to be remembered and 'left blank' when temp separated Bundles are copied back
+      !      DeadCount = DeadCount + 1
+      !      DeadTrajIDs(DeadCount) = iTraj
+      !   end if
+
+      !   if (any(B1%DeadTraj(:)%TrajID == iTraj) .and. any(B1%Trajectory(:)%TrajID == iTraj)) then
+      !      !write(fmiout, *) "This traj is dead and alive"
+      !      call FMS_DieError("Traj is dead and alive. This shouldn't happen")
+      !   end if
+
+      !   !write (fmiout, *) " ------------------------"
+      !end do
+      !!write (fmiout, *) "These are our dead trajectories: ", DeadTrajIDs
+
+      !hitDead = .false.
+
+      !do i = 1, BundlesMultDim
+      !   if (StoSelMode(i) == 1 .or. StoSelMode(i) == 3) then
+      !      !write (fmiout, *) "Killing happened in block Bundle ", i
+      !      !write (fmiout, *) "Trajs need to be copied back to B1 to keep track of who died"
+
+      !      do iTraj = 1, BundlesMult(i)%NumTraj
+      !      !   write (fmiout, *) " ------------------------"
+      !      !   write (fmiout, *) "Copying back Traj ", iTraj
+      !      !   write (fmiout, *) "Ms", BundlesMult(i)%Trajectory(iTraj)%Ms
+      !      !   write (fmiout, *) "CBF", BundlesMult(i)%Trajectory(iTraj)%CBF
+      !      !   write (fmiout, *) "What is the amplitude?", BundlesMult(i)%Trajectory(iTraj)%Amplitude
+      !         write (fmiout, *) " ------------------------"
+      !         write (fmiout, *) "Is this traj still the same in B1?", B1%Trajectory(iTraj)%TrajID
+      !         write (fmiout, *) "Ms", B1%Trajectory(iTraj)%Ms
+      !         write (fmiout, *) "CBF", B1%Trajectory(iTraj)%CBF
+      !         write (fmiout, *) "What is the amplitude?", B1%Trajectory(iTraj)%Amplitude
+      !         write (fmiout, *) " ------------------------"
+      !      end do
+      !      !write (fmiout, *) " ----------------------------------------------------"
+      !      !write (fmiout, *) "Now, actually copy and check again: "
+      !      !write (fmiout, *) " ----------------------------------------------------"
+
+      !      ! Copy back trajectories, adjust temp bundle TrajID, CBF back to refer to B1 
+      !      !write (fmiout, *) "Copying trajs for block bundle ", i
+      !      
+      !      ! 20/05/26: Try something new -----------------------------------------------------
+
+      !      write (fmiout, *) "i (the how manyth block)= ", i
+
+      !      do j = 1, BundlesMult(i)%NumTraj
+
+      !         write (fmiout, *) "j (the how manyth traj)= ", j
+      !         add_DeadTraj = 0
+
+      !         do iDeadTraj = 1, DeadCount
+
+      !            if (MergedBlockTrajID(j,i) == DeadTrajIDs(iDeadTraj)) then
+      !               add_DeadTraj = iDeadTraj
+      !               write (fmiout, *) "Hit the dead traj ", DeadTrajIDs(iDeadTraj)
+      !            end if
+
+      !         end do
+
+      !         write (fmiout, *) "add_DeadTraj is ", add_DeadTraj
+
+      !         !B1TrajID = MergedBlockTrajID(j,i)+add_DeadTraj
+      !         !sepBTrajID = MergedSepBlockTrajID(j,i)
+      !         !write (fmiout, *) "Are these really the same as TrajIDs? -----------"
+      !         !write (fmiout, *) "B1TrajID", B1TrajID, "actual TrajID", &
+      !         !                  B1%Trajectory(MergedBlockTrajID(j,i)+add_DeadTraj)%TrajID
+      !         !write (fmiout, *) "sepBTrajID", sepBTrajID, "actual TrajID", &
+      !         !                  BundlesMult(i)%Trajectory(MergedSepBlockTrajID(j,i))%TrajID
+      !         !write (fmiout, *) "--------------"
+
+      !         B1TrajID = B1%Trajectory(MergedBlockTrajID(j,i)+add_DeadTraj)%TrajID
+      !         sepBTrajID = BundlesMult(i)%Trajectory(MergedSepBlockTrajID(j,i))%TrajID
+      !         write (fmiout, *) "Are these really the same as TrajIDs? -----------"
+      !         write (fmiout, *) "B1TrajID", B1TrajID, "actual TrajID", &
+      !                           B1%Trajectory(MergedBlockTrajID(j,i)+add_DeadTraj)%TrajID
+      !         write (fmiout, *) "sepBTrajID", sepBTrajID, "actual TrajID", &
+      !                           BundlesMult(i)%Trajectory(MergedSepBlockTrajID(j,i))%TrajID
+      !         write (fmiout, *) "--------------"
+
+      !         write (fmiout, *) "Attempting to copy amplitude of sep Bundle traj ", sepBTrajID, &
+      !                           "over to traj ", B1TrajID, "in B1"
+      !         !write (fmiout, *) "The corresponding TrajIDs are: ", B1%Trajectory(MergedBlockTrajID(j,i)+add_DeadTraj)%TrajID, &
+      !         !                  "in B1 and ", BundlesMult(i)%Trajectory(MergedSepBlockTrajID(j,i))%TrajID, "in sep Bundle"
+      !         write (fmiout, *) "The amplitude ", B1%Trajectory(B1TrajID)%Amplitude, &
+      !                           "will be overwritten to", BundlesMult(i)%Trajectory(sepBTrajID)%Amplitude
+      !         B1%Trajectory(B1TrajID)%Amplitude = &
+      !                 BundlesMult(i)%Trajectory(sepBTrajID)%Amplitude
+
+      !      end do
+
+      !      ! 20/05/26 end --------------------------------------------------------------------
+
+      !      !do iTraj = 1, BundlesMult(i)%NumTraj
+      !      !   if (i>1) then
+      !      !      B1%Trajectory(iTraj+TrajCount) = BundlesMult(i)%Trajectory(iTraj) !TODO: figure out what original TrajID, CBF ID was
+
+      !      !      if (any(BundlesMult(i)%Trajectory(iTraj)%TrajID + BundlesMult(i-1)%NumTraj == DeadTrajIDs(:))) then
+      !      !         write (fmiout, *) "We hit the dead traj (iTraj)", &
+      !      !                           BundlesMult(i)%Trajectory(iTraj)%TrajID + BundlesMult(i-1)%NumTraj
+      !      !         write (fmiout, *) "Adding the DeadCount ", DeadCount, "from now on"
+      !      !         hitDead = .true.
+      !      !      end if
+
+      !      !      if (hitDead) then
+      !      !         B1%Trajectory(iTraj+TrajCount)%TrajID = BundlesMult(i)%Trajectory(iTraj)%TrajID + BundlesMult(i-1)%NumTraj + &
+      !      !         DeadCount
+      !      !         !B1%Trajectory(iTraj+TrajCount)%CBF = BundlesMult(i)%Trajectory(iTraj)%CBF
+      !      !         ! TODO: 30/04/26: Do we have to adjust CBF IDs just like for TrajID??
+      !      !         B1%Trajectory(iTraj+TrajCount)%Amplitude = BundlesMult(i)%Trajectory(iTraj)%Amplitude  ! used to break stuff
+      !      !      else
+      !      !         B1%Trajectory(iTraj+TrajCount)%TrajID = BundlesMult(i)%Trajectory(iTraj)%TrajID + BundlesMult(i-1)%NumTraj
+      !      !         B1%Trajectory(iTraj+TrajCount)%Amplitude = BundlesMult(i)%Trajectory(iTraj)%Amplitude  ! used to break stuff
+      !      !         !B1%Trajectory(iTraj+TrajCount)%CBF = BundlesMult(i)%Trajectory(iTraj)%CBF
+      !      !      end if
+      !      !      B1%Trajectory(iTraj+TrajCount)%CBF = BundlesMult(i)%Trajectory(iTraj)%CBF + BundlesMult(i-1)%NCBFs
+      !      !      write (fmiout, *) "Traj of index ", iTraj, "was copied over and received ID, ", &
+      !      !                        B1%Trajectory(iTraj+TrajCount)%TrajID
+
+      !      !   ! copy over amplitudes for first block as well:
+      !      !   ! as it's the first block we don't need to worry about:
+      !      !   ! - how many trajs we had in previous blocks (for sure)
+      !      !   ! - how many dead trajs (not too sure, but we pray for it each night)
+      !      !   else if (i==1) then
+      !      !      B1%Trajectory(iTraj)%Amplitude = BundlesMult(i)%Trajectory(iTraj)%Amplitude
+      !      !   end if
+
+      !      !end do
+
+      !      ! 23/04/26: Definitely go back here and check that copying back is done correctly
+      !      !           also apart from amplitudes
+
+      !      do iTraj = 1, BundlesMult(i)%NumTraj
+      !         !write (fmiout, *) " ------------------------"
+      !         !write (fmiout, *) "Copying back Traj ", iTraj
+      !         !write (fmiout, *) "Ms", BundlesMult(i)%Trajectory(iTraj)%Ms
+      !         !write (fmiout, *) "CBF", BundlesMult(i)%Trajectory(iTraj)%CBF
+      !         !write (fmiout, *) "What is the amplitude?", BundlesMult(i)%Trajectory(iTraj)%Amplitude
+      !         write (fmiout, *) " ------------------------"
+      !         write (fmiout, *) "Is this traj still the same in B1?", B1%Trajectory(iTraj)%TrajID
+      !         write (fmiout, *) "Ms", B1%Trajectory(iTraj)%Ms
+      !         write (fmiout, *) "CBF", B1%Trajectory(iTraj)%CBF
+      !         write (fmiout, *) "What is the amplitude?", B1%Trajectory(iTraj)%Amplitude
+      !         write (fmiout, *) " ------------------------"
+      !      end do
+      !   end if
+      !end do
 
       write (fmiout, *) " ----------------------------------------------------"
       write (fmiout, *) "These trajs are in B1 (after copying back)"
