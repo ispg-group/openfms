@@ -271,8 +271,10 @@ contains
 
       ! 2. work out if we are opening a new file
       file_exists = .true.
-      if (present(firsttime) .and. firsttime) then
-         inquire (file=file_name, exist=file_exists)
+      if (present(firsttime)) then
+         if (firsttime) then
+            inquire (file=file_name, exist=file_exists)
+         end if
       end if
 
       ! 3. open the file
