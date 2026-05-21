@@ -39,7 +39,7 @@ jobs:
       run: pip install ford
 
     - name: Build docs
-      run: ford openfms_docs.md
+      run: ford ford_config.md
 
     - uses: actions/upload-artifact@v7
       with:
