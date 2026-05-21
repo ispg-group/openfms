@@ -28,11 +28,9 @@ jobs:
     - name: Run prek hooks
       run: prek run --all-files --show-diff-on-failure --color always
 
-  docs-build:
+  dev-docs-build:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    env:
-      SKIP: 'no-commit-to-branch'
 
     steps:
     - uses: actions/checkout@v6
@@ -46,4 +44,4 @@ jobs:
     - uses: actions/upload-artifact@v7
       with:
         name: Docs artifact
-        path: ./docs/ 
+        path: ./developer_docs/

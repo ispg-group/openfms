@@ -42,3 +42,6 @@ src/moddepend
 src/build_info.F90
 # from fprettify
 __pycache__/
+
+# FORD dev docs 
+./developer_docs
