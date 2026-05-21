@@ -8,7 +8,6 @@ module SMDModule
    use GlobalModule, only: DefReal, DefInt, FMS_DieError
    use TrajectoryModule
    implicit none
-   save
 
    private
    public :: SMD_Mechano, SMD_Print, SMD_Completed

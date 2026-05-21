@@ -43,7 +43,6 @@ module SamplingModule
 !> For quasiclassical initial conditions, modes with extra quanta
    integer(kind=DefInt), public :: inIAddQuanta(100)
 
-   save
 contains
 
 !>

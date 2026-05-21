@@ -16,7 +16,6 @@ module MinSearchModule
    implicit none
    private
    public :: FMS_Minimizer
-   save
 
    ! enumerate tyoe for the minimization
    integer(DefInt), public :: mnMinType

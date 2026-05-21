@@ -15,7 +15,6 @@ module RattleModule
              Rattle_Constrain_Momentum
    public :: constraint, D_constraint, all_position_constrained
 
-   save
    logical :: constraints_set = .false.
 
    integer(kind=DefInt), public :: nconstraint ! Number of constraints

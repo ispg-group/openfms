@@ -16,7 +16,6 @@
 module ElecStrucModule
    use GlobalModule, only: DefReal, DefInt, fmiOut
    implicit none
-   save
    public
 
 !     What can this electronic structure method do?
