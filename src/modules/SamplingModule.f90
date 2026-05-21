@@ -1082,7 +1082,7 @@ contains
 
       case ('HESS')
          filein = trim(FMSWorkingDir)//'Hessian.dat'
-         open (newunit=ifunit, file=filein, status='old', action='read', iostat=ios)
+         open (newunit=ifunit, file=filein, status='old', action='read')
          write (fmiOut, *) 'Using Hessian.dat to find normal mode frequencies'
          read (IFUnit, *, end=999) natomsin
          if (natomsin /= natoms) then
