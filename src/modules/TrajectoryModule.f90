@@ -79,7 +79,6 @@ module TrajectoryModule
 
    end type T_ESFlags
 
-
 !>    Flags to track bundle status
    type T_BFlags
 
