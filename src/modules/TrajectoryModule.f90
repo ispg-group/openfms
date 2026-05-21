@@ -1,29 +1,29 @@
-module TrajectoryModule
 !---------------------------------------------------------------------!
 !                                                                     !
 !  Copyright Todd J. Martinez and Raphael D. Levine, 1994             !
 !                                                                     !
 !---------------------------------------------------------------------!
-!!
-!! @brief Trajectory class specification and related methods
-!!
-!! This module specifies the trajectory type, and all related
-!! methods. A given instance of a trajectory object contains the
-!! classical position and momenta for a given trajectory basis function
-!! at a given instant in time. Also included in the trajectory data
-!! structure are electronic structure quantities, in the "T_ElecStruc"
-!! datatype, and flags describing those quantities in "T_ESFlags".
-!!
-!! This module also defines several other derived types, some of which
-!! are stored in T_Trajectory: T_ElecStruc, T_ESFlags, T_BFlags
-!!
-!! Methods in this module pertain to basic manipulation of T_Trajectory
-!! derived type. Methods that pertain to electronic structure are
-!! in the TrajectoryCalcsModule, while the methods related to file IO
-!! are in TrajectoryIOModule.
-!!
-!! \image latex "../sources/TrajModule.png"
-!!
+!>
+!> @brief Trajectory class specification and related methods
+!>
+!> This module specifies the trajectory type, and all related
+!> methods. A given instance of a trajectory object contains the
+!> classical position and momenta for a given trajectory basis function
+!> at a given instant in time. Also included in the trajectory data
+!> structure are electronic structure quantities, in the "T_ElecStruc"
+!> datatype, and flags describing those quantities in "T_ESFlags".
+!>
+!> This module also defines several other derived types, some of which
+!> are stored in T_Trajectory: T_ElecStruc, T_ESFlags, T_BFlags
+!>
+!> Methods in this module pertain to basic manipulation of T_Trajectory
+!> derived type. Methods that pertain to electronic structure are
+!> in the TrajectoryCalcsModule, while the methods related to file IO
+!> are in TrajectoryIOModule.
+!>
+!> \image latex "../sources/TrajModule.png"
+!>
+module TrajectoryModule
 
    use GlobalModule, only: D2, Pi, DefInt, DefReal, DefComp, fmiOut, FPZero, &
                            glzStoSwiss, gldDecoherenceTime, FMS_DieError
@@ -42,31 +42,30 @@ module TrajectoryModule
 
 !--------------------------------------------------------------------!
 
+!>    Flags to track electronic structure status
    type T_ESFlags
-!     private
-!!    Flags to track electronic structure status
 
+      !> For the first timestep of centroids only - we can ignore
+      !> phasing and diabatization errors.
       logical :: zIgnoreErrors
-      !! For the first timestep of centroids only - we can ignore
-      !! phasing and diabatization errors.
+      !> Does a wavefunction exist to restart from?
       logical :: zESExists
-      !! Does a wavefunction exist to restart from?
+      !> Is the potential calculated for the current geometry
       logical :: ZPotEnCurrent
-      !! Is the potential calculated for the current geometry
+      !> If transition dipoles are calculated for this geometry
       logical :: ZTransDipsCurrent
-      !! If transition dipoles are calculated for this geometry
+      !> xf added (TODO: Needs more thorough documentation!)
       logical :: ZTransDipsCurrentxf
-      !! xf added (TODO: Needs more thorough documentation!)
+      !> If dipoles are calculated for this geometry
       logical :: ZDipolesCurrent
-      !! If dipoles are calculated for this geometry
+      !> If quadrupoles are calculated for this geometry
       logical :: ZQuadpolesCurrent
-      !! If quadrupoles are calculated for this geometry
+      !> If MM potential is calculated for the current geometry
       logical :: zMMPotCurrent
-      !! If MM potential is calculated for the current geometry
+      !> If MM forces are calculated for the current geometry
       logical :: zMMForceCurrent
-      !! If MM forces are calculated for the current geometry
+      !> Are external force modifications current?
       logical :: zModPotCurrent
-      !! Are external force modifications current?
 
       ! TODO: Add appropriate documentation here! Also the name
       ! DerivCurrent is rather misleding, as it contains information
@@ -80,22 +79,17 @@ module TrajectoryModule
 
    end type T_ESFlags
 
-!---------------------------------------------------------------------!
 
+!>    Flags to track bundle status
    type T_BFlags
-!     private
-!!    Flags to track bundle status
 
+      !> Has the trajectory changed since the last bundle calculation?
       logical :: zBundleCurrent
-      !! Has the trajectory changed since the last bundle calculation?
+      !> Is AmpDot current?
       logical :: ZAmpDotCurrent
-      !! Is AmpDot current?
 
    end type T_BFlags
 
-!---------------------------------------------------------------------!
-
-!----------------------------------------------------------------------------
 !>
 !!     Electronic structure data for a trajectory
 !!     TODO: Should this type live in ElecStrucModule?
