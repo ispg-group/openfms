@@ -1042,7 +1042,7 @@ contains
       real(DefReal), allocatable :: OReal(:, :)
 
       real(kind=DefReal) :: dmass, fac
-      integer(kind=DefInt) :: natom3, IFUnit, ios
+      integer(kind=DefInt) :: natom3, IFUnit
       integer(kind=DefInt) :: natomsin, i, j, k, ist, lst, ix, idof, ierr, ifreq
       character(len=256) :: filein, fileout, cbuffer
       character(len=10) :: method
