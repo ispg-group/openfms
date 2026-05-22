@@ -10,7 +10,6 @@
 module GlobalModule
    implicit none
    public
-   save
 
 !---------------------------------------------------------------------------
 !                       COMPILE-TIME CONSTANTS
@@ -397,7 +396,7 @@ contains
 !!    \param SetVal   Logical to flag step as rejected or not
 !<
    subroutine FMS_RejectStep(SetVal)
-      logical, intent(IN) :: SetVal
+      logical, intent(in) :: SetVal
 
       if (.not. SetVal) then
          glzRejectStep = SetVal

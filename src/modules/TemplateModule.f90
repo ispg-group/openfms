@@ -11,7 +11,6 @@
 module TemplateModule
    use GlobalModule
    implicit none
-   save
    private
    public :: FMS_TemplateInit, FMS_TemplateClean
    public :: FMS_RunCommand, FMS_WriteInput, FMS_ReadOutput
