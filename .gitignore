@@ -44,4 +44,4 @@ src/build_info.F90
 __pycache__/
 
 # FORD dev docs 
-./developer_docs
+developer_docs
