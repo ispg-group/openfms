@@ -700,51 +700,37 @@ contains
 3     format(10(1x, es15.8))
 
       write (nf, *) '# Orbitals'
-      write (nf, 3, iostat=ierr) ES%OldOrbitals
+      write (nf, 3) ES%OldOrbitals
       write (nf, *) '# CI vectors'
-      write (nf, 3, iostat=ierr) ES%OldCIVecs
+      write (nf, 3) ES%OldCIVecs
       write (nf, *) '# Overlap matrix'
-      write (nf, 3, iostat=ierr) ES%OverlapMatrix
+      write (nf, 3) ES%OverlapMatrix
       write (nf, *) '# TC Blob'
-      write (nf, 3, iostat=ierr) ES%OldBlob
+      write (nf, 3) ES%OldBlob
       write (nf, *) '# MSPT2 Coeffs'
-      write (nf, 3, iostat=ierr) ES%OldMSPT2C
+      write (nf, 3) ES%OldMSPT2C
       write (nf, *) '# Electronic Phases'
-      write (nf, *, iostat=ierr) ES%ElecPhase
-
-      return
+      write (nf, *) ES%ElecPhase
    end subroutine WriteElecStruc
 
-! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   subroutine ReadElecStruc(ES, nfile_in)
-! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   subroutine ReadElecStruc(ES, nf)
       type(T_ElecStruc), intent(inout) :: ES
-      integer(kind=DefInt), optional :: nfile_in
-
-      integer(kind=DefInt) :: nf ! unit number to write to
-! WTF: We shouldn't just blidly ignore all errors!
-      integer(kind=DefInt) :: ierr ! catch errors that may be thrown
-
-! set which file we are writing to
-      nf = 5
-      if (present(nfile_in)) nf = nfile_in
+      integer(kind=DefInt), intent(in) :: nf
 
 3     format(10(1x, es15.8))
 
       read (nf, *)
-      read (nf, 3, iostat=ierr) ES%OldOrbitals
+      read (nf, 3) ES%OldOrbitals
       read (nf, *)
-      read (nf, 3, iostat=ierr) ES%OldCIVecs
+      read (nf, 3) ES%OldCIVecs
       read (nf, *)
-      read (nf, 3, iostat=ierr) ES%OverlapMatrix
+      read (nf, 3) ES%OverlapMatrix
       read (nf, *)
-      read (nf, 3, iostat=ierr) ES%OldBlob
+      read (nf, 3) ES%OldBlob
       read (nf, *)
-      read (nf, 3, iostat=ierr) ES%OldMSPT2C
+      read (nf, 3) ES%OldMSPT2C
       read (nf, *)
-!DEBUG - changed v from read(nf,3,iostat=ierr)
-      read (nf, *, iostat=ierr) ES%ElecPhase
-      return
+      read (nf, *) ES%ElecPhase
    end subroutine ReadElecStruc
 
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
