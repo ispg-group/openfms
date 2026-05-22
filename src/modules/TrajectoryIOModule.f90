@@ -284,8 +284,10 @@ contains
       long_file_name = trim(FMSWorkingDir)//file_name
 
       file_existed = .true.
-      if (present(first_time) .and. first_time) then
-         inquire (file=long_file_name, exist=file_existed)
+      if (present(first_time)) then
+         if (first_time) then
+            inquire (file=long_file_name, exist=file_existed)
+         end if
       end if
 
       if (.not. file_existed) then
@@ -702,8 +704,10 @@ contains
       long_file_name = trim(FMSWorkingDir)//file_name
 
       file_existed = .true.
-      if (present(first_time) .and. first_time) then
-         inquire (file=long_file_name, exist=file_existed)
+      if (present(first_time)) then
+         if (first_time) then
+            inquire (file=long_file_name, exist=file_existed)
+         end if
       end if
 
       if (.not. file_existed) then
@@ -806,8 +810,10 @@ contains
       long_file_name = trim(FMSWorkingDir)//file_name
 
       file_existed = .true.
-      if (present(first_time) .and. first_time) then
-         inquire (file=long_file_name, exist=file_existed)
+      if (present(first_time)) then
+         if (first_time) then
+            inquire (file=long_file_name, exist=file_existed)
+         end if
       end if
 
       if (.not. file_existed) then
@@ -866,8 +872,10 @@ contains
       long_file_name = trim(FMSWorkingDir)//file_name
 
       file_existed = .true.
-      if (present(first_time) .and. first_time) then
-         inquire (file=long_file_name, exist=file_existed)
+      if (present(first_time)) then
+         if (first_time) then
+            inquire (file=long_file_name, exist=file_existed)
+         end if
       end if
 
 !     create column labels

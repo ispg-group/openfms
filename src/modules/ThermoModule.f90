@@ -4,10 +4,10 @@ module ThermoModule
    implicit none
    private
    public :: thermo_init, thermo, thermo_bussi_global, thermo_bussi_local, thermo_NormDist, thermo_MBDist
-   character(len=8), save :: therm = '' !which thermostat to use in simple interface
-   double precision, save :: beta_s = 0.0 !inverse temperature in simple interface
-   double precision, save :: thermtime = 0.0 !Thermostat relaxation time (in au) for simple interface
-   logical, save :: zcom_s = .true. !Do center of mass removal in simple interface?
+   character(len=8) :: therm = '' !which thermostat to use in simple interface
+   double precision :: beta_s = 0.0 !inverse temperature in simple interface
+   double precision :: thermtime = 0.0 !Thermostat relaxation time (in au) for simple interface
+   logical :: zcom_s = .true. !Do center of mass removal in simple interface?
    integer(4), parameter :: i4one = 1 !Ensure type is consistent with uses of integer(4)
 
 contains

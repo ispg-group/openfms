@@ -1693,7 +1693,7 @@ contains
 
 !     Bundle scope routines
    function FMS_IsBundleCurrent(T1) result(zCurrent)
-      type(T_Trajectory), intent(IN) :: T1
+      type(T_Trajectory), intent(in) :: T1
       logical :: zCurrent
 
       zCurrent = T1%BFlags%zBundleCurrent
@@ -1708,7 +1708,7 @@ contains
    end subroutine FMS_BundleUpdated
 
    function FMS_IsAmpDotCurrent(T1) result(zCurrent)
-      type(T_Trajectory), intent(IN) :: T1
+      type(T_Trajectory), intent(in) :: T1
       logical :: zCurrent
 
       zCurrent = T1%BFlags%zAmpDotCurrent

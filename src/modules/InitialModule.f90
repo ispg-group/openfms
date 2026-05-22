@@ -6,7 +6,6 @@ module InitialModule
    use GlobalModule, only: DefInt, DefReal, DefInt4, fmiOut
    implicit none
    public
-   save
 
 !> Initial state to create wavefunctions on
    integer(kind=DefInt) :: inInitState

@@ -97,3 +97,12 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 ```
 
 This is done automatically in GitHub UI.
+
+## Building the developer documentation
+
+Building the docs is straightforward:
+
+1. [Install FORD with your favorite python package manager](https://forddocs.readthedocs.io/en/stable/index.html#sec-installation)
+2. Execute `ford ford_config.md`
+
+That's it.

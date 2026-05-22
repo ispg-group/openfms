@@ -43,7 +43,6 @@ module SamplingModule
 !> For quasiclassical initial conditions, modes with extra quanta
    integer(kind=DefInt), public :: inIAddQuanta(100)
 
-   save
 contains
 
 !>
@@ -1082,7 +1081,7 @@ contains
 
       case ('HESS')
          filein = trim(FMSWorkingDir)//'Hessian.dat'
-         open (newunit=ifunit, file=filein, status='old', action='read', iostat=ios)
+         open (newunit=ifunit, file=filein, status='old', action='read')
          write (fmiOut, *) 'Using Hessian.dat to find normal mode frequencies'
          read (IFUnit, *, end=999) natomsin
          if (natomsin /= natoms) then
