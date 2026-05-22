@@ -334,13 +334,11 @@ contains
       real(kind=DefReal) :: p(:), fret
       character(len=64) :: comment
       logical :: MErr
-      integer(kind=DefInt) :: jPtcle, its
-      integer(kind=DefInt) :: iPtcle, iState, iOrb, jOrb
+      integer(kind=DefInt) :: iPtcle, jPtcle, its
       real(kind=DefReal), allocatable, save :: DimArray(:, :), ForceVec(:)
       real(kind=DefReal), allocatable, save :: PotEn(:), d(:)
       real(kind=Defreal), allocatable, save :: Orbitals(:, :), CIVec(:, :)
       real(kind=DefReal) :: rms
-      character(len=256) :: cTemp
 
       integer(kind=DefInt), save :: LastPSize = 0
 

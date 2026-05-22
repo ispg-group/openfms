@@ -684,18 +684,10 @@ contains
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 ! This should be moved to a the electronic structure module
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   subroutine WriteElecStruc(ES, nfile_in)
+   subroutine WriteElecStruc(ES, nf)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       type(T_ElecStruc), intent(in) :: ES
-      integer(kind=DefInt), optional :: nfile_in
-
-      integer(kind=DefInt) :: nf ! unit number to write to
-! WTF: We shouldn't just blidly ignore all errors!
-      integer(kind=DefInt) :: ierr ! catch errors that may be thrown
-
-! set which file we are writing to
-      nf = 6
-      if (present(nfile_in)) nf = nfile_in
+      integer(kind=DefInt), intent(in) :: nf
 
 3     format(10(1x, es15.8))
 
