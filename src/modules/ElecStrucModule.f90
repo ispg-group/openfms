@@ -97,12 +97,13 @@ contains
 !!    \param NumStates Number of electronic states
 !!    @ingroup ESP
 !<
-   subroutine FMS_ESInit(NumParticles, NumStates)
+   subroutine FMS_ESInit(NumParticles, NumStates, suppress_write)
       use GlobalModule, only: gliModel, gliMethod, &
                               FMSZERO, QUANTICS, TC, TEMPLATE, FMS_DieError
 
       integer(kind=DefInt), intent(in) :: NumParticles
       integer(kind=DefInt), intent(inout) :: NumStates
+      logical, intent(in), optional :: suppress_write
 
 !
 !     Set defaults
@@ -126,7 +127,9 @@ contains
 !     FMSZero: fake electronic structure
 !
       case (FMSZERO)
-         write (fmiOut, *) 'FMSZero: Using toy potentials in adiabatic basis.'
+         if (present(suppress_write) .eqv. .false.) then
+            write (fmiOut, *) 'FMSZero: Using toy potentials in adiabatic basis.'
+         end if
          eszAnalyticForces = .true.
          eszNACoupVec = .true.
          eszPartialCharges = .false.
@@ -152,9 +155,13 @@ contains
             end if
 
          case (3)
-            write (fmiOut, *) 'gliMethod=3: Izmaylov Model 2D 2-state CI'
+            if (present(suppress_write) .eqv. .false.) then
+               write (fmiOut, *) 'gliMethod=3: Izmaylov Model 2D 2-state CI'
+            end if
             if (NumStates /= 2) then
-               write (fmiOut, *) 'Number of states set to 2.'
+               if (present(suppress_write) .eqv. .false.) then
+                  write (fmiOut, *) 'Number of states set to 2.'
+               end if
                NumStates = 2
             end if
             if (NumParticles < 2) then

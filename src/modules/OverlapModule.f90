@@ -910,19 +910,6 @@ contains
          S_ij = overlap_trajectory(T1, T2)
       end if
 
-! I don't understand the need for the minus
-! but it is important, the norm is not conserved otherwise
-!
-! TODO(danielhollas): On HDF_free branch, there's this additional comment,
-! but there's no minus sign anymore! We should make sure the formula below is correct.
-!
-! Tuesday, 20 December 2011 12:01:21
-!  Worked out the problem:
-!     overlap_dx   = < g1 | d/dx | g2 >
-! This equation actually needs
-!     overlap_dx_2 = < g1 | d/dx_2 | g2 >
-! A little algebra shows
-!     overlap_dx  = -overlap_dx_2
       S_dot = (-dot_product(T2%get_vel(), &
                             overlap_dx_trajectory(T1, T2, S_ij)) &
                + dot_product(FMS_Forces(T2), &
