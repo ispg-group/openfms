@@ -57,6 +57,7 @@ contains
       call FMS_Branching(B1, Prob)
 
       write (IUnit, '(1x,f11.2,50(1x,f11.9))') B1%CurrentTime, (Prob(i), i=1, nstate), FMS_Norm(B1)
+      flush (IUnit)
 
    end subroutine FMS_WriteFBranching
 
