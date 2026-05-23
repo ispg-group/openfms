@@ -235,6 +235,7 @@ contains
       end if
 
       write (iunit, '(f10.2,4(f10.4))') T%get_time(), FMS_Weight(T), T%Amplitude
+      flush (iunit)
 
    end subroutine FMS_WriteFAmp
 !>
