@@ -277,7 +277,7 @@ contains
 
          complex(kind=DefComp), dimension(size(C_t), size(C_t)) :: Id, B, Bn, Bn2, Bn3, Bn4, tayl, tayl_prod
 
-         real*8 :: error
+         real(kind=DefReal) :: error
 
          ndim = size(C_t)
          Id = (0., 0.)
