@@ -3,6 +3,7 @@ function(openfms_add_unit_tests openfms_core_target)
     unit_tests/main.F90
     unit_tests/test_bundle.F90
     unit_tests/test_particle.F90
+    unit_tests/test_restart.F90
     unit_tests/test_trajectory.F90
     unit_tests/testdrive.F90
     unit_tests/testutils.F90
@@ -25,6 +26,7 @@ function(openfms_add_unit_tests openfms_core_target)
   set(OPENFMS_UNIT_TEST_SUITES
     BundleModule
     ParticleModule
+    RestartModule
     TrajectoryModule
   )
 
@@ -38,6 +40,7 @@ function(openfms_add_unit_tests openfms_core_target)
     )
     set_tests_properties("${_openfms_ctest_name}" PROPERTIES
       LABELS "unit;${suite_name}"
+      ENVIRONMENT "OPENFMS_TEST_TMPDIR=${CMAKE_CURRENT_BINARY_DIR}/unit-test-tmp"
     )
   endforeach()
 

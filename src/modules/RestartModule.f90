@@ -688,13 +688,30 @@ contains
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       type(T_ElecStruc), intent(in) :: ES
       integer(kind=DefInt), intent(in) :: nf
+      integer(kind=DefInt) :: rows, cols
 
 3     format(10(1x, es15.8))
 
-      write (nf, *) '# Orbitals'
-      write (nf, 3) ES%OldOrbitals
-      write (nf, *) '# CI vectors'
-      write (nf, 3) ES%OldCIVecs
+      if (allocated(ES%OldOrbitals)) then
+         rows = size(ES%OldOrbitals, dim=1)
+         cols = size(ES%OldOrbitals, dim=2)
+         write (nf, *) '# Orbitals', rows, cols
+         write (nf, 3) ES%OldOrbitals
+      else
+         write (nf, *) '# Orbitals'
+         write (nf, *)
+      end if
+
+      if (allocated(ES%OldCIVecs)) then
+         rows = size(ES%OldCIVecs, dim=1)
+         cols = size(ES%OldCIVecs, dim=2)
+         write (nf, *) '# CI vectors', rows, cols
+         write (nf, 3) ES%OldCIVecs
+      else
+         write (nf, *) '# CI vectors'
+         write (nf, *)
+      end if
+
       write (nf, *) '# Overlap matrix'
       write (nf, 3) ES%OverlapMatrix
       write (nf, *) '# TC Blob'
@@ -703,19 +720,66 @@ contains
       write (nf, 3) ES%OldMSPT2C
       write (nf, *) '# Electronic Phases'
       write (nf, *) ES%ElecPhase
+
    end subroutine WriteElecStruc
 
    subroutine ReadElecStruc(ES, nf)
+
+      use ElecStrucModule, only: esNBasis, esLCIVec
       type(T_ElecStruc), intent(inout) :: ES
       integer(kind=DefInt), intent(in) :: nf
+      integer(kind=DefInt) :: ierr, rows, cols, n_values
+      real(kind=DefReal), allocatable :: values(:)
+      character(len=500) :: header
 
 3     format(10(1x, es15.8))
 
-      read (nf, *)
-      read (nf, 3) ES%OldOrbitals
-      read (nf, *)
-      read (nf, 3) ES%OldCIVecs
-      read (nf, *)
+      read (nf, '(A)', iostat=ierr) header
+      if (ierr /= 0) call FMS_DieError('Error reading electronic-structure restart header')
+
+      ! Read orbitals
+      call parse_matrix_header(header, '# Orbitals', rows, cols)
+      if (rows >= 0 .and. cols >= 0) then
+         call read_matrix_from_unit(ES%OldOrbitals, nf, rows, cols, 'orbital matrix')
+         read (nf, '(A)', iostat=ierr) header
+         if (ierr /= 0) call FMS_DieError('Error reading CI vector restart header')
+      else
+         call read_legacy_real_block_until_header(nf, values, header)
+         n_values = size(values)
+
+         ! Compatibility with old header containing no information
+         rows = nint(sqrt(real(n_values, kind=DefReal)), kind=DefInt)
+         cols = rows
+         if (rows * cols /= n_values) then
+            call FMS_DieError('Could not infer square orbital matrix size from restart file')
+         end if
+         call set_matrix_from_block(ES%OldOrbitals, values, rows, cols, 'orbital matrix')
+      end if
+      esNBasis = rows
+
+      ! Read CI vectors
+      call parse_matrix_header(header, '# CI vectors', rows, cols)
+      if (rows >= 0 .and. cols >= 0) then
+         call read_matrix_from_unit(ES%OldCIVecs, nf, rows, cols, 'CI vector matrix')
+         read (nf, '(A)', iostat=ierr) header
+         if (ierr /= 0) call FMS_DieError('Error reading overlap matrix restart header')
+      else
+         call read_legacy_real_block_until_header(nf, values, header)
+         n_values = size(values)
+
+         ! Infer length of CI vectors from the number of rows
+         ! (We should know the number of states)
+         rows = size(ES%PotEn)
+         if (rows <= 0) call FMS_DieError('Could not infer CI vector dimensions from restart file')
+         if (mod(n_values, rows) /= 0) then
+            call FMS_DieError('CI vector block size is not divisible by number of states')
+         end if
+         cols = n_values / rows
+         call set_matrix_from_block(ES%OldCIVecs, values, rows, cols, 'CI vector matrix')
+      end if
+      esLCIVec = cols
+
+      call require_header(header, '# Overlap matrix')
       read (nf, 3) ES%OverlapMatrix
       read (nf, *)
       read (nf, 3) ES%OldBlob
@@ -723,7 +787,218 @@ contains
       read (nf, 3) ES%OldMSPT2C
       read (nf, *)
       read (nf, *) ES%ElecPhase
+
    end subroutine ReadElecStruc
+
+   subroutine read_matrix_from_unit(matrix, nf, rows, cols, name)
+      real(kind=DefReal), allocatable, intent(inout) :: matrix(:, :)
+      integer(kind=DefInt), intent(in) :: nf, rows, cols
+      character(len=*), intent(in) :: name
+      integer(kind=DefInt) :: ierr
+
+3     format(10(1x, es15.8))
+
+      if (rows < 0 .or. cols < 0) then
+         call FMS_DieError('Invalid dimensions for '//trim(name)//' in restart file')
+      end if
+
+      if (allocated(matrix)) deallocate (matrix)
+      if (rows > 0 .and. cols > 0) then
+         allocate (matrix(rows, cols))
+         read (nf, 3, iostat=ierr) matrix
+         if (ierr /= 0) call FMS_DieError('Error reading '//trim(name)//' from restart file')
+      end if
+   end subroutine read_matrix_from_unit
+
+   subroutine parse_matrix_header(header, label, rows, cols)
+      !!
+      !! Reads header with expected label (e.g., "# CI vectors") and extracts
+      !! the dimensions of the stored CI vectors according to the format
+      !! "# CI vectors [#rows] [#cols]".
+      !!
+      character(len=*), intent(in) :: header, label
+      integer(kind=DefInt), intent(out) :: rows, cols
+      integer(kind=DefInt) :: ios, start_pos
+      character(len=len(header)) :: adjusted_header
+
+      call require_header(header, label)
+
+      rows = -1
+      cols = -1
+      adjusted_header = adjustl(header)
+      start_pos = len_trim(label) + 1
+      if (len_trim(adjusted_header) >= start_pos) then
+         read (adjusted_header(start_pos:), *, iostat=ios) rows, cols
+         if (ios /= 0) then
+            rows = -1
+            cols = -1
+         end if
+      end if
+
+   end subroutine parse_matrix_header
+
+   subroutine require_header(header, label)
+      !!
+      !! Sanity check that expected header is actually == label
+      !!
+      character(len=*), intent(in) :: header, label
+
+      if (index(adjustl(header), trim(label)) /= 1) then
+
+         call FMS_DieError('Unsupported restart trajectory format: expected '''//trim(label)//'''')
+
+      end if
+
+   end subroutine require_header
+
+   subroutine read_legacy_real_block_until_header(nf, values, next_header)
+      !!
+      !! Compatibility path for old restart files where the matrix dimensions
+      !! were not written in the header. New restart files read directly into
+      !! allocated matrices and do not use this routine.
+      !!
+      integer(kind=DefInt), intent(in) :: nf
+      real(kind=DefReal), allocatable, intent(out) :: values(:)
+      character(len=*), intent(out) :: next_header
+
+      integer(kind=DefInt) :: ios, n_values, capacity
+      character(len=:), allocatable :: line
+
+      n_values = 0
+      capacity = 128
+      allocate (values(capacity))
+      next_header = ''
+
+      do
+         call read_full_line(nf, line, ios)
+         if (ios /= 0) exit
+         if (len_trim(line) == 0) cycle
+
+         if (index(adjustl(line), '#') == 1) then
+            next_header = line
+            exit
+         end if
+
+         call append_real_values_from_line(values, n_values, capacity, line)
+      end do
+
+      call shrink_real_vector(values, n_values)
+
+   end subroutine read_legacy_real_block_until_header
+
+   subroutine read_full_line(nf, line, ios)
+      use, intrinsic :: iso_fortran_env, only: iostat_end, iostat_eor
+      integer(kind=DefInt), intent(in) :: nf
+      character(len=:), allocatable, intent(out) :: line
+      integer(kind=DefInt), intent(out) :: ios
+
+      integer(kind=DefInt) :: nchars
+      character(len=256) :: chunk
+
+      line = ''
+      do
+         read (nf, '(A)', advance='no', iostat=ios, size=nchars) chunk
+         if (nchars > 0) line = line//chunk(:nchars)
+
+         select case (ios)
+         case (0)
+            cycle
+         case (iostat_eor)
+            ios = 0
+            exit
+         case (iostat_end)
+            exit
+         case default
+            exit
+         end select
+      end do
+   end subroutine read_full_line
+
+   subroutine append_real_values_from_line(values, n_values, capacity, line)
+      !!
+      !! Append values from line into values array
+      !!
+      real(kind=DefReal), allocatable, intent(inout) :: values(:)
+      integer(kind=DefInt), intent(inout) :: n_values, capacity
+      character(len=*), intent(in) :: line
+
+      integer(kind=DefInt) :: pos, first, last, line_len, ios
+      real(kind=DefReal) :: value
+
+      line_len = len_trim(line)
+      pos = 1
+      do while (pos <= line_len)
+         do
+            if (pos > line_len) exit
+            if (.not. is_blank(line(pos:pos))) exit
+            pos = pos + 1
+         end do
+         if (pos > line_len) exit
+
+         first = pos
+         do
+            if (pos > line_len) exit
+            if (is_blank(line(pos:pos))) exit
+            pos = pos + 1
+         end do
+         last = pos - 1
+
+         read (line(first:last), *, iostat=ios) value
+         if (ios /= 0) call FMS_DieError('Error reading numeric value from restart file')
+
+         if (n_values == capacity) call grow_real_vector(values, capacity)
+         n_values = n_values + 1
+         values(n_values) = value
+      end do
+   end subroutine append_real_values_from_line
+
+   logical function is_blank(char)
+      character(len=1), intent(in) :: char
+
+      is_blank = char == ' ' .or. char == achar(9)
+   end function is_blank
+
+   subroutine grow_real_vector(values, capacity)
+      real(kind=DefReal), allocatable, intent(inout) :: values(:)
+      integer(kind=DefInt), intent(inout) :: capacity
+      real(kind=DefReal), allocatable :: tmp(:)
+
+      allocate (tmp(max(1, capacity * 2)))
+      if (capacity > 0) tmp(1:capacity) = values(1:capacity)
+      call move_alloc(tmp, values)
+      capacity = size(values)
+   end subroutine grow_real_vector
+
+   subroutine shrink_real_vector(values, n_values)
+      real(kind=DefReal), allocatable, intent(inout) :: values(:)
+      integer(kind=DefInt), intent(in) :: n_values
+      real(kind=DefReal), allocatable :: tmp(:)
+
+      allocate (tmp(n_values))
+      if (n_values > 0) tmp = values(1:n_values)
+      call move_alloc(tmp, values)
+   end subroutine shrink_real_vector
+
+   subroutine set_matrix_from_block(matrix, values, rows, cols, name)
+      real(kind=DefReal), allocatable, intent(inout) :: matrix(:, :)
+      real(kind=DefReal), intent(in) :: values(:)
+      integer(kind=DefInt), intent(in) :: rows, cols
+      character(len=*), intent(in) :: name
+
+      if (rows < 0 .or. cols < 0) then
+         call FMS_DieError('Invalid dimensions for '//trim(name)//' in restart file')
+      end if
+
+      if (size(values) /= rows * cols) then
+         call FMS_DieError('Wrong number of values for '//trim(name)//' in restart file')
+      end if
+
+      if (allocated(matrix)) deallocate (matrix)
+      if (rows > 0 .and. cols > 0) then
+         allocate (matrix(rows, cols))
+         matrix = reshape(values, shape(matrix))
+      end if
+   end subroutine set_matrix_from_block
 
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 !           PARTICLE
