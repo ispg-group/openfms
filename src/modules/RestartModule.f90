@@ -743,6 +743,12 @@ contains
          call read_matrix_from_unit(ES%OldOrbitals, nf, rows, cols, 'orbital matrix')
          read (nf, '(A)', iostat=ierr) header
          if (ierr /= 0) call FMS_DieError('Error reading CI vector restart header')
+      else if (esNBasis > 0) then
+         rows = esNBasis
+         cols = esNBasis
+         call read_matrix_from_unit(ES%OldOrbitals, nf, rows, cols, 'orbital matrix')
+         read (nf, '(A)', iostat=ierr) header
+         if (ierr /= 0) call FMS_DieError('Error reading CI vector restart header')
       else
          call read_legacy_real_block_until_header(nf, values, header)
          n_values = size(values)
@@ -760,6 +766,12 @@ contains
       ! Read CI vectors
       call parse_matrix_header(header, '# CI vectors', rows, cols)
       if (rows >= 0 .and. cols >= 0) then
+         call read_matrix_from_unit(ES%OldCIVecs, nf, rows, cols, 'CI vector matrix')
+         read (nf, '(A)', iostat=ierr) header
+         if (ierr /= 0) call FMS_DieError('Error reading overlap matrix restart header')
+      else if (esLCIVec > 0) then
+         rows = size(ES%PotEn)
+         cols = esLCIVec
          call read_matrix_from_unit(ES%OldCIVecs, nf, rows, cols, 'CI vector matrix')
          read (nf, '(A)', iostat=ierr) header
          if (ierr /= 0) call FMS_DieError('Error reading overlap matrix restart header')

@@ -18,13 +18,27 @@ contains
       type(unittest_type), allocatable, intent(out) :: testsuite(:)
 
       testsuite = [ &
-                  new_unittest('infer_ci_orbital_sizes', test_infer_ci_orbital_sizes) &
+                  new_unittest('infer_ci_orbital_sizes', test_infer_ci_orbital_sizes), &
+                  new_unittest('use_known_ci_orbital_sizes', test_use_known_ci_orbital_sizes) &
                   ]
 
    end subroutine collect_restart_suite
 
    subroutine test_infer_ci_orbital_sizes(error)
       type(error_type), allocatable, intent(out) :: error
+
+      call exercise_dimensionless_restart(error, use_known_sizes=.false.)
+   end subroutine test_infer_ci_orbital_sizes
+
+   subroutine test_use_known_ci_orbital_sizes(error)
+      type(error_type), allocatable, intent(out) :: error
+
+      call exercise_dimensionless_restart(error, use_known_sizes=.true.)
+   end subroutine test_use_known_ci_orbital_sizes
+
+   subroutine exercise_dimensionless_restart(error, use_known_sizes)
+      type(error_type), allocatable, intent(out) :: error
+      logical, intent(in) :: use_known_sizes
       type(T_TrajectoryBundle) :: written_bundle, restarted_bundle
       real(kind=DefReal), dimension(4, 4) :: orbitals
       real(kind=DefReal), dimension(2, 3) :: ci_vectors
@@ -62,8 +76,13 @@ contains
 
       call strip_restart_matrix_dimensions()
 
-      esNBasis = 1
-      esLCIVec = 1
+      if (use_known_sizes) then
+         esNBasis = size(orbitals, dim=1)
+         esLCIVec = size(ci_vectors, dim=2)
+      else
+         esNBasis = 0
+         esLCIVec = 0
+      end if
       esBlobSize = 1
       call GetRestart(restarted_bundle, -1.0_DefReal)
 
@@ -99,7 +118,7 @@ contains
       call FMS_DeleteFile('Last_Bundle.txt')
       call FMS_DeleteFile('tmp.Last_Bundle.txt')
       call FMS_DeleteFile('Checkpoint.txt')
-   end subroutine test_infer_ci_orbital_sizes
+   end subroutine exercise_dimensionless_restart
 
    subroutine configure_restart_test_globals()
       character(len=256) :: test_tmpdir
