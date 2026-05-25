@@ -18,26 +18,27 @@ contains
       type(unittest_type), allocatable, intent(out) :: testsuite(:)
 
       testsuite = [ &
-                  new_unittest('infer_ci_orbital_sizes', test_infer_ci_orbital_sizes), &
+                  new_unittest('read_header_ci_orbital_sizes', test_read_header_ci_orbital_sizes), &
                   new_unittest('use_known_ci_orbital_sizes', test_use_known_ci_orbital_sizes) &
                   ]
 
    end subroutine collect_restart_suite
 
-   subroutine test_infer_ci_orbital_sizes(error)
+   subroutine test_read_header_ci_orbital_sizes(error)
       type(error_type), allocatable, intent(out) :: error
 
-      call exercise_dimensionless_restart(error, use_known_sizes=.false.)
-   end subroutine test_infer_ci_orbital_sizes
+      call exercise_restart_size_path(error, strip_dimensions=.false., use_known_sizes=.false.)
+   end subroutine test_read_header_ci_orbital_sizes
 
    subroutine test_use_known_ci_orbital_sizes(error)
       type(error_type), allocatable, intent(out) :: error
 
-      call exercise_dimensionless_restart(error, use_known_sizes=.true.)
+      call exercise_restart_size_path(error, strip_dimensions=.true., use_known_sizes=.true.)
    end subroutine test_use_known_ci_orbital_sizes
 
-   subroutine exercise_dimensionless_restart(error, use_known_sizes)
+   subroutine exercise_restart_size_path(error, strip_dimensions, use_known_sizes)
       type(error_type), allocatable, intent(out) :: error
+      logical, intent(in) :: strip_dimensions
       logical, intent(in) :: use_known_sizes
       type(T_TrajectoryBundle) :: written_bundle, restarted_bundle
       real(kind=DefReal), dimension(4, 4) :: orbitals
@@ -74,7 +75,7 @@ contains
       call check_sized_restart_header(error, '# CI vectors', size(ci_vectors, dim=1), size(ci_vectors, dim=2))
       if (allocated(error)) return
 
-      call strip_restart_matrix_dimensions()
+      if (strip_dimensions) call strip_restart_matrix_dimensions()
 
       if (use_known_sizes) then
          esNBasis = size(orbitals, dim=1)
@@ -118,7 +119,7 @@ contains
       call FMS_DeleteFile('Last_Bundle.txt')
       call FMS_DeleteFile('tmp.Last_Bundle.txt')
       call FMS_DeleteFile('Checkpoint.txt')
-   end subroutine exercise_dimensionless_restart
+   end subroutine exercise_restart_size_path
 
    subroutine configure_restart_test_globals()
       character(len=256) :: test_tmpdir
