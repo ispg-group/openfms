@@ -791,6 +791,9 @@ contains
    end subroutine ReadElecStruc
 
    subroutine read_matrix_from_unit(matrix, nf, rows, cols, name)
+      !!
+      !! Reads named matrix from nf unit
+      !!
       real(kind=DefReal), allocatable, intent(inout) :: matrix(:, :)
       integer(kind=DefInt), intent(in) :: nf, rows, cols
       character(len=*), intent(in) :: name
@@ -808,6 +811,7 @@ contains
          read (nf, 3, iostat=ierr) matrix
          if (ierr /= 0) call FMS_DieError('Error reading '//trim(name)//' from restart file')
       end if
+
    end subroutine read_matrix_from_unit
 
    subroutine parse_matrix_header(header, label, rows, cols)
@@ -887,6 +891,9 @@ contains
    end subroutine read_legacy_real_block_until_header
 
    subroutine read_full_line(nf, line, ios)
+      !!
+      !! Reads line in 256 chunks
+      !!
       use, intrinsic :: iso_fortran_env, only: iostat_end, iostat_eor
       integer(kind=DefInt), intent(in) :: nf
       character(len=:), allocatable, intent(out) :: line
@@ -912,6 +919,7 @@ contains
             exit
          end select
       end do
+
    end subroutine read_full_line
 
    subroutine append_real_values_from_line(values, n_values, capacity, line)
@@ -950,15 +958,22 @@ contains
          n_values = n_values + 1
          values(n_values) = value
       end do
+
    end subroutine append_real_values_from_line
 
    logical function is_blank(char)
+      !!
+      !! Is 'char' blank?
+      !!
       character(len=1), intent(in) :: char
-
       is_blank = char == ' ' .or. char == achar(9)
+
    end function is_blank
 
    subroutine grow_real_vector(values, capacity)
+      !!
+      !! Grow the values array (doubling its size; keeps existing elements the same)
+      !!
       real(kind=DefReal), allocatable, intent(inout) :: values(:)
       integer(kind=DefInt), intent(inout) :: capacity
       real(kind=DefReal), allocatable :: tmp(:)
@@ -967,9 +982,13 @@ contains
       if (capacity > 0) tmp(1:capacity) = values(1:capacity)
       call move_alloc(tmp, values)
       capacity = size(values)
+
    end subroutine grow_real_vector
 
    subroutine shrink_real_vector(values, n_values)
+      !!
+      !! Shrinks values to values(1:n_values)
+      !!
       real(kind=DefReal), allocatable, intent(inout) :: values(:)
       integer(kind=DefInt), intent(in) :: n_values
       real(kind=DefReal), allocatable :: tmp(:)
@@ -977,9 +996,13 @@ contains
       allocate (tmp(n_values))
       if (n_values > 0) tmp = values(1:n_values)
       call move_alloc(tmp, values)
+
    end subroutine shrink_real_vector
 
    subroutine set_matrix_from_block(matrix, values, rows, cols, name)
+      !!
+      !! Copies values into the (rows) x (cols) matrix "matrix"
+      !!
       real(kind=DefReal), allocatable, intent(inout) :: matrix(:, :)
       real(kind=DefReal), intent(in) :: values(:)
       integer(kind=DefInt), intent(in) :: rows, cols
@@ -998,6 +1021,7 @@ contains
          allocate (matrix(rows, cols))
          matrix = reshape(values, shape(matrix))
       end if
+
    end subroutine set_matrix_from_block
 
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
