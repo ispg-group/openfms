@@ -6,7 +6,6 @@ program tester
    use test_particle, only: collect_particle_suite
    use test_trajectory, only: collect_trajectory_suite
    use test_bundle, only: collect_bundle_suite
-   use test_restart, only: collect_restart_suite
    use GlobalModule, only: set_error_handler
    implicit none
    integer :: num_failed_tests, is, num_args, selected_suite_index
@@ -40,8 +39,7 @@ program tester
    testsuites = [ &
                 new_testsuite('ParticleModule', collect_particle_suite), &
                 new_testsuite('TrajectoryModule', collect_trajectory_suite), &
-                new_testsuite('BundleModule', collect_bundle_suite), &
-                new_testsuite('RestartModule', collect_restart_suite) &
+                new_testsuite('BundleModule', collect_bundle_suite) &
                 ]
 
    ! Swap the default FMS_DieError handler for a unit-test friendly

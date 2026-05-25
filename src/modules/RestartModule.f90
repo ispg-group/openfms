@@ -763,8 +763,7 @@ contains
 
    subroutine read_next_restart_header(nf, header, error_message)
       !!
-      !! Reads the next non-empty restart header, accepting the existing blank
-      !! payload record used for empty restart matrix blocks.
+      !! Reads the next non-empty restart header
       !!
       integer(kind=DefInt), intent(in) :: nf
       character(len=*), intent(out) :: header
