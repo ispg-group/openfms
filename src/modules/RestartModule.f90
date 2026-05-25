@@ -766,7 +766,7 @@ contains
       !! Reads the next non-empty restart header
       !!
       integer(kind=DefInt), intent(in) :: nf
-      character(len=*), intent(out) :: header
+      character(len=500), intent(out) :: header
       character(len=*), intent(in) :: error_message
       integer(kind=DefInt) :: ierr
 
