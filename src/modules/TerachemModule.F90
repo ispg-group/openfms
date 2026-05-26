@@ -38,16 +38,16 @@ module TerachemModule
       subroutine MPI_Send(buf, count, datatype, dest, tag, comm, ierr)
          implicit none
          type(*), dimension(*), intent(in) :: buf
-         integer, intent(in) :: count, datatype, dest, tag, comm, ierr
-         integer, intent(inout) :: comm, ierr
+         integer, intent(in) :: count, datatype, dest, tag, comm
+         integer, intent(inout) :: ierr
       end subroutine MPI_Send
 
       subroutine MPI_Recv(buf, count, datatype, source, tag, comm, status, ierr)
          import MPI_STATUS_SIZE
          implicit none
          type(*), dimension(*), intent(inout) :: buf
-         integer, intent(in) :: count, datatype, source, comm
-         integer, intent(inout) :: tag, ierr
+         integer, intent(in) :: count, datatype, source, comm, tag
+         integer, intent(inout) :: ierr
          integer, intent(inout) :: status(MPI_STATUS_SIZE)
       end subroutine MPI_Recv
    end interface
@@ -662,7 +662,7 @@ contains
 !<
    subroutine FMS_CheckOverlap(T1, SMat, nstate)
       use ElecStrucModule
-      type(T_Trajectory), intent(in) :: T1
+      type(T_Trajectory), intent(inout) :: T1
       real(kind=DefReal), intent(in) :: SMat(nstate, nstate)
       integer(kind=DefInt), intent(in) :: nstate
 
