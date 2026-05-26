@@ -278,20 +278,14 @@ contains
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   subroutine WriteBundle(B, nfile_in)
+   subroutine WriteBundle(B, nf)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ! writes the Bundle out to a flat, plain text file
 ! this is used for restarting the Trajectory
       type(T_TrajectoryBundle), intent(in) :: B
-      integer(kind=DefInt), optional :: nfile_in
-
-      integer(kind=DefInt) :: nf ! unit number to write to
+      integer(kind=DefInt), intent(in) :: nf
 
       integer(kind=DefInt) :: ntraj, ndead, npart, n, ncbfs
-
-! set which file we are writing to
-      nf = 6
-      if (present(nfile_in)) nf = nfile_in
 
 1     format(i6, 34x, a) ! integer   format with label
 2     format(f14.2, 26x, a) ! time type format with label
@@ -427,22 +421,16 @@ contains
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 !
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   subroutine WriteTraj(T1, nfile_in)
+   subroutine WriteTraj(T1, nf)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ! writes out the trajectory structure to a specefied file
       type(T_Trajectory), intent(in) :: T1
-      integer(kind=DefInt), optional :: nfile_in
+      integer(kind=DefInt), intent(in) :: nf
 
       real(kind=DefReal) :: Coupling(T1%NumStates - 1, T1%NumDimensions), ForceVector(T1%NumDimensions)
-      integer(kind=DefInt) :: nf, & ! unit number to write to
-                              nstate, i, & !
-                              npart, n, ns, ns2
+      integer(kind=DefInt) :: nstate, i, npart, n, ns, ns2
 
       logical :: ZCouplingCurrent(T1%NumStates)
-
-! set which file we are writing to
-      nf = 6
-      if (present(nfile_in)) nf = nfile_in
 
       npart = T1%NumParticles
       ns = T1%StateID
@@ -549,24 +537,18 @@ contains
    end subroutine WriteTraj
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   subroutine ReadTraj(T1, nfile_in)
+   subroutine ReadTraj(T1, nf)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-! writes out the trajectory structure to a specefied file
+! writes out the trajectory structure to a specified file
       type(T_Trajectory), intent(inout) :: T1
-      integer(kind=DefInt), optional :: nfile_in
+      integer(kind=DefInt), intent(in) :: nf
 
       real(kind=DefReal) :: Coupling(T1%NumStates - 1, T1%NumDimensions), ForceVector(T1%NumDimensions)
 
       real(kind=DefReal), allocatable :: vec(:)
-      integer(kind=DefInt) :: nf, & ! unit number to write to
-                              nstate, i, & !
-                              npart, ndim, n, ns, ns2
+      integer(kind=DefInt) :: nstate, i, npart, ndim, n, ns, ns2
 
       logical :: ZCouplingCurrent(T1%NumStates)
-
-! set which file we are reading from
-      nf = 5
-      if (present(nfile_in)) nf = nfile_in
 
       npart = T1%NumParticles
       nstate = T1%NumStates
@@ -731,16 +713,10 @@ contains
 !
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   subroutine WriteParticle(P, nfile_in)
+   subroutine WriteParticle(P, nf)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       type(T_Particle), intent(in) :: P
-      integer(kind=DefInt), optional :: nfile_in
-
-      integer(kind=DefInt) :: nf ! unit number to write to
-
-! set which file we are writing to
-      nf = 6
-      if (present(nfile_in)) nf = nfile_in
+      integer(kind=DefInt), intent(in) :: nf
 
 1     format(i6, 34x, a) ! integer   format with label
 3     format(e17.10, 24x, a) ! real      format with label
@@ -751,20 +727,14 @@ contains
       write (nf, 3) P%Mass, ' / Mass'
       write (nf, 3) P%Charge, ' / Charge'
       write (nf, 3) P%AtomicNum, ' / Atomic number'
-
    end subroutine WriteParticle
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   subroutine ReadParticle(P, nfile_in)
+   subroutine ReadParticle(P, nf)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       type(T_Particle), intent(inout) :: P
-      integer(kind=DefInt), optional :: nfile_in
-
-      integer(kind=DefInt) :: nf ! unit number to write to
-
-! set which file we are writing to
-      nf = 5
-      if (present(nfile_in)) nf = nfile_in
+      !> Unit number to write to
+      integer(kind=DefInt), intent(in) :: nf
 
       read (nf, *) P%ParticleID
       read (nf, *) P%Elmnt
@@ -772,7 +742,6 @@ contains
       read (nf, *) P%Mass
       read (nf, *) P%Charge
       read (nf, *) P%AtomicNum
-
    end subroutine ReadParticle
 
 end module RestartModule

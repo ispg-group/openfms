@@ -37,16 +37,18 @@ module TerachemModule
    interface
       subroutine MPI_Send(buf, count, datatype, dest, tag, comm, ierr)
          implicit none
-         type(*), dimension(*) :: buf
-         integer :: count, datatype, dest, tag, comm, ierr
+         type(*), dimension(*), intent(in) :: buf
+         integer, intent(in) :: count, datatype, dest, tag, comm, ierr
+         integer, intent(inout) :: comm, ierr
       end subroutine MPI_Send
 
       subroutine MPI_Recv(buf, count, datatype, source, tag, comm, status, ierr)
          import MPI_STATUS_SIZE
          implicit none
-         type(*), dimension(*) :: buf
-         integer :: count, datatype, source, tag, comm, ierr
-         integer :: status(MPI_STATUS_SIZE)
+         type(*), dimension(*), intent(inout) :: buf
+         integer, intent(in) :: count, datatype, source, comm
+         integer, intent(inout) :: tag, ierr
+         integer, intent(inout) :: status(MPI_STATUS_SIZE)
       end subroutine MPI_Recv
    end interface
 #endif
@@ -57,12 +59,12 @@ contains
    subroutine InitTerachem(NumParticles, NumStates)
       use GlobalModule, only: BohrToAng
       use ElecStrucModule
+      integer(kind=DefInt), intent(in) :: NumParticles, NumStates
 
       integer, parameter :: CLEN = 128
       integer(kind=DefInt) :: natoms, nqmmm
       real(kind=DefReal), allocatable :: atcoords(:, :)
       character(len=:), allocatable :: server_name
-      integer(kind=DefInt) :: NumParticles, NumStates
       character(len=2), allocatable :: atom_types(:)
       integer(kind=DefInt) :: bufints(20)
       integer :: status(MPI_STATUS_SIZE)
@@ -347,6 +349,7 @@ contains
       type(T_Trajectory), intent(inout) :: T_FMS
       integer(kind=DefInt), intent(in) :: iCalcState, jCalcState
       logical, intent(in) :: CalcCoup
+
       integer(DefInt), save :: first_call = 1
       real(kind=DefReal), allocatable :: atcoords(:, :), tmpcoords(:)
       integer(kind=DefInt) :: bufints(20)
@@ -659,12 +662,12 @@ contains
 !<
    subroutine FMS_CheckOverlap(T1, SMat, nstate)
       use ElecStrucModule
-      type(T_Trajectory) :: T1
+      type(T_Trajectory), intent(in) :: T1
+      real(kind=DefReal), intent(in) :: SMat(nstate, nstate)
+      integer(kind=DefInt), intent(in) :: nstate
 
-      integer(kind=DefInt) :: nstate
       integer(kind=DefInt) :: IState, JState, ioccstate
 
-      real(kind=DefReal) :: SMat(nstate, nstate)
       real(kind=DefReal) :: SCI_II, SCI_IJ, SCI_JI, SCI_JJ
       real(kind=defReal) :: E_occ, E_I, E_J, E_occ_old, E_I_old, E_J_old
 
