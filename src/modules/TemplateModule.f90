@@ -34,22 +34,20 @@ contains
 !!    \see FMS_ReadOutput
 !<
    subroutine FMS_WriteInput(par, ixstate, cfTemplate, Orb, CIVec)
-      use ElecStrucModule
+      real(kind=DefReal), intent(in), optional :: Orb(:, :), CIVec(:, :)
 
-      real(kind=DefReal), optional :: Orb(esnBasis, esnBasis), CIVec(:, :)
-
-      real(kind=DefReal) :: par(:)
+      real(kind=DefReal), intent(in) :: par(:)
       character(len=*), intent(in) :: cfTemplate
 
-      integer(kind=DefInt) :: ixstate
+      integer(kind=DefInt), intent(in) :: ixstate
       write (6, *) '[FMS_WriteInput] : this subroutine is not active'
       stop 1
    end subroutine FMS_WriteInput
 !<
    subroutine FMS_ReadOutput(par, ixState, cfTemplate)
-      real(kind=DefReal) :: par(:)
+      real(kind=DefReal), intent(inout) :: par(:)
       character(len=*), intent(in) :: cfTemplate
-      integer(kind=DefInt) :: ixState
+      integer(kind=DefInt), intent(in) :: ixState
 
       write (6, *) '[FMS_ReadOutput] : this subroutine is not active'
       stop 1

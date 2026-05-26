@@ -30,7 +30,7 @@ allow-bare-use = [
 
 [check.per-file-ignores]
 # TODO: Add missing intents!
-"src/modules/{Trajectory,Thermo,Terachem,Template,SMD,Bundle,Rattle,MinSearch,Restart,Spawn,Overlap}*.[fF]90" = ["missing-intent"]
+"src/modules/{Trajectory,BundleCalcs,Thermo,SMD,Rattle,MinSearch}*Module.[fF]90" = ["missing-intent"]
 "src/read_namelist.f90" = ["use-all"]
 # TODO: Resolve this!
 "src/modules/SpawnModule.f90" = ["missing-exit-or-cycle-label"]
@@ -40,6 +40,4 @@ allow-bare-use = [
 "src/modules/TerachemModule.F90" = ["assumed-size"]
 "src/modules/BundleCalcsModule.f90" = ["common-block"]
 "src/modules/MinSearchModule.f90" = ["interface-implicit-typing"]
-# fortitude confused by ifdef?
-"src/modules/QuanticsModule.F90" = ["implicit-typing", "missing-accessibility-statement"]
 "src/modules/{Overlap,Verlet}Module.f90" = ["trailing-backslash"]
