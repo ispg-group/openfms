@@ -69,19 +69,22 @@ contains
 !         only called from perform_stochastic_selection)
       integer(kind=DefInt), dimension(B1%NumTraj, B1%NumTraj) :: Coupled
       integer(kind=DefInt), dimension(B1%NumTraj + 1, B1%NumTraj + 1) :: blocktrajid
-      integer(kind=DefInt), dimension(B1%NumTraj + 1, B1%NumTraj + 1) :: MergedBlockTrajID, MergedSepBlockTrajID
       integer(kind=DefInt), dimension(B1%NumTraj + 1) :: ntrajblock
+      integer(kind=DefInt), dimension(B1%NumTraj + 1, 2) :: MergedBlockTrajID
+      integer(kind=DefInt), dimension(B1%NCBFs + 1, 2) :: BlockCBFID
+      integer(kind=DefInt), dimension(2) :: NumTrajSepBlock
+      integer(kind=DefInt), dimension(2) :: NumCBFsBlock
       integer(kind=DefInt) :: nblockMerged, DeadID, NumDeadTrajCurr, NumDeadTrajSave
       integer(kind=DefInt), dimension(50) :: SaveForceKill
       real(kind=DefReal), allocatable :: SaveNorms(:)
-      real(kind=DefReal), allocatable :: SaveTrajAmps(:,:)
+      complex(kind=DefComp), allocatable :: SaveTrajAmps(:,:)
 ! sepSS: Shall we perform multiplet separated stochastic selection
-      integer(kind=DefInt), allocatable :: StoSelMode(:), NumTrajBlock(:)
+      integer(kind=DefInt), allocatable :: StoSelMode(:) !, NumTrajBlock(:)
       logical :: isSing, isTrip, isSingTrip
-      logical :: IsSelection
+      !logical :: IsSelection
+      logical, dimension(2) :: IsSelection
 ! --- Added 4 sep SS end ---
-      integer(kind=DefInt) :: iTraj, i, j, k, nblock_outer, totDeadCount, prev_add_traj
-      integer(kind=DefInt) :: skip_positions
+      integer(kind=DefInt) :: iBlocks, iTraj, i, j, k, nblock_outer, totDeadCount
 ! AIMSWISS: Shall we perform stochastic selection
       logical :: performSelection
 ! AIMSWISS: Current selection time
@@ -129,19 +132,15 @@ contains
          end do
          deallocate (BundleSS)
 
+      end if
+
 ! Multiplicity-Specific Stochastic Selection
 ! 1. Decide whether we have Sing only, Trip only, or Sing and Trip
 ! 2. Create temporary, separate Bundles that only hold the trajectories within a multiplicity
 ! 3. Perform selections within those bundles
 ! 4. Reunite to reform the original bundle, get rid of temporary block Bundles
 
-      else if (NTrip /= 0) then
-
-         NumDeadTrajSave = B1%NumDeadTraj
-         gliForceKill = 0
-
-         !write (fmiout, *) "Asking this question once and for all: do we call FMS_StochasticCollapse at each time step??"
-         ! yes we do...
+      if (NTrip /= 0) then
 
          ! (1) getting Coupled matrix to identify separated S only, or T only blocks
 
@@ -167,25 +166,25 @@ contains
          !   - Singlet only --> perform StoSel
          !   - Triplet only --> perform StoSel
          !   - Singlet and Triplet in the same block --> no StoSel on these mixed blocks
-         isSing = .false.
-         isTrip = .false.
-         isSingTrip = .false.
+         !isSing = .false.
+         !isTrip = .false.
+         !isSingTrip = .false.
 
          !write (fmiout, *) "-----------------------------------------------------------"
          !write (fmiout, *) "Deciding StoSel mode based on total Bundle"
 
          allocate (StoSelMode(nblock_outer))
-         allocate (NumTrajBlock(nblock_outer))
+         !allocate (NumTrajBlock(nblock_outer))
 
          ! Get isSIng, isTrip, isSingTrip for each block in the original, total Coupled matrix
-         NumTrajBlock = 0
+         !NumTrajBlock = 0
          do i = 1, nblock_outer
             isSing = .false.
             isTrip = .false.
             isSingTrip = .false.
             do iTraj = 1, B1%NumTraj
                if (any(blocktrajid(:,i) == iTraj)) then
-                  NumTrajBlock(i) = NumTrajBlock(i) + 1
+                  !NumTrajBlock(i) = NumTrajBlock(i) + 1
                   if (B1%Trajectory(iTraj)%triplet) then
                      isTrip = .true.
                   else
@@ -218,76 +217,34 @@ contains
             write (fmiout, *) blocktrajid(i,:)
          end do
 
-         do i = 1, nblock_outer
+         !write (fmiout,*) "Is NumTrajBlock just the same as ntrajblock???"
+         !write (fmiout,*) "NumTrajBlock: ", NumTrajBlock
+         !write (fmiout,*) "ntrajblock: ", ntrajblock
 
-            !write (fmiout, *) "Entering loop for i = ", i
-            !write (fmiout, *) "Part of blocktrajid we are using: ", blocktrajid(i,:)
-            !write (fmiout, *) "General question: what is NumTrajBlock???", NumTrajBlock
-
-            if (StoSelMode(i) == 0) cycle
-
-            !prev_add_traj = 0
-
-            do j = i+1, nblock_outer
-               write (fmiout, *) "Entering loop for j = ", j
-
-               if (StoSelMode(i) == StoSelMode(j)) then
-
-                  ! Copy over block j TrajIDs to i column of blocktrajid
-                  ! Set the NumTrajBlock(i:j) positions in the i column to the indices in the jth column
-                  !blocktrajid(NumTrajBlock(i)+1:NumTrajBlock(i)+NumTrajBlock(j), i) = blocktrajid(1:NumTrajBlock(j),j)
-                  !write (fmiout, *) "Copied over ", blocktrajid(1:NumTrajBlock(j),j), " to ",&
-                  !                  blocktrajid( sum(NumTrajBlock(1:j)) : NumTrajBlock(i) + NumTrajBlock(j), i)
-
-                  ! Count how many positions need to be skipped
-                  skip_positions = 0
-                  do k = 1, j-1
-                     if (StoSelMode(k) == StoSelMode(j)) then
-                        skip_positions = skip_positions + NumTrajBlock(k)
-                     end if
-                  end do
-                  !write (fmiout, *) "This many positions ", skip_positions, "need 2 be skipped in col", i
-
-                  prev_add_traj = 0
-                  !write (fmiout, *) "++++++++++++++++++++"
-                  do k = 1, NumTrajBlock(j)
-                     !write (fmiout, *) "Number of trajs added to column", i, "in a previous step: ", prev_add_traj
-                     !write (fmiout, *) "Number of trajs in previous blocks: ", NumTrajBlock(1:j-1), "in sum: ", &
-                     !                  sum(NumTrajBlock(1:j-1))
-                     !write (fmiout, *) "Now replace element ", skip_positions+k, "in ", &
-                     !                   i, "th column by", blocktrajid(k,j)
-                     blocktrajid(skip_positions+k, i) = blocktrajid(k,j)
-                     prev_add_traj = prev_add_traj + 1
-                  end do
-                  !write (fmiout, *) "++++++++++++++++++++"
-
-                  ! Set j column to zero
-                  blocktrajid(:,j) = 0
-
-                  !write (fmiout, *) "Part of blocktrajid was modified to: ", blocktrajid(i,:)
-                  !write (fmiout, *) "The ith column is now: ", blocktrajid(:,i)
-
-               end if
-
-            end do
-
-         end do
-
-         ! Set StoSelMode to zero if column of blocktrajid is fully zero
-         ! i.e. if the block was copied over (the j column)
-         do i = 1, nblock_outer
-            if (all(blocktrajid(:,i) == 0)) then
-               StoSelMode(i) = 0
-            end if
-         end do
+         !! Set StoSelMode to zero if column of blocktrajid is fully zero
+         !! i.e. if the block was copied over (the j column)
+         !do i = 1, nblock_outer
+         !   if (all(blocktrajid(:,i) == 0)) then
+         !      StoSelMode(i) = 0
+         !   end if
+         !end do
 
          write (fmiout, *) "blocktrajid after merging: "
          do i = 1, B1%NumTraj + 1
             write (fmiout, *) blocktrajid(i,:)
          end do
 
-         MergedBlockTrajID = blocktrajid
-         nblockMerged = nblock_outer        ! TODO: For now, nblockMerged is not used, but do we need to account for change
+         MergedBlockTrajID = 0
+         call getMergedBlockTrajID(B1, nblock_outer, StoSelMode, ntrajblock, blocktrajid, &
+                                   MergedBlockTrajID)
+
+         write (fmiout, *) "MergedBlockTrajID after merging: "
+         do i = 1, B1%NumTraj + 1
+            write (fmiout, *) MergedBlockTrajID(i, :)
+         end do
+
+         !MergedBlockTrajID = blocktrajid
+         !nblockMerged = nblock_outer        ! TODO: For now, nblockMerged is not used, but do we need to account for change
                                             ! in number of blocks after merging (so, nblockMerged < nblock_outer depending
                                             ! on how many blocks we merged???
                                             ! This is actually done two steps later I think
@@ -302,30 +259,31 @@ contains
          !                                                 - is it fine to only adjust indices after the
          !                                                   first column = from the second block onwards??)
 
-         MergedSepBlockTrajID = MergedBlockTrajID
-         do i = 1, B1%NumTraj + 1
-            do j = 2, B1%NumTraj + 1
-               if (MergedBlockTrajID(i,j) == 0) cycle
-               MergedSepBlockTrajID(i,j) = MergedBlockTrajID(i,j) - MergedBlockTrajID(1,j) + 1
-            end do
-         end do
+         !MergedSepBlockTrajID = MergedBlockTrajID
+         !do i = 1, B1%NumTraj + 1
+         !   do j = 2, B1%NumTraj + 1
+         !      if (MergedBlockTrajID(i,j) == 0) cycle
+         !      MergedSepBlockTrajID(i,j) = MergedBlockTrajID(i,j) - MergedBlockTrajID(1,j) + 1
+         !   end do
+         !end do
 
          ! Make sure that indices in MergedBlockTrajID leave out indices of trajs that died before
-         totDeadCount = 0
-         do i = 1, B1%NumTraj + 1
-            do j = 2, B1%NumTraj + 1
-               if (MergedBlockTrajID(i,j) == 0) cycle
-               do k = 1, B1%NumDeadTraj
-                  if (MergedBlockTrajID(i,j) == B1%DeadTraj(k)%TrajID) then
-                     !write (fmiout, *) "This index belongs to a dead traj: ", MergedBlockTrajID(i,j), B1%DeadTraj(k)%TrajID
-                     !write (fmiout, *) "totDeadCount increased from ", totDeadCount
-                     totDeadCount = totDeadCount + 1
-                     !write (fmiout, *) "to... ", totDeadCount
-                  end if
-               end do
-               MergedBlockTrajID(i,j) = MergedBlockTrajID(i,j) + totDeadCount
-            end do
-         end do
+         ! This step is necessary because FMS_GroupIntoBlocks loops over B1%NumTraj
+         !totDeadCount = 0
+         !do i = 1, B1%NumTraj + 1
+         !   do j = 2, B1%NumTraj + 1
+         !      if (MergedBlockTrajID(i,j) == 0) cycle
+         !      do k = 1, B1%NumDeadTraj
+         !         if (MergedBlockTrajID(i,j) == B1%DeadTraj(k)%TrajID) then
+         !            !write (fmiout, *) "This index belongs to a dead traj: ", MergedBlockTrajID(i,j), B1%DeadTraj(k)%TrajID
+         !            !write (fmiout, *) "totDeadCount increased from ", totDeadCount
+         !            totDeadCount = totDeadCount + 1
+         !            !write (fmiout, *) "to... ", totDeadCount
+         !         end if
+         !      end do
+         !      MergedBlockTrajID(i,j) = MergedBlockTrajID(i,j) + totDeadCount
+         !   end do
+         !end do
 
 
          ! ----------------------------- !!! --------------------------------------------------
@@ -361,44 +319,92 @@ contains
 
          ! Determine how many block bundles we need to create, based on merged blocktrajid:
          ! and based on whether we need to carry out SS in the merged block or not
-         BundlesMultDim = 0
-         do i = 1, nblock_outer
-            if (StoSelMode(i) /= 0) then
-               BundlesMultDim = BundlesMultDim + 1
-            end if
-         end do
-         nblockMerged = BundlesMultDim
+         !BundlesMultDim = 0
+         !do i = 1, nblock_outer
+         !   if (StoSelMode(i) /= 0) then
+         !      BundlesMultDim = BundlesMultDim + 1
+         !   else
+         !      write (fmiout, *) "No separated Bundle will be created for block ", i, &
+         !                        "because StoSelMode is zero"
+         !   end if
+         !end do
+
+         !nblockMerged = BundlesMultDim
          write (fmiout, *) "nblock_outer = ", nblock_outer, "StoSelMode = ", StoSelMode
          !write (fmiout, *) "BundlesMultDim based on merged blocktrajid: ", BundlesMultDim
          !write (fmiout, *) "nblock based on merged blocktrajid: ", nblockMerged
 
-         !write (fmiout, *) "-----------------------------------------------------------"
+         ! Determine how many CBFs we have per S-only and T-only block
+         ! sepB creation and subsequent selection only needs to happen if
+         ! we have more than one CBF in the block
 
-         allocate (BundlesMult(BundlesMultDim))
+         NumTrajSepBlock = 0
+         NumCBFsBlock = 0
+         BlockCBFID = 0
+         call getNumCBFsBlock(B1, MergedBlockTrajID, NumTrajSepBlock, NumCBFsBlock, BlockCBFID)
+
+         write (fmiout, *) "BlockCBFID after merging: "
+         do i = 1, B1%NCBFs + 1
+            write (fmiout, *) BlockCBFID(i, :)
+         end do
+
+         do iBlocks = 1, 2
+            if (NumCBFsBlock(iBlocks) > 1 ) then
+               IsSelection(iBlocks) = .true. ! Set StoSelMode of block to zero if we have
+                                             ! no more than one CBF in the block
+            end if
+         end do
+         write (fmiout, *) "Singlet selection set to ", IsSelection(1), "Triplet selection set to ", IsSelection(2)
+         write (fmiout, *) "Number Singlet CBFs", NumCBFsBlock(1), "Number Triplet CBFs", NumCBFsBlock(2)
+
+         allocate (BundlesMult(2))
+
+         do iBlocks = 1, 2
+            if (IsSelection(iBlocks)) then
+               write (fmiout, *) "Creating separated Bundle for block ", iBlocks, &
+                                 "with StoSelMode ", StoSelMode(iBlocks)
+               call getMultBundles(B1, BundlesMult, iBlocks, MergedBlockTrajID(:, iBlocks), BlockCBFID(:,iBlocks), &
+                                   NumTrajSepBlock(iBlocks), NumCBFsBlock(iBlocks))
+            else if (iBlocks == 1) then
+               write (fmiout, *) "No separated Bundle created for the singlet block &
+                                  because no more than one CBF."
+            else if (iBlocks == 2) then
+               write (fmiout, *) "No separated Bundle created for the triplet block &
+                                  because no more than one CBF."
+            end if
+         end do
 
          ! Create BundlesMultDim many temp bundles and fill them up
          ! with corresponding trajs from B1
-         write (fmiout, *) "This is the blocktrajid to be used in getMultBundles: ", blocktrajid
-         call getMultBundles(B1, BundlesMult, BundlesMultDim, blocktrajid)
+         !write (fmiout, *) "This is the blocktrajid to be used in getMultBundles: ", blocktrajid
+         !call getMultBundles(B1, BundlesMult, BundlesMultDim, MergedBlockTrajID)
 
          ! Set the norm of each temporary bundle to one (for SS)
          ! ---> by just normalizing
          ! and remember actual norm within total bundle (for continuing propagation after SS)
          ! ---> SaveNorms
 
+         allocate (SaveNorms(2))
+         !allocate (SaveTrajAmps(B1%NumTraj + 1, 2))
          write (fmiout, *) "What's the norm of the newly created bundles?"
-         allocate (SaveNorms(BundlesMultDim))
-         allocate (SaveTrajAmps(BundlesMultDim, B1%NumStates))
-         do i = 1, BundlesMultDim
-            write (fmiout, *) "Block ", i, "Norm: ", FMS_Norm(BundlesMult(i))
-            SaveNorms(i) = FMS_Norm(BundlesMult(i))
-            call FMS_Branching(BundlesMult(i), SaveTrajAmps(i,:))
+         do i = 1, 2
+            if (IsSelection(i)) then
+               write (fmiout, *) "Block ", i, "Norm: ", FMS_Norm(BundlesMult(i))
+               SaveNorms(i) = FMS_Norm(BundlesMult(i))
+               !call FMS_Branching(BundlesMult(i), SaveTrajAmps(i,:))
+            end if
          end do
          write (fmiout, *) "Did we copy over to SaveNorms correctly?", SaveNorms
-         write (fmiout, *) "Did we copy over to SaveTrajAmps correctly?"
-         !do i = 1, BundlesMultDim
-         !   write(fmiout, *) SaveTrajAmps(i, :)
-         !end do
+
+         do i = 1, 2
+            if (IsSelection(i)) then
+               do iTraj = 1, NumTrajSepBlock(i)
+                  write(fmiout, *) "Amplitude of traj", BundlesMult(i)%Trajectory(iTraj)%TrajID , &
+                                   BundlesMult(i)%Trajectory(iTraj)%Amplitude
+                  !SaveTrajAmps(iTraj, i) = BundlesMult(i)%Trajectory(iTraj)%Amplitude
+               end do
+            end if
+         end do
 
          write (fmiout, *) "-----------------------------------------------------------"
          write (fmiout, *) "The B1 norm is: "
@@ -411,108 +417,123 @@ contains
 
          write (fmiout, *) "----------------------------"
          write (fmiout, *) "Normalizing..."
-         do i = 1,  BundlesMultDim
-            do iTraj = 1, BundlesMult(i)%NumTraj
-               BundlesMult(i)%Trajectory(iTraj)%Amplitude = BundlesMult(i)%Trajectory(iTraj)%Amplitude / sqrt(SaveNorms(i))
-            end do
+
+         do i = 1, 2
+            if (IsSelection(i)) then
+               write (fmiout, *) "SaveNorms(i)", SaveNorms(i)
+               write (fmiout, *) "NumTrajSepBlock(i)", NumTrajSepBlock(i)
+               write (fmiout, *) "MergedBlockTrajID(:,i)", MergedBlockTrajID(:,i)
+               !call FMS_RenormalizeBlockAmplitudes(BundlesMult(i), SaveNorms(i), NumTrajSepBlock(i), MergedBlockTrajID(:,i))
+               do j = 1, NumTrajSepBlock(i)
+                  iTraj = MergedBlockTrajID(j,i)
+                  BundlesMult(i)%Trajectory(iTraj)%Amplitude = BundlesMult(i)%Trajectory(iTraj)%Amplitude &
+                                                               * dcmplx( 1.d0 / sqrt(SaveNorms(i)) )
+               end do
+            end if
          end do
+         
          write (fmiout, *) "After Normalizing prior to SS, the sep bundle norms are: "
-         do i = 1, BundlesMultDim
-            write (fmiout, *) "Block ", i, "Norm: ", FMS_Norm(BundlesMult(i))
+         do i = 1, 2
+            if (IsSelection(i)) then
+               write (fmiout, *) "Block ", i, "Norm: ", FMS_Norm(BundlesMult(i))
+               write (fmiout, *) "and the corresponding amplitudes are"
+               do iTraj = 1, NumTrajSepBlock(i)
+                  write(fmiout, *) "Amplitude of traj", BundlesMult(i)%Trajectory(iTraj)%TrajID , &
+                                   BundlesMult(i)%Trajectory(iTraj)%Amplitude
+               end do
+            end if
          end do
          write (fmiout, *) "----------------------------"
 
-
          ! (3) Perform SS on the separated bundles
          NumDeadTrajCurr = 0
-         do i = 1, nblockMerged
+         !do i = 1, nblockMerged
+         do i = 1, 2
 
-            if (StoSelMode(i) == 1 .or. StoSelMode(i) == 3) then
+            if (IsSelection(i)) then
 
-               write (fmiout, *) "StoSelMode for block ", i, "is ", StoSelMode(i)
-               IsSelection = .false.
+               !write (fmiout, *) "StoSelMode for block ", i, "is ", StoSelMode(i)
                ! Do the stochastic selection
-               if (BundlesMult(i)%NCBFs > 1 ) then
-                  write (fmiout, *) "Performing stochastic selection for block Bundle", i, &
-                                    "with", BundlesMult(i)%NCBFs, "CBFs"
+               write (fmiout, *) "Performing stochastic selection for block Bundle", i, &
+                                 "with", BundlesMult(i)%NCBFs, "CBFs"
 
-                  call perform_stochastic_selection(BundlesMult(i), selectionTime, IsSelection)
+               !call perform_stochastic_selection(BundlesMult(i), selectionTime, IsSelection)
+               call perform_stochastic_selection(BundlesMult(i), selectionTime)
 
-                  ! Adjust gliForceKill only if selection actually happened
-                  if (IsSelection) then
+               call FMS_DieError("check that this works...")
 
-                     write (fmiout, *) "Number of dead trajs: ", B1%NumDeadTraj
-                     do j = 1, B1%NumDeadTraj
-                        write (fmiout, *) "TrajID of dead traj", j, ": ", B1%DeadTraj(j)%TrajID
-                     end do
+               ! Adjust gliForceKill only if selection actually happened
+               if (IsSelection(i)) then
 
-                  end if
+                  write (fmiout, *) "Number of dead trajs: ", B1%NumDeadTraj
+                  do j = 1, B1%NumDeadTraj
+                     write (fmiout, *) "TrajID of dead traj", j, ": ", B1%DeadTraj(j)%TrajID
+                  end do
 
-                  ! Adjust gliForceKill only if selection actually happened
-                  !if (i>1 .and. IsSelection) then
-                  !   !write (fmiout, *) "Adjusting gliForceKill using MergedSepBlockTrajID (this is the full matrix): "
-                  !   !do j = 1, B1%NumTraj + 1
-                  !   !   write (fmiout, *) MergedSepBlockTrajID(j,:)
-                  !   !end do
-
-                  !   !write (fmiout, *) "and MergedBlockTrajID (this is the full matrix): "
-                  !   !do j = 1, B1%NumTraj + 1
-                  !   !   write (fmiout, *) MergedBlockTrajID(j,:)
-                  !   !end do
-
-                  !   write (fmiout, *) "gliForcKill for block Bundle", i
-                  !   write (fmiout, *) gliForceKill
-                  !   !write (fmiout, *) "adjusting to B1 indiced..."
-
-                  !   SaveForceKill = gliForceKill
-
-                  !   do iTraj = 1, B1%NumTraj + 1                       ! Why did I ever start this one from 2??
-                  !      do j = 1, B1%NumTraj + 1
-                  !         if (MergedSepBlockTrajID(iTraj,j) == 0) cycle
-                  !         do DeadID = 1, size(SaveForceKill)
-                  !            !write (fmiout, *) "many numbers (?)", SaveForceKill(DeadID)
-                  !            if (MergedSepBlockTrajID(iTraj,j) == SaveForceKill(DeadID)) then
-                  !               write (fmiout, *) "Match for gliForceKill: ", SaveForceKill(DeadID)
-                  !               write (fmiout, *) "with MergedSepblock: ", MergedSepBlockTrajID(iTraj,j)
-                  !               write (fmiout, *) "i and j are: ", iTraj, j
-                  !               write (fmiout, *) "Corresponding MergedBlock: ", MergedBlockTrajID(iTraj,j)
-                  !               gliForceKill(DeadID) = MergedBlockTrajID(iTraj,j)
-                  !            end if
-                  !         end do
-                  !      end do
-                  !   end do
-
-                  !   write (fmiout, *) "Adjusted gliForcKill for block Bundle", i, "and obtained"
-                  !   write (fmiout, *) gliForceKill
-                  !end if
-
-                  if (IsSelection) then
-                     write (fmiout, *) "(Before copying back to original Bundle)"
-                     write (fmiout, *) "Number of Dead Trajs is now: ", B1%NumDeadTraj
-                  end if
-
-                  !if (B1%NumDeadTraj > 0) then
-
-                  !   do iTraj = 1, B1%NumDeadTraj
-                  !      write (fmiout, *) "IDs of dead traj ", iTraj, ": ", B1%DeadTraj(iTraj)%TrajID
-                  !   end do
-
-                  !   !if (B1%NumDeadTraj >= 2) then
-                  !   !   call FMS_DieError("That's enough for now...")
-                  !   !end if
-
-                  !end if
-
-               else
-                  write (fmiout, *) "No stochastic selection because block Bundle only has one CBF"
                end if
 
-            else
-               if (any(blocktrajid(:,i) /= 0)) then
-                  write (fmiout, *) "No stochastic selection because block Bundle", i, "contains a mix of S and T"
-               else
-                  write (fmiout, *) "No stochastic selection because block Bundle", i, "was merged into other block"
+               ! Adjust gliForceKill only if selection actually happened
+               !if (i>1 .and. IsSelection) then
+               !   !write (fmiout, *) "Adjusting gliForceKill using MergedSepBlockTrajID (this is the full matrix): "
+               !   !do j = 1, B1%NumTraj + 1
+               !   !   write (fmiout, *) MergedSepBlockTrajID(j,:)
+               !   !end do
+
+               !   !write (fmiout, *) "and MergedBlockTrajID (this is the full matrix): "
+               !   !do j = 1, B1%NumTraj + 1
+               !   !   write (fmiout, *) MergedBlockTrajID(j,:)
+               !   !end do
+
+               !   write (fmiout, *) "gliForcKill for block Bundle", i
+               !   write (fmiout, *) gliForceKill
+               !   !write (fmiout, *) "adjusting to B1 indiced..."
+
+               !   SaveForceKill = gliForceKill
+
+               !   do iTraj = 1, B1%NumTraj + 1                       ! Why did I ever start this one from 2??
+               !      do j = 1, B1%NumTraj + 1
+               !         if (MergedSepBlockTrajID(iTraj,j) == 0) cycle
+               !         do DeadID = 1, size(SaveForceKill)
+               !            !write (fmiout, *) "many numbers (?)", SaveForceKill(DeadID)
+               !            if (MergedSepBlockTrajID(iTraj,j) == SaveForceKill(DeadID)) then
+               !               write (fmiout, *) "Match for gliForceKill: ", SaveForceKill(DeadID)
+               !               write (fmiout, *) "with MergedSepblock: ", MergedSepBlockTrajID(iTraj,j)
+               !               write (fmiout, *) "i and j are: ", iTraj, j
+               !               write (fmiout, *) "Corresponding MergedBlock: ", MergedBlockTrajID(iTraj,j)
+               !               gliForceKill(DeadID) = MergedBlockTrajID(iTraj,j)
+               !            end if
+               !         end do
+               !      end do
+               !   end do
+
+               !   write (fmiout, *) "Adjusted gliForcKill for block Bundle", i, "and obtained"
+               !   write (fmiout, *) gliForceKill
+               !end if
+
+               if (IsSelection(i)) then
+                  write (fmiout, *) "(Before copying back to original Bundle)"
+                  write (fmiout, *) "Number of Dead Trajs is now: ", B1%NumDeadTraj
                end if
+
+               !if (B1%NumDeadTraj > 0) then
+
+               !   do iTraj = 1, B1%NumDeadTraj
+               !      write (fmiout, *) "IDs of dead traj ", iTraj, ": ", B1%DeadTraj(iTraj)%TrajID
+               !   end do
+
+               !   !if (B1%NumDeadTraj >= 2) then
+               !   !   call FMS_DieError("That's enough for now...")
+               !   !end if
+
+               !end if
+
+            !else
+            !   if (any(blocktrajid(:,i) /= 0)) then
+            !      write (fmiout, *) "No stochastic selection because block Bundle", i, "contains a mix of S and T"
+            !   else
+            !      write (fmiout, *) "No stochastic selection because block Bundle", i, "was merged into other block"
+            !   end if
+
             end if
 
          end do
@@ -538,9 +559,9 @@ contains
          end do
 
          write (fmiout, *) "Renormalizing..."
-         do i = 1,  BundlesMultDim
-            call FMS_Renormalize(BundlesMult(i), SaveTrajAmps(i,:), SaveNorms(i))
-         end do
+         !do i = 1,  BundlesMultDim
+         !   call FMS_Renormalize(BundlesMult(i), SaveTrajAmps(i,:), SaveNorms(i))
+         !end do
          write (fmiout, *) "----------------------------"
          write (fmiout, *) "After Renormalizing, the sep bundle norms are: "
          do i = 1, BundlesMultDim
@@ -578,19 +599,19 @@ contains
             write (fmiout, *) MergedBlockTrajID(i,:)
          end do
 
-         write (fmiout, *) "MergedSepBlockTrajID: "
-         do i = 1, B1%NumTraj + 1
-            write (fmiout, *) MergedBlockTrajID(i,:)
-         end do
+         !write (fmiout, *) "MergedSepBlockTrajID: "
+         !do i = 1, B1%NumTraj + 1
+         !   write (fmiout, *) MergedBlockTrajID(i,:)
+         !end do
 
-         if (IsSelection) then
+         if (IsSelection(i)) then
             call copy_MultBundles_to_original_bundle(B1, BundlesMult, BundlesMultDim, StoSelMode, &
-                                                     MergedBlockTrajID, MergedSepBlockTrajID)
+                                                     MergedBlockTrajID) !, MergedSepBlockTrajID)
             ! 18/05/26: Don't we need to normalise here ???!!?!?!
             write (fmiout, *) "States were copied back without error"
          end if
 
-         if (IsSelection) then
+         if (IsSelection(i)) then
             write (fmiout, *) "(After copying back to original Bundle)"
             write (fmiout, *) "Number of Dead Trajs is now: ", B1%NumDeadTraj
 
@@ -616,7 +637,8 @@ contains
          write (fmiout, *) " ----------------------------------------------------"
 
          ! Destroy the temporary block bundles
-         do i = 1, nblockMerged
+         !do i = 1, nblockMerged
+         do i = 1, BundlesMultDim
             call BundlesMult(i)%destroy()
          end do
          deallocate(SaveNorms, SaveTrajAmps, BundlesMult)
@@ -652,7 +674,7 @@ contains
 !!    This is done by renormalizing population in collapsed block to one
 !!    and then marking all other trajectories to be killed.
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   subroutine perform_stochastic_selection(B1, selectionTime, IsSelection)
+   subroutine perform_stochastic_selection(B1, selectionTime)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       type(T_TrajectoryBundle), intent(inout) :: B1
 ! Coupling matrix for TBF basis
@@ -671,8 +693,8 @@ contains
       integer(kind=DefInt) :: iblockslct
 ! AIMSWISS: Current selection time
       real(kind=DefReal), intent(in) :: selectionTime
-! sep SS: Did selection happen?
-      logical, optional, intent(inout) :: IsSelection
+!! sep SS: Did selection happen?
+!      logical, optional, intent(inout) :: IsSelection
 
       !write (fmiout, *) "Number of traj used for dimension of Coupled: ", B1%NumTraj
       !write (fmiout, *) "meaning Coupled dimension is: ", "( ", B1%NumTraj, ", ", B1%NumTraj, " )"
@@ -707,9 +729,9 @@ contains
       if (nblock == 1) return
 ! At this point, more than one uncoupled block of trajectories,
 ! so we want to stochastically collapse to one of them
-      if (present(IsSelection)) then
-         IsSelection = .true.
-      end if
+!      if (present(IsSelection)) then
+!         IsSelection = .true.
+!      end if
 
 ! . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ! Compute populations of each block
@@ -942,6 +964,7 @@ contains
 
       ntraj = B1%NumTraj
 
+      write (fmiout, *) "FMS_BuildCoupled_ESS is getting called :S"
       !write (fmiout, *) "Calculating coupling for trajs in bundle"
       !write (fmiout, *) " ----------------------------------------------------"
       !write (fmiout, *) "Are traj indices still fine here?"
@@ -978,6 +1001,8 @@ contains
 ! Overlap between TBF i and j
       complex(kind=DefComp) :: S_ij
       integer(kind=DefInt) :: ntraj, i, j
+
+      write (fmiout, *) "FMS_BuildCoupled_OSS is getting called"
 
       ntraj = B1%NumTraj
 
@@ -1268,7 +1293,9 @@ contains
       !write (fmiout, *) "This is NormInit", NormInit
       !write (fmiout, *) "This is slctBlockpop", slctBlockpop
       !write (fmiout, *) "This is slctNtrajblock", slctNtrajblock
+      !write (fmiout, *) "This is slctBlockTrajID", slctBlocktrajid
       cnorm = dcmplx(sqrt(NormInit / slctBlockpop))
+      !write (fmiout, *) "cnorm = ", cnorm
       !write (fmiout, *) "Renormalising the amplitudes (Inside perform_stochastic_selection): "
       do j = 1, slctNtrajblock
          jtraj = slctBlocktrajid(j)
@@ -1377,37 +1404,207 @@ contains
 
    end subroutine FMS_WriteSelectionLog
 
-   subroutine getMultBundles(B1, BundlesMult, BundlesMultDim, blocktrajid)
+   subroutine getMergedBlockTrajID(B1, nblock_outer, StoSelMode, ntrajblock, blocktrajid, &
+                                   MergedBlockTrajID)
+      
+      type(T_TrajectoryBundle), intent(in) :: B1
+      integer(kind=DefInt), intent(in) :: nblock_outer
+      integer(kind=DefInt), dimension(nblock_outer), intent(in) :: StoSelMode(:)
+      integer(kind=DefInt), dimension(B1%NumTraj + 1), intent(in) :: ntrajblock
+      integer(kind=DefInt), dimension(B1%NumTraj + 1, B1%NumTraj + 1), intent(in) :: blocktrajid
+      integer(kind=DefInt), dimension(B1%NumTraj + 1, 2), intent(inout) :: MergedBlockTrajID
+      integer(kind=DefInt) :: i, j, currStoSelMode, skip_positions
+
+      do i = 1, nblock_outer
+
+         !write (fmiout, *) "Entering loop for i = ", i
+         !write (fmiout, *) "Part of blocktrajid we are using: ", blocktrajid(i,:)
+         !write (fmiout, *) "General question: what is NumTrajBlock???", NumTrajBlock
+
+         if (StoSelMode(i) == 0) cycle
+
+         currStoSelMode = StoSelMode(i)
+
+         write (fmiout, *) "In outer block ", i, "with StoSelMode ", currStoSelMode
+
+         if (currStoSelMode == 1) then
+
+            skip_positions = 1
+            do while ( MergedBlockTrajID(skip_positions, 1) /= 0 )
+               write (fmiout, *) "skip_positions: ", skip_positions, "ID", MergedBlockTrajID(skip_positions, 1)
+               skip_positions = skip_positions + 1
+            end do
+            skip_positions = skip_positions - 1
+
+            do j = 1, ntrajblock(i)
+               MergedBlockTrajID(j+skip_positions, 1) = blocktrajid(j,i)
+            end do
+
+         else if (currStoSelMode == 3) then
+
+            skip_positions = 1
+            do while ( MergedBlockTrajID(skip_positions, 2) /= 0 )
+               skip_positions = skip_positions + 1
+            end do
+            skip_positions = skip_positions - 1
+
+            do j = 1, ntrajblock(i)
+               MergedBlockTrajID(j+skip_positions, 2) = blocktrajid(j,i)
+            end do
+
+         end if
+
+         !do j = i+1, nblock_outer
+         !   write (fmiout, *) "Entering loop for j = ", j
+
+         !   if (StoSelMode(j) == currStoSelMode) then
+
+         !      ! Copy over block j TrajIDs to i column of blocktrajid
+         !      ! Set the NumTrajBlock(i:j) positions in the i column to the indices in the jth column
+         !      !blocktrajid(NumTrajBlock(i)+1:NumTrajBlock(i)+NumTrajBlock(j), i) = blocktrajid(1:NumTrajBlock(j),j)
+         !      !write (fmiout, *) "Copied over ", blocktrajid(1:NumTrajBlock(j),j), " to ",&
+         !      !                  blocktrajid( sum(NumTrajBlock(1:j)) : NumTrajBlock(i) + NumTrajBlock(j), i)
+
+         !      ! Count how many positions need to be skipped
+         !      skip_positions = 0
+         !      do k = 1, i
+         !         if (StoSelMode(k) == currStoSelMode) then
+         !            skip_positions = skip_positions + ntrajblock(k)
+         !         end if
+         !      end do
+         !      !write (fmiout, *) "This many positions ", skip_positions, "need 2 be skipped in col", i
+
+         !      !prev_add_traj = 0
+         !      !write (fmiout, *) "++++++++++++++++++++"
+         !      do k = 1, ntrajblock(j)
+         !         !write (fmiout, *) "Number of trajs added to column", i, "in a previous step: ", prev_add_traj
+         !         !write (fmiout, *) "Number of trajs in previous blocks: ", NumTrajBlock(1:j-1), "in sum: ", &
+         !         !                  sum(NumTrajBlock(1:j-1))
+         !         !write (fmiout, *) "Now replace element ", skip_positions+k, "in ", &
+         !         !                   i, "th column by", blocktrajid(k,j)
+         !         blocktrajid(skip_positions+k, i) = blocktrajid(k,j)
+         !         !prev_add_traj = prev_add_traj + 1
+         !      end do
+         !      !write (fmiout, *) "++++++++++++++++++++"
+
+         !      ! Set j column to zero
+         !      blocktrajid(:,j) = 0
+
+         !      !write (fmiout, *) "Part of blocktrajid was modified to: ", blocktrajid(i,:)
+         !      !write (fmiout, *) "The ith column is now: ", blocktrajid(:,i)
+
+         !   end if
+
+         !end do
+
+      end do
+
+   end subroutine getMergedBlockTrajID
+
+   subroutine getNumCBFsBlock(B1, MergedBlockTrajID, NumTrajSepBlock, NumCBFsBlock, BlockCBFID)
+
+      ! the original bundle
+      type(T_TrajectoryBundle), intent(in) :: B1
+      ! 2D array holding the TrajIDs sorted according to StoSel blocks they belong to
+      integer(kind=DefInt), intent(in), dimension(B1%NumTraj + 1, 2) :: MergedBlockTrajID
+
+      ! Getting info on Traj, CBF indices for each StoSel block:
+      !  - Traj information
+      !    1D array holding the number of trajs per StoSel block
+      integer(kind=DefInt), intent(inout), dimension(2) :: NumTrajSepBlock
+      !  - CBF information
+      !    2D array holding the CBFIDs sorted according to StoSel blocks they belong to
+      integer(kind=DefInt), intent(inout), dimension(B1%NCBFs + 1, 2) :: BlockCBFID
+      !    1D array holding the number of trajs per StoSel block
+      integer(kind=DefInt), intent(inout), dimension(2) :: NumCBFsBlock
+      integer(kind=DefInt) :: CBFcount, CBFcurr
+      ! Iterating over StoSel blocks, trajs:
+      integer(kind=DefInt) :: iblocks, iTraj
+
+      ! Determine number of trajs and CBFs in each StoSel block
+
+      !NumTrajSepBlock = 0
+      !NumCBFsBlock = 0
+      BlockCBFID = 0
+      CBFcurr = 0
+      !CBFcount = 0
+
+      ! Count how many trajs and CBFs we have in the current block
+      !
+      ! - Construct NumTrajSepBlock: will be needed 4 allocating temp Bundle and 
+      !   knowing how many trajs 2 add to temp Bundles
+      !
+      ! - Construct BlockCBFID: equivalent of MergedBlockTrajID for CBFs, 2 keep track
+      !   of CBFs corresponding 2 trajs
+      ! - and NumCBFsBlock (will be needed 4 allocating temp Bundle and 
+      !   making sure CBF IDs in temp Bundles start from 1)
+      !
+      ! - CBFcurr, CBFcount: used to make sure that multiplets are copied
+      !   over correctly, and not separated
+
+      do iblocks = 1, 2
+
+         CBFcount = 0
+         do iTraj =1, B1%NumTraj
+
+            !write (fmiout, *) "Counting NCBFs in block ", iblocks
+            !write (fmiout, *) "The current CBF is: ", CBFcurr
+            !write (fmiout, *) "This is MergedBlockTrajID", MergedBlockTrajID
+
+            ! count traj if its ID is in the current block
+            ! (done in this way because we can not assume the TrajIDs to be
+            !  in ascending order)
+            if (any(MergedBlockTrajID(:, iblocks) == iTraj)) then
+               NumTrajSepBlock(iblocks) = NumTrajSepBlock(iblocks) + 1
+               if (B1%Trajectory(iTraj)%CBF /= CBFcurr) then
+                  CBFcurr = B1%Trajectory(iTraj)%CBF
+                  CBFcount = CBFcount + 1
+                  BlockCBFID(CBFcount, iblocks) = CBFcurr
+                  NumCBFsBlock(iblocks) = NumCBFsBlock(iblocks) + 1
+               end if
+            end if
+
+         end do
+
+         ! useful printing --> keep!
+         write (fmiout, *) "Number of Trajs and CBFs in block ", iblocks
+         write (fmiout, *) NumTrajSepBlock(iblocks), NumCBFsBlock(iblocks)
+
+      end do
+
+      !write (fmiout, *) "This is BlockCBFID :"
+      !do iblocks = 1, BundlesMultDim
+      !   write (fmiout, *) BlockCBFID(:, iblocks)
+      !end do
+
+   end subroutine getNumCBFsBlock
+
+   subroutine getMultBundles(B1, BundlesMult, iBlocks, MergedBlockTrajID, BlockCBFID, iNumTraj, iNumCBF)
 
       ! Number of separated bundles we need to create
       ! is determined based on merged blocktrajid
       ! so this number is also how many Selections we will perform
-      integer(kind=DefInt), intent(in) :: BundlesMultDim
+      !integer(kind=DefInt), intent(in) :: BundlesMultDim
       ! the original bundle
       type(T_TrajectoryBundle), intent(in) :: B1
-      ! 2D array holding the TrajIDs sorted according to StoSel blocks they belong to
-      integer(kind=DefInt), intent(in), dimension(B1%NumTraj + 1, B1%NumTraj + 1) :: blocktrajid
+      ! 1D array holding the TrajIDs sorted according to StoSel blocks they belong to
+      integer(kind=DefInt), intent(in), dimension(B1%NumTraj + 1) :: MergedBlockTrajID
+      ! 1D array holding the CBFIDs sorted according to StoSel blocks they belong to
+      integer(kind=DefInt), intent(in), dimension(B1%NCBFs + 1) :: BlockCBFID
       ! array holding the separated bundles
-      type(T_TrajectoryBundle), intent(inout) :: BundlesMult(BundlesMultDim)
+      type(T_TrajectoryBundle), intent(inout) :: BundlesMult(2)
 
-      ! Getting info on Traj, CBF, Cen indices for each StoSel block:
-      !  - Traj information
-      integer(kind=DefInt), dimension(BundlesMultDim) :: NumTrajBlock
-      integer(kind=DefInt) :: iTraj, addTraj
-      !  - CBF information
-      integer(kind=DefInt), dimension(B1%NCBFs + 1, BundlesMultDim) :: BlockCBFID
-      integer(kind=DefInt), dimension(BundlesMultDim) :: NumCBFBlock
-      integer(kind=DefInt) :: iblocks, jblocks, BlockCBFCount
-      integer(kind=DefInt) :: CBFcount, CBFcurr, CBF_i, CBF_j
-      !  - Cen information
+      integer(kind=DefInt), intent(in) :: iBlocks, iNumTraj, iNumCBF
+      integer(kind=DefInt) :: iTraj, iCBF, currTrajID, currCBFID
+      integer(kind=DefInt) :: CBFcount, CBF_i, CBF_j
       integer(kind=DefInt) :: Cen_i, Cen_j, CenCount, Cen_TrajID, CenID
       logical :: is_addCen
       ! Number of particles
       integer(kind=DefInt) :: npart
       
-      ! Renormalization of the separated Bundles:
-      real(kind=DefReal), dimension(B1%NumStates) :: OldNorms
-      real(kind=DefReal) :: DNorm0
+      !! Renormalization of the separated Bundles:
+      !real(kind=DefReal), dimension(B1%NumStates) :: OldNorms
+      !real(kind=DefReal) :: DNorm0
 
       npart = B1%Trajectory(1)%NumParticles
 
@@ -1422,96 +1619,65 @@ contains
       !write (fmiout, *) "Number CBFs S, Number CBFs T trajs:", nSingCBF, nTripCBF
       !write (fmiout, *) " ----------------------------------------------------"
 
-      ! Determine number of trajs and CBFs in each StoSel block
-      !write (fmiout, *) " ----------------------------------------------------"
-      !write (fmiout, *) "What we currently have in the B1 bundle: "
-      !do iTraj = 1, B1%NumTraj
-
-      !      write (fmiout, *) "Info for trajectory with ID ", B1%Trajectory(iTraj)%TrajID
-      !      write (fmiout, *) "Triplet?", B1%Trajectory(iTraj)%triplet
-      !      write (fmiout, *) "Ms", B1%Trajectory(iTraj)%Ms
-      !      write (fmiout, *) "CBF", B1%Trajectory(iTraj)%CBF
-
-      !end do
-
-      NumTrajBlock = 0
-      NumCBFBlock = 0
-      BlockCBFID = 0
-      CBFcurr = 0
-      CBFcount = 0
-
-      ! Count how many trajs and CBFs we have in the current block
-      ! - Construct NumTrajBlock (will be needed 4 allocating temp Bundle and 
-      !   knowing how many trajs 2 add to temp Bundles)
-      ! - Construct BlockCBFID 2 keep track of CBFs corresponding 2 trajs
-      !   and NumCBFBlock (will be needed 4 allocating temp Bundle and 
-      !   resetting CBF IDs in these temp Bundles)
-      ! - CBFcurr, CBFcount used to make sure that multiplets are copied
-      !   over correctly, and not separated
-      do iblocks = 1, bundlesmultdim
-
-         CBFcount = 0
-         !CBFcurr = 1 + CBFCount
-         do iTraj =1, B1%NumTraj
-
-            !write (fmiout, *) "Counting NCBFs in block ", iblocks
-            !write (fmiout, *) "The current CBF is: ", CBFcurr
-            !write (fmiout, *) "This is blocktrajid", blocktrajid
-
-            ! count traj if its ID is in the current block
-            if (any(blocktrajid(:, iblocks) == iTraj)) then
-               NumTrajBlock(iblocks) = NumTrajBlock(iblocks) + 1
-               if (B1%Trajectory(iTraj)%CBF /= CBFcurr) then
-                  CBFcurr = B1%Trajectory(iTraj)%CBF
-                  CBFcount = CBFcount + 1
-                  BlockCBFID(CBFcount, iblocks) = CBFcurr
-                  NumCBFBlock(iblocks) = NumCBFBlock(iblocks) + 1
-               end if
-            end if
-
-         end do
-
-         ! useful printing --> keep!
-         write (fmiout, *) "Number of Trajs and CBFs in block ", iblocks
-         write (fmiout, *) NumTrajBlock(iblocks), NumCBFBlock(iblocks)
-
-      end do
-
-      !write (fmiout, *) "This is BlockCBFID :"
+      ! (2) Create temporary bundles, separated according 2 selection mode:
+      !
+      ! - S only, or T only (as for S/T combined, no SS should happen
+      !                      no temp Bundles are created 4 this case)
       !do iblocks = 1, BundlesMultDim
-      !   write (fmiout, *) BlockCBFID(:, iblocks)
+
+      call BundlesMult(iBlocks)%create(numtraj=iNumTraj, &
+                                       numdeadtraj=0, &                 !!!!! TODO: Is it fine setting this to 0???
+                                       numstates=B1%NumStates, &        ! yes, I think it is because we are not taking
+                                       numparticles=npart, &            ! into account dead trajectories in any of
+                                       ncbfs=iNumCBF)                   ! the previous steps
+
       !end do
-
-      !Create temporary bundles, separated according 2 selection mode:
-      ! S only, or T only, (as for S/T combined, no SS should happen
-      !                     no temp Bundles are created 4 this case)
-      do iblocks = 1, BundlesMultDim
-
-         call BundlesMult(iblocks)%create(numtraj=NumTrajBlock(iblocks), &
-                                          numdeadtraj=0, &                 !!!!! TODO: Is it fine setting this to 0???
-                                          numstates=B1%NumStates, &
-                                          numparticles=npart, &
-                                          ncbfs=NumCBFBlock(iblocks))
-
-      end do
 
       ! useful printing --> keep!
       write (fmiout, *) " ----------------------------------------------------"
-      write (fmiout, *) "These are the empty, separated Bundles we created: "
-      do iblocks = 1, BundlesMultDim
-         write (fmiout, *) "Block number ", iblocks
-         write (fmiout, *) "Number trajs, Number CBFs:", BundlesMult(iblocks)%NumTraj, BundlesMult(iblocks)%NCBFs
-      end do
+      write (fmiout, *) "Block number ", iblocks
+      write (fmiout, *) "Number trajs, Number CBFs:", BundlesMult(iblocks)%NumTraj, BundlesMult(iblocks)%NCBFs
+      !do iblocks = 1, BundlesMultDim
+      !   write (fmiout, *) "Block number ", iblocks
+      !   write (fmiout, *) "Number trajs, Number CBFs:", BundlesMult(iblocks)%NumTraj, BundlesMult(iblocks)%NCBFs
+      !end do
       write (fmiout, *) " ----------------------------------------------------"
 
-      ! Copy over to the temp, separated bundles:
-      ! - matching trajs according 2 BlockTrajID column
-      ! - matching Centroids (make sure CentID matches)
+      ! (3) Copy over traj info from B1 to the temp bundles:
+      !
+      ! - Create trajs and copy over matching info from B1 according 2 MergedBlockTrajID column
+      ! - Copy over matching Centroids (i.e. Centroid for the correct two trajs in the sepB)
 
-      !write (fmiout, *) "The blocktrajid we are using for copying trajs to sep Bundles: "
-      !do iTraj = 1, B1%NumTraj + 1
-      !   write (fmiout, *) blocktrajid(iTraj,:)
-      !end do
+      write (fmiout, *) "The MergedBlockTrajID we are using for copying trajs to sep Bundles: "
+      do iTraj = 1, iNumTraj
+         write (fmiout, *) "Traj number ", iTraj, "with ID ", MergedBlockTrajID(iTraj), &
+                           "should have CBFID ", B1%Trajectory(MergedBlockTrajID(iTraj))%CBF
+      end do
+      write (fmiout, *) "The CBF indices: "
+      do iCBF = 1, iNumCBF
+         write (fmiout, *) "CBF number ", iCBF, "with ID ", BlockCBFID(iCBF)
+      end do
+
+      do iTraj = 1, iNumTraj
+
+         ! create the traj in the temp separated bundle and set it 2 corresponding traj in B1
+         currTrajID = MergedBlockTrajID(iTraj)
+         currCBFID = B1%Trajectory(currTrajID)%CBF
+
+         call BundlesMult(iBlocks)%Trajectory(currTrajID)%create(npart, B1%NumStates)
+         BundlesMult(iBlocks)%Trajectory(currTrajID) = B1%Trajectory(currTrajID)
+         BundlesMult(iBlocks)%Trajectory(currTrajID)%TrajID = B1%Trajectory(currTrajID)%TrajID ! should give the same as...
+         !BundlesMult(iblocks)%Trajectory(currTrajID)%TrajID = currTrajID                      ! this one here
+                                                                                       
+      end do
+
+      write (fmiout, *) "What we filled into sepB of block ", iBlocks
+      do iTraj = 1, iNumTraj
+
+         write (fmiout, *) "Traj Number ", iTraj, "has ID", BundlesMult(iBlocks)%Trajectory(iTraj)%TrajID
+         write (fmiout, *) "has CBF ID ", BundlesMult(iBlocks)%Trajectory(iTraj)%CBF
+
+      end do
 
       !write (fmiout, *) " ----------------------------------------------------"
       !write (fmiout, *) "Original centroids in B1"
@@ -1522,150 +1688,130 @@ contains
       !   write (fmiout, *) "And has position: ", B1%Centroids(iTraj)%Particle(1)%get_pos()
       !end do
 
-      !write (fmiout, *) " ----------------------------------------------------"
-      !write (fmiout, *) "Filling up the empty, separated bundles with Trajs from B1:"
+      !do iblocks = 1, BundlesMultDim
 
-      do iblocks = 1, BundlesMultDim
+      !   CenCount = 1
+      !   CBFcount = 1
 
-         !write (fmiout, *) "====================================================="
-         !write (fmiout, *) "Now adding trajs to sep Bundle ", iblocks
-         !write (fmiout, *) "Should start with traj of index ", blocktrajid(1,iblocks)
-         !write (fmiout, *) "====================================================="
+      !   do iTraj = 1, NumTrajSepBlock(iblocks)
 
-         CenCount = 1
-         CBFcount = 1
+      !      addTraj = MergedBlockTrajID(iTraj,iblocks)
+      !      ! iTraj --> ID traj will have in temp bundle
+      !      ! addTraj --> ID of corresponding traj in B1
 
-         do iTraj = 1, NumTrajBlock(iblocks)
+      !      write (fmiout, *) "iTraj ", iTraj
+      !      write (fmiout, *) "represents traj", addTraj
+      !      write (fmiout, *) "The BlockCBFID for current block: ", BlockCBFID(:, iblocks)
+      !      write (fmiout, *) "has actual CBF", B1%Trajectory(addTraj)%CBF, "the BlockCBFID CBF is:", BlockCBFID(CBFcount,iblocks)
 
-            addTraj = blocktrajid(iTraj,iblocks)
-            ! iTraj --> ID traj will have in temp bundle
-            ! addTraj --> ID of corresponding traj in B1
+      !      if (addTraj == 0) cycle ! dont try to add traj if there is no corresponding traj in BlockTrajID
+      !                              ! TODO: do we actually need this?
 
-            write (fmiout, *) "iTraj ", iTraj
-            write (fmiout, *) "represents traj", addTraj
-            write (fmiout, *) "The BlockCBFID for current block: ", BlockCBFID(:, iblocks)
-            write (fmiout, *) "has actual CBF", B1%Trajectory(addTraj)%CBF, "the BlockCBFID CBF is:", BlockCBFID(CBFcount,iblocks)
+      !      ! increase CBFcount if CBFcurr has changed from previous iteration
+      !      ! (BlockCBFID(CBFcount,iblocks) is the CBF of previous the iteration)
+      !      if (B1%Trajectory(addTraj)%CBF /= BlockCBFID(CBFcount,iblocks)) then
+      !         CBFcount = CBFcount + 1
+      !      end if
 
-            !if (iblocks>1) then
-            !   write (fmiout, *) "in sep Bundle, needs to have CBF", B1%Trajectory(addTraj)%CBF - NumCBFBlock(iblocks-1)
-            !else
-            !   write (fmiout, *) "in sep Bundle, needs to have CBF", B1%Trajectory(addTraj)%CBF
-            !end if
+      !      ! create the traj in the temp separated bundle and set it 2 corresponding traj in B1
+      !      call BundlesMult(iblocks)%Trajectory(iTraj)%create(npart, B1%NumStates)
+      !      BundlesMult(iblocks)%Trajectory(iTraj) = B1%Trajectory(addTraj)
+      !      BundlesMult(iblocks)%Trajectory(iTraj)%TrajID = B1%Trajectory(addTraj)%TrajID
 
-            !write (fmiout, *) "We are counting CBF (CBFcount) ", CBFcount
-            !write (fmiout, *) B1%Trajectory(iTraj)%CBF, BlockCBFID(CBFcount,iblocks)
+      !      ! check if CBF IDs need to be reset to 1 (the case if we are not in the first separated block)
+      !      ! to make sure CBF IDs also start at 1
+      !      ! TODO: change such that we always make sure CBFIDs start from one, not only when we are
+      !      !       in blocks after the first block
+      !      if (iblocks>1) then
+      !         BlockCBFCount = 0
+      !         do jblocks = 1, iblocks-1
+      !            BlockCBFCount = BlockCBFCount + NumCBFBlock(jblocks)
+      !         end do
+      !         !write (fmiout, *) "BlockCBFcount (all CBFs added to previous blocks: ", BlockCBFCount
+      !         BundlesMult(iblocks)%Trajectory(iTraj)%CBF = B1%Trajectory(addTraj)%CBF - BlockCBFCount
+      !         !write (fmiout, *) "CBF receives the number (must start at 1)", B1%Trajectory(addTraj)%CBF - BlockCBFCount
+      !      else
+      !         BundlesMult(iblocks)%Trajectory(iTraj)%CBF = B1%Trajectory(addTraj)%CBF
+      !      end if
 
-            if (addTraj == 0) cycle ! dont try to add traj if there is no corresponding traj in BlockTrajID
-                                    ! TODO: do we actually need this?
+      !      ! Next, copy over matching centroids from B1 to temp bundle
+      !      ! ---------------------------------------------------------------------------------------
+      !      ! Careful here, figuring this out has been a mess but we (we=Vera) pray that it works now
+      !      ! - do we really cover all possible CBF ID pairs, i.e. catch all centroids?
+      !      ! ---------------------------------------------------------------------------------------
+      !      !write (fmiout, *) "___________________________"
 
-            ! increase CBFcount if CBFcurr has changed from previous iteration
-            ! (BlockCBFID(CBFcount,iblocks) is the CBF of previous the iteration)
-            if (B1%Trajectory(addTraj)%CBF /= BlockCBFID(CBFcount,iblocks)) then
-               !CBFcurr = B1%Trajectory(iTraj)%CBF
-               !write (fmiout, *) "Adding one to CBFcount"
-               CBFcount = CBFcount + 1
-            end if
+      !      ! - start from the 1st CBF ID (i.e. 1st row, current column of BlockCBFID)
+      !      !   and go over all CBF IDs as CBFcount increases
+      !      CBF_i = BlockCBFID(CBFcount, iblocks)
+      !      !write (fmiout, *) "CBF_i is, CBF_j will be", CBF_i, CBF_i + 1
+      !      !write (fmiout, *) "loop limit will be:", B1%NCBFs
 
-            ! create the traj in the temp separated bundle and set it 2 corresponding traj in B1
-            ! set TrajID to iTraj to make sure indices in temp bundle start at 1
-            call BundlesMult(iblocks)%Trajectory(iTraj)%create(npart, B1%NumStates)
-            BundlesMult(iblocks)%Trajectory(iTraj) = B1%Trajectory(addTraj)
-            !BundlesMult(iblocks)%Trajectory(iTraj)%TrajID = iTraj
-            !BundlesMult(iblocks)%Trajectory(iTraj)%TrajID = addTraj
-            BundlesMult(iblocks)%Trajectory(iTraj)%TrajID = B1%Trajectory(addTraj)%TrajID
+      !      ! - loop over possible CBF ID pairs and check 4 matching CentID pair in B1
+      !      is_addCen = .false.
+      !      do CBF_j = CBF_i + 1, B1%NCBFs ! what if CBF IDs are not in ascending order, does this still work??? :S
 
-            ! check if CBF IDs need to be reset to 1 (the case if we are not in the first separated block)
-            ! to make sure CBF IDs also start at 1
-            if (iblocks>1) then
-               BlockCBFCount = 0
-               do jblocks = 1, iblocks-1
-                  BlockCBFCount = BlockCBFCount + NumCBFBlock(jblocks)
-               end do
-               !write (fmiout, *) "BlockCBFcount (all CBFs added to previous blocks: ", BlockCBFCount
-               BundlesMult(iblocks)%Trajectory(iTraj)%CBF = B1%Trajectory(addTraj)%CBF - BlockCBFCount
-               !write (fmiout, *) "CBF receives the number (must start at 1)", B1%Trajectory(addTraj)%CBF - BlockCBFCount
-            else
-               BundlesMult(iblocks)%Trajectory(iTraj)%CBF = B1%Trajectory(addTraj)%CBF
-            end if
+      !         if (CenCount > (((BundlesMult(iblocks)%NCBFs - 1) * BundlesMult(iblocks)%NCBFs) / 2) ) cycle ! dont add more Cens
+      !                                                                                                      ! if max of cens in
+      !                                                                                                      ! temp bundle is reached
 
-            ! Next, copy over matching centroids from B1 to temp bundle
-            ! ---------------------------------------------------------------------------------------
-            ! Careful here, figuring this out has been a mess but we (we=Vera) pray that it works now
-            ! - do we really cover all possible CBF ID pairs, i.e. catch all centroids?
-            ! ---------------------------------------------------------------------------------------
-            !write (fmiout, *) "___________________________"
+      !         !write (fmiout, *) "CBF_i and CBF_j", CBF_i, CBF_j
+      !         if (any(CBF_i == BlockCBFID(:,iblocks)) .and. any(CBF_j == BlockCBFID(:,iblocks)) .and. CBF_i /= CBF_j) then
 
-            ! - start from the 1st CBF ID (i.e. 1st row, current column of BlockCBFID)
-            !   and go over all CBF IDs as CBFcount increases
-            CBF_i = BlockCBFID(CBFcount, iblocks)
-            !write (fmiout, *) "CBF_i is, CBF_j will be", CBF_i, CBF_i + 1
-            !write (fmiout, *) "loop limit will be:", B1%NCBFs
+      !             !write (fmiout, *) "dream come true", CBF_j, CBF_i
+      !             !write (fmiout, *) "CenID is", CenID
 
-            ! - loop over possible CBF ID pairs and check 4 matching CentID pair in B1
-            is_addCen = .false.
-            do CBF_j = CBF_i + 1, B1%NCBFs ! what if CBF IDs are not in ascending order, does this still work??? :S
+      !             ! For this CentID pair, find out corresponding ID of Centroid in B1 (CenID)
+      !             do Cen_TrajID = 1, (((B1%NCBFs - 1) * B1%NCBFs) / 2)
 
-               if (CenCount > (((BundlesMult(iblocks)%NCBFs - 1) * BundlesMult(iblocks)%NCBFs) / 2) ) cycle ! dont add more Cens
-                                                                                                            ! if max of cens in
-                                                                                                            ! temp bundle is reached
+      !                !write(fmiout, *) "Is Cen ", Cen_TrajID, "the correct one?"
+      !                !write (fmiout, *) B1%Centroids(Cen_TrajID)%CentID
+      !                Cen_i = B1%Centroids(Cen_TrajID)%CentID(1); Cen_j = B1%Centroids(Cen_TrajID)%CentID(2)
 
-               !write (fmiout, *) "CBF_i and CBF_j", CBF_i, CBF_j
-               if (any(CBF_i == BlockCBFID(:,iblocks)) .and. any(CBF_j == BlockCBFID(:,iblocks)) .and. CBF_i /= CBF_j) then
+      !                if (CBF_i == Cen_i .and. CBF_j == Cen_j .or. CBF_j == Cen_i .and. CBF_i == Cen_j) then
+      !                   CenID = Cen_TrajID
+      !                   !write (fmiout, *) "The ID of the centroid we need is ", CenID
+      !                   is_addCen = .true.
+      !                   !cycle
+      !                end if
 
-                   !write (fmiout, *) "dream come true", CBF_j, CBF_i
-                   !write (fmiout, *) "CenID is", CenID
+      !             end do
 
-                   ! For this CentID pair, find out corresponding ID of Centroid in B1 (CenID)
-                   do Cen_TrajID = 1, (((B1%NCBFs - 1) * B1%NCBFs) / 2)
+      !             if (is_addCen .eqv. .true.) then
+      !                ! Use the corresponding ID of Centroid in B1 (CenID) to copy over matching info
+      !                BundlesMult(iblocks)%Centroids(CenCount) = B1%Centroids(CenID)
+      !                BundlesMult(iblocks)%Centroids(CenCount)%CentID = [CBF_j, CBF_i]
+      !                BundlesMult(iblocks)%Centroids(CenCount)%TrajID = CenCount
+      !                !write (fmiout, *) "We added Cen", CenID, "of B1 to block Bundle ", iblocks, "as Cen number", CenCount
 
-                      !write(fmiout, *) "Is Cen ", Cen_TrajID, "the correct one?"
-                      !write (fmiout, *) B1%Centroids(Cen_TrajID)%CentID
-                      Cen_i = B1%Centroids(Cen_TrajID)%CentID(1); Cen_j = B1%Centroids(Cen_TrajID)%CentID(2)
+      !                if (iblocks>1) then
+      !                   !BlockCBFCount = 0
+      !                   !do jblocks = 1, iblocks-1
+      !                   !   BlockCBFCount = BlockCBFCount + NumCBFBlock(jblocks)
+      !                   !end do
 
-                      if (CBF_i == Cen_i .and. CBF_j == Cen_j .or. CBF_j == Cen_i .and. CBF_i == Cen_j) then
-                         CenID = Cen_TrajID
-                         !write (fmiout, *) "The ID of the centroid we need is ", CenID
-                         is_addCen = .true.
-                         !cycle
-                      end if
+      !                   ! still in the same block, so reuse BlockCBFCount from above
 
-                   end do
+      !                   BundlesMult(iblocks)%Centroids(CenCount)%CentID = [CBF_j - BlockCBFCount, &
+      !                                                                      CBF_i - BlockCBFCount]
+      !                   !write (fmiout, *) "Cen receives the number (must start at 1)"
+      !                end if
+      !                CenCount = CenCount + 1
+      !                cycle
+      !             end if
 
-                   if (is_addCen .eqv. .true.) then
-                      ! Use the corresponding ID of Centroid in B1 (CenID) to copy over matching info
-                      BundlesMult(iblocks)%Centroids(CenCount) = B1%Centroids(CenID)
-                      BundlesMult(iblocks)%Centroids(CenCount)%CentID = [CBF_j, CBF_i]
-                      BundlesMult(iblocks)%Centroids(CenCount)%TrajID = CenCount
-                      !write (fmiout, *) "We added Cen", CenID, "of B1 to block Bundle ", iblocks, "as Cen number", CenCount
+      !         !else
+      !         !   write (fmiout, *) "Index pair is not the one needed for the CentIDs in this block"
 
-                      if (iblocks>1) then
-                         !BlockCBFCount = 0
-                         !do jblocks = 1, iblocks-1
-                         !   BlockCBFCount = BlockCBFCount + NumCBFBlock(jblocks)
-                         !end do
+      !         end if
 
-                         ! still in the same block, so reuse BlockCBFCount from above
+      !      end do
 
-                         BundlesMult(iblocks)%Centroids(CenCount)%CentID = [CBF_j - BlockCBFCount, &
-                                                                            CBF_i - BlockCBFCount]
-                         !write (fmiout, *) "Cen receives the number (must start at 1)"
-                      end if
-                      CenCount = CenCount + 1
-                      cycle
-                   end if
+      !      !write (fmiout, *) "___________________________"
 
-               !else
-               !   write (fmiout, *) "Index pair is not the one needed for the CentIDs in this block"
-
-               end if
-
-            end do
-
-            !write (fmiout, *) "___________________________"
-
-         end do
-      
-      end do
+      !   end do
+      !
+      !end do
 
       !write (fmiout, *) "Do we have Centroids after copying them?", glzCentroids
       !do iblocks = 1, BundlesMultDim
@@ -1682,27 +1828,18 @@ contains
 
       !write (fmiout, *) " ----------------------------------------------------"
 
-      write (fmiout, *) "What we filled into the separated bundle: "
-      do iblocks = 1, BundlesMultDim
-         do iTraj = 1, BundlesMult(iblocks)%NumTraj
-
-               write (fmiout, *) "Info for trajectory with ID ", BundlesMult(iblocks)%Trajectory(iTraj)%TrajID
-               write (fmiout, *) "Triplet?", BundlesMult(iblocks)%Trajectory(iTraj)%triplet
-               write (fmiout, *) "Ms", BundlesMult(iblocks)%Trajectory(iTraj)%Ms
-               write (fmiout, *) "CBF", BundlesMult(iblocks)%Trajectory(iTraj)%CBF
-
-         end do
-      end do
-      write (fmiout, *) " ----------------------------------------------------"
-
-      ! Normalise the separate bundles before SS (and keep the og norm, amplitudes?)
-
-      !DNorm0 = 1.d0
+      !write (fmiout, *) "What we filled into the separated bundle: "
       !do iblocks = 1, BundlesMultDim
-      !   call FMS_Branching(BundlesMult(iblocks), OldNorms) ! no idea yet what OldNorms should actually
-      !                                                      ! be but just to try it out
-      !   call FMS_Renormalize(BundlesMult(iblocks), OldNorms, DNorm0)
+      !   do iTraj = 1, BundlesMult(iblocks)%NumTraj
+
+      !         write (fmiout, *) "Info for trajectory with ID ", BundlesMult(iblocks)%Trajectory(iTraj)%TrajID
+      !         write (fmiout, *) "Triplet?", BundlesMult(iblocks)%Trajectory(iTraj)%triplet
+      !         write (fmiout, *) "Ms", BundlesMult(iblocks)%Trajectory(iTraj)%Ms
+      !         write (fmiout, *) "CBF", BundlesMult(iblocks)%Trajectory(iTraj)%CBF
+
+      !   end do
       !end do
+      !write (fmiout, *) " ----------------------------------------------------"
 
    end subroutine getMultBundles
 
@@ -1710,13 +1847,13 @@ contains
 ! to the original bundle. Note that we must copy over
 ! also the trajectories marked for death.
    subroutine copy_MultBundles_to_original_bundle(B1, BundlesMult, BundlesMultDim, StoSelMode, &
-                                                           MergedBlockTrajID, MergedSepBlockTrajID)
+                                                           MergedBlockTrajID) !, MergedSepBlockTrajID)
       integer(kind=DefInt), intent(in) :: BundlesMultDim
       integer(kind=DefInt), dimension(BundlesMultDim), intent(in) :: StoSelMode
       type(T_TrajectoryBundle), intent(inout) :: B1
       type(T_TrajectoryBundle), intent(in) :: BundlesMult(BundlesMultDim)
       integer(kind=DefInt), dimension(B1%NumTraj + 1, B1%NumTraj + 1), intent(in) :: &
-                                                   MergedBlockTrajID, MergedSepBlockTrajID
+                                                   MergedBlockTrajID !, MergedSepBlockTrajID
       integer(kind=DefInt) :: i, j, iTraj, B1TrajID, sepBTrajID
       integer(kind=DefInt) :: TrajCount, CBFCount, DeadCount
       integer(kind=DefInt), dimension(50) :: DeadTrajIDs
