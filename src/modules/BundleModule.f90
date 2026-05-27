@@ -1,6 +1,6 @@
 !     Copyright Todd J. Martinez and Raphael D. Levine, 1994
 !>
-!!    @brief Specification of the "Bundle" datatype and methods.
+!!    Specification of the "Bundle" datatype and methods.
 !!
 !!    The T_TrajectoryBundle datatype contains a specification of the
 !!    full nuclear/electronic wavefunction at a given instant in
@@ -47,7 +47,7 @@ module BundleModule
    end type T_BundleMatrices
 
 !>
-!!    @brief Datatype holding a collection of trajectories.
+!!    Datatype holding a collection of trajectories.
 !!
 !!    A bundle represents the full
 !!    wavefunction, represented as a linear combination of the trajectory
@@ -93,8 +93,8 @@ contains
 
 ! Constructors/Destructors/Assignment
 !>
-!|    Memory allocation for creating a trajectory bundle
-!<
+!>    Memory allocation for creating a trajectory bundle
+!>
    subroutine create_bundle(B1, NumTraj, NumDeadTraj, NumStates, NumParticles, NCBFs)
       class(T_TrajectoryBundle), intent(inout) :: B1
       integer(kind=DefInt), intent(in) :: NumTraj, NumDeadTraj, NumStates, NumParticles, NCBFs
@@ -221,12 +221,14 @@ contains
    end subroutine destroy_bundle
 
 !>
-!!    Memory allocation and book-keeping for B1=B2, where B1 and B2 are
-!!    trajectory bundle structures
+!!    Memory allocation and book-keeping for B1 = B2 assignment,
+!!    where B1 and B2 are trajectory bundles.
 !<
    subroutine assign_bundle(B1, B2)
-      type(T_TrajectoryBundle), intent(inout) :: B1 !< Copy TO B1
-      type(T_TrajectoryBundle), intent(in) :: B2 !< Copy FROM B2
+      !> Copy to B1
+      type(T_TrajectoryBundle), intent(inout) :: B1
+      !> Copy from B2
+      type(T_TrajectoryBundle), intent(in) :: B2
       integer(kind=DefInt) :: ITraj
 
       if ((B1%NumStates /= B2%NumStates) .or. (B1%NumTraj /= B2%NumTraj) .or. B1%NumDeadTraj /= B2%NumDeadTraj) then
@@ -281,8 +283,7 @@ contains
    end subroutine assign_bundle
 
 !>
-!!    @ingroup spawning
-!!    @brief Add a new trajectory to a bundle
+!!    Add a new trajectory to a bundle
 !!
 !!    Add a new trajectory to the bundle; handle memory allocation
 !!    and expansion of trajectory-basis operators.
@@ -290,8 +291,8 @@ contains
 !!    Bundle%add_traj(Trajectory)
 !<
    subroutine add_traj_to_bundle(B1, T1)
-      class(T_TrajectoryBundle), intent(inout) :: B1 !> Bundle
-      type(T_Trajectory), intent(inout) :: T1 !> Add this trajectory to the bundle
+      class(T_TrajectoryBundle), intent(inout) :: B1
+      type(T_Trajectory), intent(inout) :: T1
 
       integer(kind=DefInt) :: ITraj, NumTrajP1, iCent
       integer(kind=DefInt) :: ICBF, NumCBFP1
@@ -359,16 +360,15 @@ contains
    end subroutine add_traj_to_bundle
 
 !>
-!!    @ingroup spawning
-!!    @brief Add a new triplet trajectory to a bundle.
+!!    Add a new triplet trajectory to a bundle.
 !!
 !!    Unlike in add_traj_to_bundle, the triplet trajectory
 !!    is copied into three sublevels.
 !<
    subroutine add_traj_triplet_to_bundle(B1, T1)
-      class(T_TrajectoryBundle), intent(inout) :: B1 !> Bundle being modified
-      type(T_Trajectory), intent(inout) :: T1 !> Add this trajectory to the bundle
-      type(T_Trajectory) :: T2, T3 !> Additional sublevels
+      class(T_TrajectoryBundle), intent(inout) :: B1
+      type(T_Trajectory), intent(inout) :: T1
+      type(T_Trajectory) :: T2, T3
 
       integer(kind=DefInt) :: ITraj, NumTrajP1, iCent
       integer(kind=DefInt) :: i, j, NumCBFP1
@@ -377,7 +377,7 @@ contains
       T2 = T1
       T3 = T1
 
-      NumTrajP1 = B1%NumTraj + 3 !> Add the three sublevels of Ms=-1,0,1
+      NumTrajP1 = B1%NumTraj + 3 ! Add the three sublevels of Ms=-1,0,1
       NumCBFP1 = B1%NCBFs + 1
 
       call BTemp%create(numtraj=NumTrajP1, &

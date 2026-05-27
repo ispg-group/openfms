@@ -8,11 +8,16 @@ module RestartModule
    private
 
    public :: GetRestart, PutRestart
-   integer(kind=DefInt), public :: inIRestart, & !> Determines whether this is a restart (1 = restart, 0 = not restart)
-                                   RestartStep ! Number of steps between archived restarts
+   !> Determines whether this is a restart (1 = restart, 0 = not restart)
+   integer(kind=DefInt), public :: inIRestart
+   !> Number of steps between archived restarts
+   integer(kind=DefInt), public :: RestartStep
+   !> Number of steps between archived restarts
    integer(kind=DefReal), public :: inIRestartTraj(maxtrajlimit)
+   !> Time from which to restart in Checkpoint.txt
    real(kind=DefReal), public :: RestartTime
-   logical, public :: zRedoRestartES !> Redo the electronic structure calculation for restarted step?
+   !> Redo the electronic structure calculation for restarted step?
+   logical, public :: zRedoRestartES
 contains
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
