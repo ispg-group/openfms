@@ -27,7 +27,7 @@ program OpenFMS
    integer(kind=DefInt) :: NumTraj, l
    integer(kind=DefInt) :: numparticles, numstates
    real(kind=DefReal) :: simulationtime, dt
-   character(len=256) :: tc_port_name
+   character(len=:), allocatable :: tc_port_name
    real(8) :: RndNum
 
 !-----------------------------------------------------------------------
@@ -41,7 +41,6 @@ program OpenFMS
       FMSWorkingDir(l + 1:) = '/'
    end if
 
-   tc_port_name = ''
    call get_cmdline(tc_port_name)
    ! Start the timer
    call cpu_time(timei)
@@ -333,7 +332,7 @@ contains
       use TemplateModule, only: FMS_TemplateInit
       use TerachemModule, only: InitTerachem
       integer, intent(in) :: NumParticles, NumStates
-      character(len=*), intent(in) :: tc_port_name
+      character(len=:), allocatable, intent(inout) :: tc_port_name
 
       select case (gliModel)
       case (TEMPLATE)
@@ -443,7 +442,11 @@ contains
 
    subroutine get_cmdline(tc_port_name)
       use, intrinsic :: iso_fortran_env, only: output_unit
-      character(len=*), intent(inout) :: tc_port_name
+#ifdef TeraChem
+      use mpi, only: MPI_MAX_PORT_NAME
+      integer :: len
+#endif
+      character(len=:), allocatable, intent(out) :: tc_port_name
       character(len=256) :: arg
       integer :: i
 
@@ -461,11 +464,18 @@ contains
             call print_version(output_unit)
             stop 0
          case ('--tc-port-name')
+#ifdef TeraChem
             i = i + 1
-            call get_command_argument(i, tc_port_name)
+            call get_command_argument(i, tc_port_name, length=len)
+            if (len > MPI_MAX_PORT_NAME) then
+               call FMS_DieError('--tc-port-name argument was too long')
+            end if
             if (trim(tc_port_name) == '') then
                call FMS_DieError('Empty --tc-port-name argument. Provide port name of the TeraChem server')
             end if
+#else
+            call FMS_DieError('OpenFMS not compiled with TC interface, --tc-port-name not available')
+#endif
          case default
             call print_help()
             call FMS_DieError('Invalid command line argument "'//trim(arg)//'"')

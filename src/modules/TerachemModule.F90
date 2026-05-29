@@ -60,9 +60,7 @@ contains
       use GlobalModule, only: BohrToAng
       use ElecStrucModule
       integer(kind=DefInt), intent(in) :: NumParticles, NumStates
-
-      integer(kind=DefInt), intent(in) :: NumParticles, NumStates
-      character(len=*), intent(in) :: tc_port_name
+      character(len=:), allocatable, intent(inout) :: tc_port_name
 
       integer, parameter :: CLEN = 128
       integer(kind=DefInt) :: natoms, nqmmm
@@ -233,8 +231,8 @@ contains
                      MPI_Comm_size, MPI_COMM_CONNECT, MPI_INFO_NULL
 
       character(len=*), intent(in) :: server_name
+      character(len=:), allocatable, intent(inout) :: port_name
       integer :: nproc
-      character(len=*) :: port_name
       integer :: ierr
 
       write (*, *) 'Terachem MPI Initialization'
@@ -256,7 +254,7 @@ contains
       ! Look for server_name, get port name
       ! After 60 seconds, exit if not found
       ! -----------------------------------
-      if (trim(port_name) == '') then
+      if (.not. allocated(port_name)) then
          call lookup_port_via_nameserver(server_name, port_name)
       end if
 
@@ -808,7 +806,7 @@ contains
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    subroutine InitTerachem(NumParticles, NumStates, tc_port_name)
       integer(kind=DefInt), intent(in) :: NumParticles, NumStates
-      character(len=*) :: tc_port_name
+      character(len=:), allocatable, intent(inout) :: tc_port_name
       call FMS_DieError('ERROR: not compiled for use with TeraChem.')
    end subroutine InitTerachem
 
