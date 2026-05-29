@@ -28,7 +28,6 @@ fi
 
 # Generate random port number to avoid conflicts
 tc_server_name=tcfms_port$(( ( RANDOM % 10000 ) + 1 ))
-printf "&tc\nserver_name = '%s'\n/\n" "$tc_server_name" > tc_input
 
 # For MPICH, OpenFabrics interface works in general
 export MPIR_CVAR_CH4_NETMOD=ofi

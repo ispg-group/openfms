@@ -65,7 +65,6 @@ contains
       integer, parameter :: CLEN = 128
       integer(kind=DefInt) :: natoms, nqmmm
       real(kind=DefReal), allocatable :: atcoords(:, :)
-      character(len=:), allocatable :: server_name
       character(len=2), allocatable :: atom_types(:)
       integer(kind=DefInt) :: bufints(20)
       integer :: status(MPI_STATUS_SIZE)
@@ -83,7 +82,6 @@ contains
 
       ! Setup on first program call
       write (fmiOut, *) '    >>>> FMS / TC <<<<'
-      server_name = get_server_name()
 
       natoms = NumParticles
       nqmmm = esNMM
@@ -92,7 +90,7 @@ contains
       ! Initialization: Connect to "terachem_port", set
       ! newcomm (global), send relevant namelist variables.
       ! ---------------------------------------------------
-      call connect_to_terachem(server_name, tc_port_name)
+      call connect_to_terachem(tc_port_name)
 
       ! -------------------
       ! Send job info to TC
@@ -226,12 +224,12 @@ contains
    end function get_server_name
 
    ! Connect to the TeraChem server.
-   subroutine connect_to_terachem(server_name, port_name)
+   subroutine connect_to_terachem(port_name)
       use mpi, only: MPI_MAX_PORT_NAME, MPI_Init, &
                      MPI_Comm_size, MPI_COMM_CONNECT, MPI_INFO_NULL
 
-      character(len=*), intent(in) :: server_name
       character(len=:), allocatable, intent(inout) :: port_name
+      character(len=:), allocatable :: server_name
       integer :: nproc
       integer :: ierr
 
@@ -255,6 +253,7 @@ contains
       ! After 60 seconds, exit if not found
       ! -----------------------------------
       if (.not. allocated(port_name)) then
+         server_name = get_server_name()
          call lookup_port_via_nameserver(server_name, port_name)
       end if
 
