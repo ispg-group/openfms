@@ -87,7 +87,7 @@ build_info.F90: FORCE
 	../generate_build_info.sh $@
 
 # Always recompile build_info.F90 to keep the git revision up to date.
-build_info.o: build_info.F90 $(OBJS) $(MOD_OBJS)
+build_info.o: build_info.F90 openfms.o $(OBJS) $(MOD_OBJS)
 	$(FC) -c $(FFLAGS) -I $(MODULEDIR) -DOPENFMS_BUILD_DATE="'$(BUILD_DATE)'" $<
 
 %.o : %.F
