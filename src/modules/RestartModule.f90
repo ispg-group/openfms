@@ -715,21 +715,20 @@ contains
 
 3     format(10(1x, es15.8))
 
-      read (nf, '(A)', iostat=ierr) header
-      if (ierr /= 0) call FMS_DieError('Error reading electronic-structure restart header')
+      read (nf, '(A)') header
 
       ! Read orbitals
       call parse_matrix_header(header, '# Orbitals', rows, cols)
       call resolve_orbital_restart_dimensions(rows, cols)
       call read_matrix_from_unit(ES%OldOrbitals, nf, rows, cols, 'orbital matrix')
-      call read_next_restart_header(nf, header, 'Error reading CI vector restart header')
+      call read_next_restart_header(nf, header)
       if (rows > 0) esNBasis = rows
 
       ! Read CI vectors
       call parse_matrix_header(header, '# CI vectors', rows, cols)
       call resolve_ci_restart_dimensions(rows, cols, size(ES%PotEn))
       call read_matrix_from_unit(ES%OldCIVecs, nf, rows, cols, 'CI vector matrix')
-      call read_next_restart_header(nf, header, 'Error reading overlap matrix restart header')
+      call read_next_restart_header(nf, header)
       if (cols > 0) esLCIVec = cols
 
       call require_header(header, '# Overlap matrix')
@@ -743,18 +742,16 @@ contains
 
    end subroutine ReadElecStruc
 
-   subroutine read_next_restart_header(nf, header, error_message)
+   subroutine read_next_restart_header(nf, header)
       !!
       !! Reads the next non-empty restart header
       !!
       integer(kind=DefInt), intent(in) :: nf
       character(len=500), intent(out) :: header
-      character(len=*), intent(in) :: error_message
       integer(kind=DefInt) :: ierr
 
       do
-         read (nf, '(A)', iostat=ierr) header
-         if (ierr /= 0) call FMS_DieError(error_message)
+         read (nf, '(A)') header
          if (len_trim(header) > 0) exit
       end do
 
