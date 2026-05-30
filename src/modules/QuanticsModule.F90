@@ -29,11 +29,13 @@ module QuanticsModule
    use dbcootrans, only: ltshtrans, lddtrans ! , tshtransb
    !use op2lib, only: subvxxdo1
    !use xvlib, only: mvtxdd1, mvxxdd1
+#endif
 
    implicit none
    private
    public :: run_quantics
 
+#ifdef Quantics
    real(dop), allocatable :: qcoo(:), qcoo1(:), xgp(:)
    real(dop), allocatable :: pesdia(:, :)
    real(dop), allocatable :: derdia(:, :, :)
@@ -42,9 +44,11 @@ module QuanticsModule
    integer(long), allocatable :: point(:)
    real(dop), allocatable :: hops(:)
    integer :: gdof
+#endif
 
 contains
 
+#ifdef Quantics
    subroutine run_quantics(step, xyz0, cstate, en, gra, nadvec)
       use rddvrmod, only: ilog, ldd, basis, ldbsmall, rpbaspar
       integer, intent(in) :: step
@@ -404,11 +408,6 @@ contains
 
 !#######################################################################
 #else
-
-   implicit none
-   private
-   public :: run_quantics
-contains
 
    subroutine run_quantics(step, xyz0, cstate, en, gra, nadvec)
       integer, intent(in) :: step
