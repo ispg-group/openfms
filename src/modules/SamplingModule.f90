@@ -1339,6 +1339,7 @@ contains
       real(DefReal), parameter :: SIGMA = 0.1d0 ! size of random perturbation
       real(defReal) :: P_norm ! norm of momentum
       real(defReal) :: B1_norm
+      real(defReal) :: dspl   ! displacement in x direction of X, for tests w/ SOC model
       complex(DefComp), dimension(B1%NumTraj) :: S_if ! overlap between initial and final
 
       write (fmiout, *) "Initializing a swarm of trajectories"
@@ -1367,6 +1368,8 @@ contains
          write (fmiout, *) "dX, dP: ", dX, dP
 
          if (ntraj > 2) then
+            !dspl = 0.1
+            dspl = -0.25
             do n = 2, ntraj
                B1%Trajectory(n)%TrajID = n
                call B1%Trajectory(n)%set_pos(X + dX)
@@ -1374,6 +1377,11 @@ contains
                dX = [10.0d0, 0.d0, 0.d0]             ! used for placing two Gaussians in front of, one after
                                                      ! the crossing point
                !dX = [-0.25d0, 0.d0, 0.d0]            ! for having three Gaussians in front of crossing
+               ! ------------------------------------------------------------------------------------------
+               !dX = dX + [dspl, 0.d0, 0.d0]          ! for having many Gaussians floating around
+               !dspl = dspl + 0.1                     ! somewhere and somehow
+               !dX = dX + [dspl, 0.d0, 0.d0]          ! Used for comp with full GAIMS
+               !dspl = dspl - 0.25
             end do
          else
             call B1%Trajectory(ntraj)%set_pos(X + dX)

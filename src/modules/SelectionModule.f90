@@ -62,7 +62,6 @@ contains
 ! sepSS: array of temporary Bundles for singlet and triplet separated stochastic selection
 !        and the dimension of sep bundles array
       type(T_TrajectoryBundle), allocatable :: BundlesMult(:)
-      integer(kind=DefInt) :: BundlesMultDim
 ! --- Added 4 sep SS
 ! sepSS: needed to determine total Coupled matrix before stochastic selection is performed
 !        (same as in FMS_BuildCoupled and FMS_GroupIntoBlocks which are otherwise
@@ -74,17 +73,14 @@ contains
       integer(kind=DefInt), dimension(B1%NCBFs + 1, 2) :: BlockCBFID
       integer(kind=DefInt), dimension(2) :: NumTrajSepBlock
       integer(kind=DefInt), dimension(2) :: NumCBFsBlock
-      integer(kind=DefInt) :: nblockMerged, DeadID, NumDeadTrajCurr, NumDeadTrajSave
-      integer(kind=DefInt), dimension(50) :: SaveForceKill
       real(kind=DefReal), allocatable :: SaveNorms(:)
-      complex(kind=DefComp), allocatable :: SaveTrajAmps(:,:)
+      real(kind=DefReal) :: RNorm
+      !complex(kind=DefComp), allocatable :: SaveTrajAmps(:,:)
 ! sepSS: Shall we perform multiplet separated stochastic selection
-      integer(kind=DefInt), allocatable :: StoSelMode(:) !, NumTrajBlock(:)
-      logical :: isSing, isTrip, isSingTrip
-      !logical :: IsSelection
+      integer(kind=DefInt), allocatable :: StoSelMode(:)
       logical, dimension(2) :: IsSelection
+      integer(kind=DefInt) :: iBlocks, iTraj, i, j, NumBlockOuter
 ! --- Added 4 sep SS end ---
-      integer(kind=DefInt) :: iBlocks, iTraj, i, j, k, nblock_outer, totDeadCount
 ! AIMSWISS: Shall we perform stochastic selection
       logical :: performSelection
 ! AIMSWISS: Current selection time
@@ -176,73 +172,26 @@ contains
          !write (fmiout, *) "Get number of blocks for total Bundle (B1, unseparated)"
          blocktrajid = 0
          ntrajblock = 0
-         nblock_outer = 0
-         call FMS_GroupIntoBlocks(B1, Coupled, blocktrajid, ntrajblock, nblock_outer)
-         !write (fmiout, *) "Number of Blocks: ", nblock_outer
-         !write (fmiout, *) "-----------------------------------------------------------"
+         NumBlockOuter = 0
+         call FMS_GroupIntoBlocks(B1, Coupled, blocktrajid, ntrajblock, NumBlockOuter)
+         !write (fmiout, *) "Number of Blocks: ", NumBlockOuter
 
-         ! - merge the total coupled matrix according to
-         !   - Singlet only --> perform StoSel
-         !   - Triplet only --> perform StoSel
-         !   - Singlet and Triplet in the same block --> no StoSel on these mixed blocks
-         !isSing = .false.
-         !isTrip = .false.
-         !isSingTrip = .false.
-
-         !write (fmiout, *) "-----------------------------------------------------------"
-         !write (fmiout, *) "Deciding StoSel mode based on total Bundle"
-
-         allocate (StoSelMode(nblock_outer))
-         !allocate (NumTrajBlock(nblock_outer))
 
          ! Get isSIng, isTrip, isSingTrip for each block in the original, total Coupled matrix
-         !NumTrajBlock = 0
-         do i = 1, nblock_outer
-            isSing = .false.
-            isTrip = .false.
-            isSingTrip = .false.
-            do iTraj = 1, B1%NumTraj
-               if (any(blocktrajid(:,i) == iTraj)) then
-                  !NumTrajBlock(i) = NumTrajBlock(i) + 1
-                  if (B1%Trajectory(iTraj)%triplet) then
-                     isTrip = .true.
-                  else
-                     isSing = .true.
-                  end if
+         allocate (StoSelMode(NumBlockOuter))
+         StoSelMode = 0
+         call GroupIntoMultiplicityBlocks(B1, StoSelMode, NumBlockOuter, blocktrajid)
 
-               end if
-            end do
-            if (isTrip .eqv. .true. .and. isSing .eqv. .true.) then
-               isSingTrip = .true.
-               StoSelMode(i) = 0 ! no selection because Sing and Trip are coupled
-            else if (isSing .eqv. .true.) then
-               StoSelMode(i) = 1 ! selection for Sing
-            else if (isTrip .eqv. .true.) then
-               StoSelMode(i) = 3 ! selection for Trip
-            else
-               call FMS_DieError("No valid Selection mode could be determined")
-            end if
-
-            !write (fmiout, *) "For block ", i, "StoSel mode is: "
-            !write (fmiout, *) "isSing is ", isSing, ", isTrip is ", isTrip, ", and... isSingTrip is", isSingTrip
-            !write (fmiout, *) "This is for the trajs ", blocktrajid(:,i)
-            !write (fmiout, *) "This is the current StoSel mode: ", StoSelMode(i)
-         end do
-
-         ! Merge blocks depending on isSIng, isTrip
-         ! (No action for isSingTrip because not to be touched in StoSel
+         ! Merge blocks depending on isSing, isTrip
+         ! (No action for isSingTrip because not to be touched in StoSel)
          write (fmiout, *) "blocktrajid before merging: "
          do i = 1, B1%NumTraj + 1
             write (fmiout, *) blocktrajid(i,:)
          end do
 
-         !write (fmiout,*) "Is NumTrajBlock just the same as ntrajblock???"
-         !write (fmiout,*) "NumTrajBlock: ", NumTrajBlock
-         !write (fmiout,*) "ntrajblock: ", ntrajblock
-
          !! Set StoSelMode to zero if column of blocktrajid is fully zero
          !! i.e. if the block was copied over (the j column)
-         !do i = 1, nblock_outer
+         !do i = 1, NumBlockOuter
          !   if (all(blocktrajid(:,i) == 0)) then
          !      StoSelMode(i) = 0
          !   end if
@@ -254,7 +203,7 @@ contains
          end do
 
          MergedBlockTrajID = 0
-         call getMergedBlockTrajID(B1, nblock_outer, StoSelMode, ntrajblock, blocktrajid, &
+         call getMergedBlockTrajID(B1, NumBlockOuter, StoSelMode, ntrajblock, blocktrajid, &
                                    MergedBlockTrajID)
 
          write (fmiout, *) "MergedBlockTrajID after merging: "
@@ -263,8 +212,8 @@ contains
          end do
 
          !MergedBlockTrajID = blocktrajid
-         !nblockMerged = nblock_outer        ! TODO: For now, nblockMerged is not used, but do we need to account for change
-                                            ! in number of blocks after merging (so, nblockMerged < nblock_outer depending
+         !nblockMerged = NumBlockOuter        ! TODO: For now, nblockMerged is not used, but do we need to account for change
+                                            ! in number of blocks after merging (so, nblockMerged < NumBlockOuter depending
                                             ! on how many blocks we merged???
                                             ! This is actually done two steps later I think
 
@@ -339,7 +288,7 @@ contains
          ! Determine how many block bundles we need to create, based on merged blocktrajid:
          ! and based on whether we need to carry out SS in the merged block or not
          !BundlesMultDim = 0
-         !do i = 1, nblock_outer
+         !do i = 1, NumBlockOuter
          !   if (StoSelMode(i) /= 0) then
          !      BundlesMultDim = BundlesMultDim + 1
          !   else
@@ -349,7 +298,7 @@ contains
          !end do
 
          !nblockMerged = BundlesMultDim
-         write (fmiout, *) "nblock_outer = ", nblock_outer, "StoSelMode = ", StoSelMode
+         write (fmiout, *) "NumBlockOuter = ", NumBlockOuter, "StoSelMode = ", StoSelMode
          !write (fmiout, *) "BundlesMultDim based on merged blocktrajid: ", BundlesMultDim
          !write (fmiout, *) "nblock based on merged blocktrajid: ", nblockMerged
 
@@ -447,6 +396,8 @@ contains
                !call FMS_RenormalizeBlockAmplitudes(BundlesMult(i), SaveNorms(i), NumTrajSepBlock(i), MergedBlockTrajID(:,i))
                do j = 1, NumTrajSepBlock(i)
                   !iTraj = MergedBlockTrajID(j,i)
+                  !BundlesMult(i)%Trajectory(j)%Amplitude = BundlesMult(i)%Trajectory(j)%Amplitude &
+                  !                                             * dcmplx( 1.d0 / sqrt(SaveNorms(i)) )
                   BundlesMult(i)%Trajectory(j)%Amplitude = BundlesMult(i)%Trajectory(j)%Amplitude &
                                                                * dcmplx( 1.d0 / sqrt(SaveNorms(i)) )
                end do
@@ -467,7 +418,6 @@ contains
          write (fmiout, *) "----------------------------"
 
          ! (3) Perform SS on the separated bundles
-         NumDeadTrajCurr = 0
          !do i = 1, nblockMerged
          do i = 1, 2
 
@@ -629,10 +579,26 @@ contains
                write (fmiout, *) "NumTrajSepBlock(i)", NumTrajSepBlock(i)
                write (fmiout, *) "MergedBlockTrajID(:,i)", MergedBlockTrajID(:,i)
                !call FMS_RenormalizeBlockAmplitudes(BundlesMult(i), SaveNorms(i), NumTrajSepBlock(i), MergedBlockTrajID(:,i))
+               RNorm = FMS_Norm(BundlesMult(i))
+               write (fmiout, *) "RNorm", RNorm
                do j = 1, NumTrajSepBlock(i)
                   !iTraj = MergedBlockTrajID(j,i)
+                  !BundlesMult(i)%Trajectory(j)%Amplitude = BundlesMult(i)%Trajectory(j)%Amplitude &
+                  !                                             * dcmplx( sqrt(SaveNorms(i)) )
                   BundlesMult(i)%Trajectory(j)%Amplitude = BundlesMult(i)%Trajectory(j)%Amplitude &
-                                                               * dcmplx( sqrt(SaveNorms(i)) )
+                                                               * dcmplx( sqrt(SaveNorms(i) / RNorm ) )
+               end do
+            end if
+         end do
+         
+         write (fmiout, *) "After Renormalizing prior to copying back, the sep bundle norms are: "
+         do i = 1, 2
+            if (IsSelection(i)) then
+               write (fmiout, *) "Block ", i, "Norm: ", FMS_Norm(BundlesMult(i))
+               write (fmiout, *) "and the corresponding amplitudes are"
+               do iTraj = 1, NumTrajSepBlock(i)
+                  write (fmiout, *) "Trajectory ", iTraj, "TrajID ", BundlesMult(i)%Trajectory(iTraj)%TrajID, & 
+                                    "AMplitude: ", BundlesMult(i)%Trajectory(iTraj)%Amplitude
                end do
             end if
          end do
@@ -731,7 +697,7 @@ contains
 ! Coupling matrix for TBF basis
       integer(kind=DefInt), dimension(B1%NumTraj, B1%NumTraj) :: Coupled
 ! Number of blocks
-      integer(kind=DefInt) :: nblock, iTraj
+      integer(kind=DefInt) :: nblock
 ! Matrix containing IDs of TBFs belonging to a block.
       integer(kind=DefInt), dimension(B1%NumTraj + 1, B1%NumTraj + 1) :: blocktrajid
 ! Array containing number of TBFs belonging to a block.
@@ -1455,18 +1421,65 @@ contains
 
    end subroutine FMS_WriteSelectionLog
 
-   subroutine getMergedBlockTrajID(B1, nblock_outer, StoSelMode, ntrajblock, blocktrajid, &
+   subroutine GroupIntoMultiplicityBlocks(B1, StoSelMode, NumBlockOuter, blocktrajid)
+
+      ! - merge the total coupled matrix according to
+      !   - Singlet only --> perform StoSel
+      !   - Triplet only --> perform StoSel
+      !   - Singlet and Triplet in the same block --> no StoSel on these mixed blocks
+
+      type(T_TrajectoryBundle), intent(in) :: B1
+      integer(kind=DefInt), dimension(B1%NumTraj + 1, B1%NumTraj + 1), intent(in) :: blocktrajid
+      integer(kind=DefInt), intent(in) :: NumBlockOuter
+      integer(kind=DefInt), intent(inout), dimension(NumBlockOuter) :: StoSelMode(:)
+      integer(kind=DefInt) :: iBlocks_outer, iBlocks, iTraj
+      logical :: isSing, isTrip, isSingTrip
+
+      do iBlocks = 1, NumBlockOuter
+         isSing = .false.
+         isTrip = .false.
+         isSingTrip = .false.
+         do iTraj = 1, B1%NumTraj
+            if (any(blocktrajid(:,iBlocks) == iTraj)) then
+               if (B1%Trajectory(iTraj)%triplet) then
+                  isTrip = .true.
+               else
+                  isSing = .true.
+               end if
+
+            end if
+         end do
+         if (isTrip .eqv. .true. .and. isSing .eqv. .true.) then
+            isSingTrip = .true.
+            StoSelMode(iBlocks) = 0 ! no selection because Sing and Trip are coupled
+         else if (isSing .eqv. .true.) then
+            StoSelMode(iBlocks) = 1 ! selection for Sing
+         else if (isTrip .eqv. .true.) then
+            StoSelMode(iBlocks) = 3 ! selection for Trip
+         else
+            call FMS_DieError("No valid Selection mode could be determined")
+         end if
+
+         !write (fmiout, *) "For block ", i, "StoSel mode is: "
+         !write (fmiout, *) "isSing is ", isSing, ", isTrip is ", isTrip, ", and... isSingTrip is", isSingTrip
+         !write (fmiout, *) "This is for the trajs ", blocktrajid(:,i)
+         !write (fmiout, *) "This is the current StoSel mode: ", StoSelMode(i)
+      end do
+
+   end subroutine GroupIntoMultiplicityBlocks
+
+   subroutine getMergedBlockTrajID(B1, NumBlockOuter, StoSelMode, ntrajblock, blocktrajid, &
                                    MergedBlockTrajID)
       
       type(T_TrajectoryBundle), intent(in) :: B1
-      integer(kind=DefInt), intent(in) :: nblock_outer
-      integer(kind=DefInt), dimension(nblock_outer), intent(in) :: StoSelMode(:)
+      integer(kind=DefInt), intent(in) :: NumBlockOuter
+      integer(kind=DefInt), dimension(NumBlockOuter), intent(in) :: StoSelMode(:)
       integer(kind=DefInt), dimension(B1%NumTraj + 1), intent(in) :: ntrajblock
       integer(kind=DefInt), dimension(B1%NumTraj + 1, B1%NumTraj + 1), intent(in) :: blocktrajid
       integer(kind=DefInt), dimension(B1%NumTraj + 1, 2), intent(inout) :: MergedBlockTrajID
       integer(kind=DefInt) :: i, j, currStoSelMode, skip_positions
 
-      do i = 1, nblock_outer
+      do i = 1, NumBlockOuter
 
          !write (fmiout, *) "Entering loop for i = ", i
          !write (fmiout, *) "Part of blocktrajid we are using: ", blocktrajid(i,:)
@@ -1505,7 +1518,7 @@ contains
 
          end if
 
-         !do j = i+1, nblock_outer
+         !do j = i+1, NumBlockOuter
          !   write (fmiout, *) "Entering loop for j = ", j
 
          !   if (StoSelMode(j) == currStoSelMode) then
