@@ -97,9 +97,9 @@ contains
 !<
    subroutine create_bundle(B1, NumTraj, NumDeadTraj, NumStates, NumParticles, NCBFs)
       class(T_TrajectoryBundle), intent(inout) :: B1
-      integer(kind=DefInt), intent(in) :: NumTraj, NumDeadTraj, NumStates, NumParticles
+      integer(kind=DefInt), intent(in) :: NumTraj, NumDeadTraj, NumStates, NumParticles, NCBFs
 
-      integer(kind=DefInt) :: ITraj, iCent, ICBF, JCBF, NCBFs
+      integer(kind=DefInt) :: ITraj, iCent, ICBF, JCBF
 
       if (allocated(B1%Trajectory)) then
          if (B1%NumTraj == NumTraj .and. B1%NumDeadTraj == NumDeadTraj .and. &
@@ -168,7 +168,7 @@ contains
 !!    Memory deallocation to destroy a trajectory bundle structure
 !<
    subroutine destroy_bundle(B)
-      class(T_TrajectoryBundle) :: B
+      class(T_TrajectoryBundle), intent(inout) :: B
 
       integer(kind=DefInt) :: n
 

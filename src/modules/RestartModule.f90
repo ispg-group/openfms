@@ -278,20 +278,14 @@ contains
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   subroutine WriteBundle(B, nfile_in)
+   subroutine WriteBundle(B, nf)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ! writes the Bundle out to a flat, plain text file
 ! this is used for restarting the Trajectory
       type(T_TrajectoryBundle), intent(in) :: B
-      integer(kind=DefInt), optional :: nfile_in
-
-      integer(kind=DefInt) :: nf ! unit number to write to
+      integer(kind=DefInt), intent(in) :: nf
 
       integer(kind=DefInt) :: ntraj, ndead, npart, n, ncbfs
-
-! set which file we are writing to
-      nf = 6
-      if (present(nfile_in)) nf = nfile_in
 
 1     format(i6, 34x, a) ! integer   format with label
 2     format(f14.2, 26x, a) ! time type format with label
@@ -427,22 +421,16 @@ contains
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 !
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   subroutine WriteTraj(T1, nfile_in)
+   subroutine WriteTraj(T1, nf)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ! writes out the trajectory structure to a specefied file
       type(T_Trajectory), intent(in) :: T1
-      integer(kind=DefInt), optional :: nfile_in
+      integer(kind=DefInt), intent(in) :: nf
 
       real(kind=DefReal) :: Coupling(T1%NumStates - 1, T1%NumDimensions), ForceVector(T1%NumDimensions)
-      integer(kind=DefInt) :: nf, & ! unit number to write to
-                              nstate, i, & !
-                              npart, n, ns, ns2
+      integer(kind=DefInt) :: nstate, i, npart, n, ns, ns2
 
       logical :: ZCouplingCurrent(T1%NumStates)
-
-! set which file we are writing to
-      nf = 6
-      if (present(nfile_in)) nf = nfile_in
 
       npart = T1%NumParticles
       ns = T1%StateID
@@ -549,24 +537,18 @@ contains
    end subroutine WriteTraj
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   subroutine ReadTraj(T1, nfile_in)
+   subroutine ReadTraj(T1, nf)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-! writes out the trajectory structure to a specefied file
+! writes out the trajectory structure to a specified file
       type(T_Trajectory), intent(inout) :: T1
-      integer(kind=DefInt), optional :: nfile_in
+      integer(kind=DefInt), intent(in) :: nf
 
       real(kind=DefReal) :: Coupling(T1%NumStates - 1, T1%NumDimensions), ForceVector(T1%NumDimensions)
 
       real(kind=DefReal), allocatable :: vec(:)
-      integer(kind=DefInt) :: nf, & ! unit number to write to
-                              nstate, i, & !
-                              npart, ndim, n, ns, ns2
+      integer(kind=DefInt) :: nstate, i, npart, ndim, n, ns, ns2
 
       logical :: ZCouplingCurrent(T1%NumStates)
-
-! set which file we are reading from
-      nf = 5
-      if (present(nfile_in)) nf = nfile_in
 
       npart = T1%NumParticles
       nstate = T1%NumStates
@@ -688,13 +670,30 @@ contains
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       type(T_ElecStruc), intent(in) :: ES
       integer(kind=DefInt), intent(in) :: nf
+      integer(kind=DefInt) :: rows, cols
 
 3     format(10(1x, es15.8))
 
-      write (nf, *) '# Orbitals'
-      write (nf, 3) ES%OldOrbitals
-      write (nf, *) '# CI vectors'
-      write (nf, 3) ES%OldCIVecs
+      if (allocated(ES%OldOrbitals)) then
+         rows = size(ES%OldOrbitals, dim=1)
+         cols = size(ES%OldOrbitals, dim=2)
+         write (nf, *) '# Orbitals', rows, cols
+         write (nf, 3) ES%OldOrbitals
+      else
+         write (nf, *) '# Orbitals', 0, 0
+         write (nf, *)
+      end if
+
+      if (allocated(ES%OldCIVecs)) then
+         rows = size(ES%OldCIVecs, dim=1)
+         cols = size(ES%OldCIVecs, dim=2)
+         write (nf, *) '# CI vectors', rows, cols
+         write (nf, 3) ES%OldCIVecs
+      else
+         write (nf, *) '# CI vectors', 0, 0
+         write (nf, *)
+      end if
+
       write (nf, *) '# Overlap matrix'
       write (nf, 3) ES%OverlapMatrix
       write (nf, *) '# TC Blob'
@@ -703,19 +702,36 @@ contains
       write (nf, 3) ES%OldMSPT2C
       write (nf, *) '# Electronic Phases'
       write (nf, *) ES%ElecPhase
+
    end subroutine WriteElecStruc
 
    subroutine ReadElecStruc(ES, nf)
+
+      use ElecStrucModule, only: esNBasis, esLCIVec
       type(T_ElecStruc), intent(inout) :: ES
       integer(kind=DefInt), intent(in) :: nf
+      integer(kind=DefInt) :: ierr, rows, cols
+      character(len=500) :: header
 
 3     format(10(1x, es15.8))
 
-      read (nf, *)
-      read (nf, 3) ES%OldOrbitals
-      read (nf, *)
-      read (nf, 3) ES%OldCIVecs
-      read (nf, *)
+      read (nf, '(A)') header
+
+      ! Read orbitals
+      call parse_matrix_header(header, '# Orbitals', rows, cols)
+      call resolve_orbital_restart_dimensions(rows, cols)
+      call read_matrix_from_unit(ES%OldOrbitals, nf, rows, cols, 'orbital matrix')
+      call read_next_restart_header(nf, header)
+      if (rows > 0) esNBasis = rows
+
+      ! Read CI vectors
+      call parse_matrix_header(header, '# CI vectors', rows, cols)
+      call resolve_ci_restart_dimensions(rows, cols, size(ES%PotEn))
+      call read_matrix_from_unit(ES%OldCIVecs, nf, rows, cols, 'CI vector matrix')
+      call read_next_restart_header(nf, header)
+      if (cols > 0) esLCIVec = cols
+
+      call require_header(header, '# Overlap matrix')
       read (nf, 3) ES%OverlapMatrix
       read (nf, *)
       read (nf, 3) ES%OldBlob
@@ -723,7 +739,138 @@ contains
       read (nf, 3) ES%OldMSPT2C
       read (nf, *)
       read (nf, *) ES%ElecPhase
+
    end subroutine ReadElecStruc
+
+   subroutine read_next_restart_header(nf, header)
+      !!
+      !! Reads the next non-empty restart header
+      !!
+      integer(kind=DefInt), intent(in) :: nf
+      character(len=500), intent(out) :: header
+      integer(kind=DefInt) :: ierr
+
+      do
+         read (nf, '(A)') header
+         if (len_trim(header) > 0) exit
+      end do
+
+   end subroutine read_next_restart_header
+
+   subroutine resolve_orbital_restart_dimensions(rows, cols)
+      !!
+      !! Resolve old-orbital matrix dimensions from the restart header or from
+      !! an already-initialized backend, and check that both sources agree.
+      !!
+      use ElecStrucModule, only: esNBasis
+      integer(kind=DefInt), intent(inout) :: rows, cols
+
+      if (rows >= 0 .and. cols >= 0) then
+         if (rows == 0 .and. cols == 0) return
+         if (esNBasis > 0 .and. (rows /= esNBasis .or. cols /= esNBasis)) then
+            call FMS_DieError('Orbital matrix dimensions in restart file do not match initialized backend')
+         end if
+      else
+         if (esNBasis <= 0) then
+            call FMS_DieError('Restart orbital header must include dimensions when esNBasis is unknown')
+         end if
+         rows = esNBasis
+         cols = esNBasis
+      end if
+
+   end subroutine resolve_orbital_restart_dimensions
+
+   subroutine resolve_ci_restart_dimensions(rows, cols, num_states)
+      !!
+      !! Resolve CI vector dimensions from the restart header or from an
+      !! already-initialized backend, and check that both sources agree.
+      !!
+      use ElecStrucModule, only: esLCIVec
+      integer(kind=DefInt), intent(inout) :: rows, cols
+      integer(kind=DefInt), intent(in) :: num_states
+
+      if (rows >= 0 .and. cols >= 0) then
+         if (rows == 0 .and. cols == 0) return
+         if (rows /= num_states) then
+            call FMS_DieError('CI vector row count in restart file does not match number of states')
+         end if
+         if (esLCIVec > 0 .and. cols /= esLCIVec) then
+            call FMS_DieError('CI vector length in restart file does not match initialized backend')
+         end if
+      else
+         if (esLCIVec <= 0) then
+            call FMS_DieError('Restart CI vector header must include dimensions when esLCIVec is unknown')
+         end if
+         rows = num_states
+         cols = esLCIVec
+      end if
+
+   end subroutine resolve_ci_restart_dimensions
+
+   subroutine read_matrix_from_unit(matrix, nf, rows, cols, name)
+      !!
+      !! Reads named matrix from nf unit
+      !!
+      real(kind=DefReal), allocatable, intent(inout) :: matrix(:, :)
+      integer(kind=DefInt), intent(in) :: nf, rows, cols
+      character(len=*), intent(in) :: name
+      integer(kind=DefInt) :: ierr
+
+3     format(10(1x, es15.8))
+
+      if (rows < 0 .or. cols < 0) then
+         call FMS_DieError('Invalid dimensions for '//trim(name)//' in restart file')
+      end if
+
+      if (allocated(matrix)) deallocate (matrix)
+      if (rows > 0 .and. cols > 0) then
+         allocate (matrix(rows, cols))
+         read (nf, 3, iostat=ierr) matrix
+         if (ierr /= 0) call FMS_DieError('Error reading '//trim(name)//' from restart file')
+      end if
+
+   end subroutine read_matrix_from_unit
+
+   subroutine parse_matrix_header(header, label, rows, cols)
+      !!
+      !! Reads header with expected label (e.g., "# CI vectors") and extracts
+      !! the dimensions of the stored CI vectors according to the format
+      !! "# CI vectors [#rows] [#cols]".
+      !!
+      character(len=*), intent(in) :: header, label
+      integer(kind=DefInt), intent(out) :: rows, cols
+      integer(kind=DefInt) :: ios, start_pos
+      character(len=len(header)) :: adjusted_header
+
+      call require_header(header, label)
+
+      rows = -1
+      cols = -1
+      adjusted_header = adjustl(header)
+      start_pos = len_trim(label) + 1
+      if (len_trim(adjusted_header) >= start_pos) then
+         read (adjusted_header(start_pos:), *, iostat=ios) rows, cols
+         if (ios /= 0) then
+            rows = -1
+            cols = -1
+         end if
+      end if
+
+   end subroutine parse_matrix_header
+
+   subroutine require_header(header, label)
+      !!
+      !! Sanity check that expected header is actually == label
+      !!
+      character(len=*), intent(in) :: header, label
+
+      if (index(adjustl(header), trim(label)) /= 1) then
+
+         call FMS_DieError('Unsupported restart trajectory format: expected '''//trim(label)//'''')
+
+      end if
+
+   end subroutine require_header
 
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 !           PARTICLE
@@ -731,16 +878,10 @@ contains
 !
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   subroutine WriteParticle(P, nfile_in)
+   subroutine WriteParticle(P, nf)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       type(T_Particle), intent(in) :: P
-      integer(kind=DefInt), optional :: nfile_in
-
-      integer(kind=DefInt) :: nf ! unit number to write to
-
-! set which file we are writing to
-      nf = 6
-      if (present(nfile_in)) nf = nfile_in
+      integer(kind=DefInt), intent(in) :: nf
 
 1     format(i6, 34x, a) ! integer   format with label
 3     format(e17.10, 24x, a) ! real      format with label
@@ -751,20 +892,14 @@ contains
       write (nf, 3) P%Mass, ' / Mass'
       write (nf, 3) P%Charge, ' / Charge'
       write (nf, 3) P%AtomicNum, ' / Atomic number'
-
    end subroutine WriteParticle
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   subroutine ReadParticle(P, nfile_in)
+   subroutine ReadParticle(P, nf)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       type(T_Particle), intent(inout) :: P
-      integer(kind=DefInt), optional :: nfile_in
-
-      integer(kind=DefInt) :: nf ! unit number to write to
-
-! set which file we are writing to
-      nf = 5
-      if (present(nfile_in)) nf = nfile_in
+      !> Unit number to write to
+      integer(kind=DefInt), intent(in) :: nf
 
       read (nf, *) P%ParticleID
       read (nf, *) P%Elmnt
@@ -772,7 +907,6 @@ contains
       read (nf, *) P%Mass
       read (nf, *) P%Charge
       read (nf, *) P%AtomicNum
-
    end subroutine ReadParticle
 
 end module RestartModule

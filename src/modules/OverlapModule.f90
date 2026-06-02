@@ -79,7 +79,7 @@ contains
 ! right acting
       real(kind=DefReal), intent(in) :: x_i, p_i, alpha_i, &
                                         x_j, p_j, alpha_j
-      logical, optional :: prefactor ! pre calculated overlap
+      logical, intent(in), optional :: prefactor ! pre calculated overlap
       complex(kind=DefComp) :: dp_S_ij
 
       real(kind=DefReal) :: delta_x, delta_p
@@ -110,7 +110,7 @@ contains
 ! the expection of d/dx between two complex gaussians
       real(kind=DefReal), intent(in) :: x_i, p_i, alpha_i, &
                                         x_j, p_j, alpha_j
-      logical, optional :: prefactor
+      logical, intent(in), optional :: prefactor
       complex(kind=DefComp) :: dx_S_ij
 
       real(kind=DefReal) :: P_ij, delta_x
@@ -141,7 +141,7 @@ contains
 ! the expectation of the d^2/dx^2  between two complex gaussians
       real(kind=DefReal), intent(in) :: x_i, p_i, alpha_i, &
                                         x_j, p_j, alpha_j
-      logical, optional :: prefactor ! pre calculated overlap
+      logical, intent(in), optional :: prefactor ! pre calculated overlap
       complex(kind=DefComp) :: d2x_S_ij
       real(kind=DefReal) :: P_ij, delta_x
 
@@ -208,7 +208,7 @@ contains
 ! this calculates the expectation of the derivative operator for a particle
 ! returns a ndim vector
       type(T_Particle), intent(in) :: P1, P2
-      logical, optional :: prefactor
+      logical, intent(in), optional :: prefactor
       complex(kind=DefComp) :: dx_S_ij(P1%NumDimensions)
 
       integer(kind=DefInt) :: ndim_1, ndim_2, n
@@ -253,7 +253,7 @@ contains
 ! calculates the expectation of d/dp.  Needed for calculating Sdot
 ! if prefactor is true the overlap part of the expression is not calculated
       type(T_Particle), intent(in) :: P1, P2
-      logical, optional :: prefactor
+      logical, intent(in), optional :: prefactor
       complex(kind=DefComp) :: dp_S_ij(P1%NumDimensions)
 
       integer(kind=DefInt) :: ndim_1, ndim_2, n
@@ -298,7 +298,7 @@ contains
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ! calculates the Del^2 operator between two particles
       type(T_Particle), intent(in) :: P1, P2
-      logical, optional :: prefactor
+      logical, intent(in), optional :: prefactor
       complex(kind=DefComp) :: d2x_S_ij
 
       integer(kind=DefInt) :: ndim_1, ndim_2, i
@@ -346,7 +346,7 @@ contains
    function overlap_trajectory(T1, T2, same_state) result(S)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       type(T_Trajectory), intent(in) :: T1, T2
-      logical, optional :: same_state
+      logical, intent(in), optional :: same_state
       complex(kind=DefComp) :: S
       real(kind=DefReal) :: time_tmp1, time_tmp2
       integer :: n
@@ -383,7 +383,7 @@ contains
    function overlap_dp_trajectory(T1, T2, S_ij_precalc) result(dp_S_ij)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       type(T_Trajectory), intent(in) :: T1, T2
-      complex(kind=DefComp), optional :: S_ij_precalc
+      complex(kind=DefComp), intent(in), optional :: S_ij_precalc
       complex(kind=DefComp) :: dp_S_ij(T1%NumDimensions)
 
       complex(kind=DefComp) :: dp_S_ij_tmp(T1%Particle(1)%NumDimensions, &
@@ -415,7 +415,7 @@ contains
    function overlap_dx_trajectory(T1, T2, S_ij_precalc) result(dx_S_ij)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       type(T_Trajectory), intent(in) :: T1, T2
-      complex(kind=DefComp), optional :: S_ij_precalc
+      complex(kind=DefComp), intent(in), optional :: S_ij_precalc
       complex(kind=DefComp) :: dx_S_ij(T1%NumDimensions)
 
       complex(kind=DefComp) :: dx_S_ij_tmp(T1%Particle(1)%NumDimensions, &
@@ -449,7 +449,7 @@ contains
 ! this appears in the equations of motion on the off diagonal coupling
 ! different states together theough the NACME
       type(T_Trajectory), intent(in) :: T1, T2
-      complex(kind=DefComp), optional :: S_ij_precalc
+      complex(kind=DefComp), intent(in), optional :: S_ij_precalc
       complex(kind=DefComp) :: dx_M_S_ij(T1%NumDimensions)
 
       complex(kind=DefComp) :: dx_M_S_ij_tmp(T1%Particle(1)%NumDimensions, &
@@ -577,7 +577,7 @@ contains
 
       type(T_Trajectory), intent(in) :: T_i
       type(T_Trajectory), intent(in), optional :: T_j, T_c
-      complex(kind=DefComp), optional :: S_ij_precalc
+      complex(kind=DefComp), intent(in), optional :: S_ij_precalc
       complex(kind=DefComp) :: V
 ! enumerated type for cases
       integer :: mode
@@ -865,7 +865,7 @@ contains
    function overlap_KE_trajectory(T1, T2, S_ij_precalc) result(KE)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       type(T_Trajectory), intent(in) :: T1, T2
-      complex(kind=DefComp), optional :: S_ij_precalc
+      complex(kind=DefComp), intent(in), optional :: S_ij_precalc
       complex(kind=DefComp) :: KE
 
       complex(kind=DefComp) :: S_ij
@@ -898,8 +898,8 @@ contains
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    function overlap_S_dot_trajectory(T1, T2, S_ij_precalc) result(S_dot)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      type(T_Trajectory) :: T1, T2
-      complex(kind=DefComp), optional :: S_ij_precalc
+      type(T_Trajectory), intent(in) :: T1, T2
+      complex(kind=DefComp), intent(in), optional :: S_ij_precalc
       complex(kind=DefComp) :: S_dot
 
       complex(kind=DefComp) :: S_ij
@@ -970,13 +970,14 @@ contains
    function nuc_dip_particlexf(P1, P2, charge) result(S_ij)
 ! Calculates the overlap between two particles
       type(T_Particle), intent(in) :: P1, P2
+      real(kind=DefReal), intent(in) :: charge
       complex(kind=DefComp) :: S_ij(P1%NumDimensions), Rterm
 
       integer(kind=DefInt) :: i
 
       real(kind=DefReal) :: x_1, p_1, a_1, &
                             x_2, p_2, a_2, &
-                            delta_x, delta_p, x_cent, charge
+                            delta_x, delta_p, x_cent
 
       if (P1%NumDimensions /= 3) then
          call FMS_DieError('nuc_dip_particlexf only implemented for 3D systems')

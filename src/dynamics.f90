@@ -64,6 +64,7 @@
             else
                write (fmiOut, 2131) Bundle%CurrentTime, TimeStep, Bundle%NumTraj
             end if
+            flush (fmiOut)
 
 !     Propagate bundle through 1 timestep
             call PropagateBundle(Bundle, Timestep)
@@ -129,6 +130,7 @@
             ! save Bundle
             call PutRestart(Bundle)
             call FMS_CheckStop(Bundle)
+            flush (fmiOut)
 
             ! end of MD loop
          end do

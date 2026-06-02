@@ -28,7 +28,7 @@ contains
    ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    subroutine FMS_WriteFBranching(B1)
       ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      type(T_TrajectoryBundle) :: B1
+      type(T_TrajectoryBundle), intent(in) :: B1
       integer(kind=DefInt) :: nstate, i
       real(kind=DefReal) :: Prob(B1%NumStates)
 
@@ -57,6 +57,7 @@ contains
       call FMS_Branching(B1, Prob)
 
       write (IUnit, '(1x,f11.2,50(1x,f11.9))') B1%CurrentTime, (Prob(i), i=1, nstate), FMS_Norm(B1)
+      flush (IUnit)
 
    end subroutine FMS_WriteFBranching
 
@@ -67,7 +68,7 @@ contains
    ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    subroutine FMS_WriteFEnergy(B1)
       ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      type(T_TrajectoryBundle) :: B1
+      type(T_TrajectoryBundle), intent(in) :: B1
 
       real(kind=DefReal) :: PotQM, KinQM, PotCl, KinCl
 
@@ -306,11 +307,12 @@ contains
       ! - - - - - - - -
       use SpawnModule, only: spawn_couple
       type(T_Trajectory), intent(in) :: T1, T2
+      integer(DefInt), intent(in) :: js
       character(len=*), intent(in) :: filename
-      logical, optional :: firsttime
+      logical, intent(in), optional :: firsttime
       logical :: file_exists, open_new_file
 
-      integer :: IUnit, js
+      integer :: IUnit
       character(len=256) :: file_name
 
       ! 1. get the file name and unit number
@@ -346,8 +348,9 @@ contains
 !!    NOTE: Currently not used anywhere
 !<
    subroutine FMS_ReadFBundle(B1, IUnitH, iUnitS, iUnitSDot)
-      type(T_TrajectoryBundle) :: B1
-      integer(kind=DefInt) :: IUnitH, iUnitS, iUnitSDot, iTraj
+      type(T_TrajectoryBundle), intent(inout) :: B1
+      integer(kind=DefInt), intent(in) :: IUnitH, iUnitS, iUnitSDot
+      integer(kind=DefInt) :: iTraj
       real(kind=DefReal) :: TimeTemp
 
 !     Read in bundle matrices
@@ -398,7 +401,7 @@ contains
    subroutine FMS_Output(B1, FirstTime)
       use SMDModule, only: SMD_Print
       type(t_trajectoryBundle), intent(in) :: B1
-      logical, optional :: FirstTime
+      logical, optional, intent(in) :: FirstTime
 
       integer(kind=DefInt) :: ITraj, JTraj, CBFi, CBFj
       integer(kind=DefInt), save :: NPreviousTraj, nPrintStep

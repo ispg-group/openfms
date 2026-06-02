@@ -330,9 +330,10 @@ contains
 ! result is true if the conditions to spawn to state is are satisfied for the
 ! trajectory passed in
       type(T_Trajectory), intent(inout) :: T1 ! Trajectory coupling calculated => T1 changes
-      integer(kind=DefInt) :: is !
-      integer(kind=DefInt) :: ispawn
-      logical :: spwn, COUP_FIELD, COUP_CI
+      integer(kind=DefInt), intent(in) :: is
+      integer(kind=DefInt), intent(in) :: ispawn
+      logical, intent(in) :: COUP_FIELD, COUP_CI
+      logical :: spwn
 
       spwn = .true.
 
@@ -441,13 +442,11 @@ contains
    end function spawn_couple
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-! -
    subroutine propagate_cont_spawn(parent_i, cs, TimeStep, &
                                    parent_s, parent_f, &
                                    child_s, child_f, success, &
                                    COUP_FIELD, COUP_CI)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-! -
       type(T_Trajectory), intent(inout) :: parent_i
       integer(kind=DefInt), intent(in) :: cs
       real(kind=DefReal), intent(in) :: TimeStep
@@ -455,9 +454,10 @@ contains
       type(T_Trajectory), intent(inout) :: parent_s, parent_f, &
                                            child_s, child_f
 
-      type(T_Trajectory) :: child_a ! attempt at a spawn
+      logical, intent(out) :: success
+      logical, intent(in) :: COUP_FIELD, COUP_CI
 
-      logical :: success
+      type(T_Trajectory) :: child_a ! attempt at a spawn
 
       complex(kind=DefComp) :: S
       real(kind=DefReal) :: coup_max, coup, curr_time, &
@@ -467,7 +467,6 @@ contains
                               ps
 
       logical :: child_adjusted, child_created
-      logical :: COUP_FIELD, COUP_CI
       character :: created_this_step
 
       success = .false.
@@ -566,9 +565,10 @@ contains
       type(T_Trajectory), intent(inout) :: parent_s, parent_f, &
                                            child_s, child_f
 
-      type(T_Trajectory) :: child_a ! attempt at a spawn
+      logical, intent(out) :: success
+      logical, intent(in) :: COUP_FIELD, COUP_CI
 
-      logical :: success
+      type(T_Trajectory) :: child_a ! attempt at a spawn
 
       complex(kind=DefComp) :: S
       real(kind=DefReal) :: coup_max, coup, curr_time, &
@@ -578,7 +578,6 @@ contains
                               ps
 
       logical :: child_adjusted, child_created
-      logical :: COUP_FIELD, COUP_CI
       character :: created_this_step
 
       success = .false.
@@ -803,10 +802,10 @@ contains
 
       integer(kind=DefInt) :: is, js
       real(kind=DefReal) :: nacme(child%NumDimensions)
-      logical :: success
+      logical, intent(out) :: success
+      logical, intent(in) :: COUP_FIELD, COUP_CI
 
-      logical :: adjust_nacme, &
-                 adjust_mom, COUP_FIELD, COUP_CI
+      logical :: adjust_nacme, adjust_mom
 
       is = parent%StateID
       js = child%StateID
@@ -869,12 +868,12 @@ contains
 !<
       type(T_Trajectory), intent(inout) :: child
       type(T_Trajectory), intent(in) :: parent
-      logical, optional :: success
-      real(kind=DefReal), optional :: scale_in(child%NumDimensions)
+      logical, intent(inout), optional :: success
+      real(kind=DefReal), intent(in), optional :: scale_in(child%NumDimensions)
 
       logical :: split_momentum ! if true, a component of the momentum
       ! is scaled
-      logical :: COUP_FIELD, COUP_CI
+      logical, intent(in) :: COUP_FIELD, COUP_CI
 
       real(kind=DefReal), dimension(child%NumDimensions) :: &
          P, & ! momentum
@@ -1027,8 +1026,8 @@ contains
    subroutine write_spawn_log(parent_i, parent_s, parent_f, &
                               child_i, child_s, l_spawn, l_overlap)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      type(T_Trajectory) :: parent_i, child_i, parent_f, &
-                            parent_s, child_s
+      type(T_Trajectory), intent(in) :: parent_i, child_i, parent_f, &
+                                        parent_s, child_s
       logical, intent(in) :: l_spawn, l_overlap
 
       character(len=256) :: file_name, spawn_sum ! for the spawn XYZ file
@@ -1200,8 +1199,9 @@ contains
 ! We probably don't need both!
    function FMS_AdjustEnergy(TChild, TParent, ScaleVector) result(Success)
       use TrajectoryCalcsModule, only: Kinetic, Potential
-      type(T_Trajectory) :: TChild, TParent
-      real(kind=DefReal), optional :: ScaleVector(TChild%NumDimensions)
+      type(T_Trajectory), intent(inout) :: TChild
+      type(T_Trajectory), intent(in) :: TParent
+      real(kind=DefReal), intent(in), optional :: ScaleVector(TChild%NumDimensions)
       logical :: Success
 
       real(kind=DefReal), allocatable :: Scaling(:), PPar(:), PPerp(:)
