@@ -328,13 +328,122 @@ contains
          write (fmiout, *) "Number Singlet CBFs", NumCBFsBlock(1), "Number Triplet CBFs", NumCBFsBlock(2)
 
          allocate (BundlesMult(2))
+         allocate (SaveNorms(2))
+
+         write (fmiout, *) "-----------------------------------------------------------"
+         write (fmiout, *) "The B1 norm is: "
+         write (fmiout, *) "Norm: ", FMS_Norm(B1)
+         write (fmiout, *) "and the corresponding amplitudes are"
+         do iTraj = 1, B1%NumTraj
+            write (fmiout, *) "Trajectory ", iTraj, "TrajID ", B1%Trajectory(iTraj)%TrajID, &
+                              "AMplitude: ", B1%Trajectory(iTraj)%Amplitude
+         end do
 
          do iBlocks = 1, 2
             if (IsSelection(iBlocks)) then
                write (fmiout, *) "Creating separated Bundle for block ", iBlocks, &
                                  "with StoSelMode ", StoSelMode(iBlocks)
+
+               ! Create BundlesMultDim many temp bundles and fill them up
+               ! with corresponding trajs from B1
                call getMultBundles(B1, BundlesMult, iBlocks, MergedBlockTrajID(:, iBlocks), BlockCBFID(:,iBlocks), &
                                    NumTrajSepBlock(iBlocks), NumCBFsBlock(iBlocks))
+
+
+               ! Set the norm of each temporary bundle to one (for SS)
+               ! ---> by just normalizing
+               ! and remember actual norm within total bundle (for continuing propagation after SS)
+               ! ---> SaveNorms
+               write (fmiout, *) "What's the norm of the newly created bundle?"
+               write (fmiout, *) "Block ", iBlocks, "Norm: ", FMS_Norm(BundlesMult(iBlocks))
+               SaveNorms(iBlocks) = FMS_Norm(BundlesMult(iBlocks))
+
+               write (fmiout, *) "Did we copy over to SaveNorms correctly?", SaveNorms(iBlocks)
+
+               write (fmiout, *) "----------------------------"
+               write (fmiout, *) "Normalizing..."
+
+               write (fmiout, *) "SaveNorms(iBlocks)", SaveNorms(iBlocks)
+               write (fmiout, *) "NumTrajSepBlock(iBlocks)", NumTrajSepBlock(iBlocks)
+               write (fmiout, *) "MergedBlockTrajID(:,iBlocks)", MergedBlockTrajID(:,iBlocks)
+               do j = 1, NumTrajSepBlock(iBlocks)
+                  BundlesMult(iBlocks)%Trajectory(j)%Amplitude = BundlesMult(iBlocks)%Trajectory(j)%Amplitude &
+                                                               * dcmplx( 1.d0 / sqrt(SaveNorms(iBlocks)) )
+               end do
+
+               write (fmiout, *) "After Normalizing prior to SS, the sep bundle norms are: "
+               write (fmiout, *) "Block ", iBlocks, "Norm: ", FMS_Norm(BundlesMult(iBlocks))
+               write (fmiout, *) "and the corresponding amplitudes are"
+               do iTraj = 1, NumTrajSepBlock(iBlocks)
+                  write (fmiout, *) "Trajectory ", iTraj, "TrajID ", BundlesMult(iBlocks)%Trajectory(iTraj)%TrajID, & 
+                                    "AMplitude: ", BundlesMult(iBlocks)%Trajectory(iTraj)%Amplitude
+               end do
+               write (fmiout, *) "----------------------------"
+
+               ! (3) Perform SS on the separated bundles
+
+               write (fmiout, *) "Performing stochastic selection for block Bundle", iBlocks, &
+                                 "with", BundlesMult(iBlocks)%NCBFs, "CBFs"
+
+               call perform_stochastic_selection(BundlesMult(iBlocks), selectionTime)
+
+               ! Set the norm of each temporary bundle back to SaveNorms
+               ! and renormalize adjusting traj amplitudes
+               write (fmiout, *) "----------------------------"
+               write (fmiout, *) "After Selection, the sep bundle norms are: "
+
+               write (fmiout, *) "Block ", iBlocks, "Norm: ", FMS_Norm(BundlesMult(iBlocks))
+               write (fmiout, *) "and the corresponding amplitudes are"
+               do iTraj = 1, NumTrajSepBlock(iBlocks)
+                  write (fmiout, *) "Trajectory ", iTraj, "TrajID ", BundlesMult(iBlocks)%Trajectory(iTraj)%TrajID, & 
+                                    "AMplitude: ", BundlesMult(iBlocks)%Trajectory(iTraj)%Amplitude
+               end do
+               
+               write (fmiout, *) "----------------------------"
+               write (fmiout, *) "Renormalizing..."
+
+               write (fmiout, *) "SaveNorms(iBlocks)", SaveNorms(iBlocks)
+               write (fmiout, *) "NumTrajSepBlock(iBlocks)", NumTrajSepBlock(iBlocks)
+               write (fmiout, *) "MergedBlockTrajID(:,iBlocks)", MergedBlockTrajID(:,iBlocks)
+
+               RNorm = FMS_Norm(BundlesMult(iBlocks))
+               write (fmiout, *) "RNorm", RNorm
+               do j = 1, NumTrajSepBlock(iBlocks)
+                  BundlesMult(iBlocks)%Trajectory(j)%Amplitude = BundlesMult(iBlocks)%Trajectory(j)%Amplitude &
+                                                               * dcmplx( sqrt(SaveNorms(iBlocks) / RNorm ) )
+               end do
+
+               write (fmiout, *) "After Renormalizing prior to copying back, the sep bundle norms are: "
+
+               write (fmiout, *) "Block ", iBlocks, "Norm: ", FMS_Norm(BundlesMult(iBlocks))
+               write (fmiout, *) "and the corresponding amplitudes are"
+               do iTraj = 1, NumTrajSepBlock(iBlocks)
+                  write (fmiout, *) "Trajectory ", iTraj, "TrajID ", BundlesMult(iBlocks)%Trajectory(iTraj)%TrajID, & 
+                                    "AMplitude: ", BundlesMult(iBlocks)%Trajectory(iTraj)%Amplitude
+               end do
+               write (fmiout, *) "----------------------------"
+
+               call copy_MultBundles_to_original_bundle(B1, BundlesMult(iBlocks), iBlocks, NumTrajSepBlock(iBlocks), &
+                                                        MergedBlockTrajID(:,iBlocks)) !, MergedSepBlockTrajID)
+               write (fmiout, *) "States were copied back without error"
+
+               write (fmiout, *) "(After copying back to original Bundle)"
+               write (fmiout, *) "Number of Dead Trajs is now: ", B1%NumDeadTraj
+
+               write (fmiout, *) "After copy_MultBundles_to_original_Bundle, the B1 norm is: "
+               write (fmiout, *) "Norm: ", FMS_Norm(B1)
+               write (fmiout, *) "and the corresponding amplitudes are"
+               do iTraj = 1, B1%NumTraj
+                  write (fmiout, *) "Trajectory ", iTraj, "has ID", B1%Trajectory(iTraj)%TrajID, "and AMplitude: ", &
+                                    B1%Trajectory(iTraj)%Amplitude
+               end do
+
+               write (fmiout, *) "-----------------------------------------------------------"
+
+               ! Destroy the temporary block bundle
+               call BundlesMult(iBlocks)%destroy()
+
+
             else if (iBlocks == 1) then
                write (fmiout, *) "No separated Bundle created for the singlet block &
                                   because no more than one CBF."
@@ -343,6 +452,36 @@ contains
                                   because no more than one CBF."
             end if
          end do
+
+         deallocate(SaveNorms, BundlesMult, StoSelMode)
+
+         write (fmiout, *) " ----------------------------------------------------"
+         write (fmiout, *) "Check that Centroids of B1 remain unaffected"
+         write (fmiout, *) "Part 2: B1 Centroids after"
+         do iTraj = 1, (((B1%NCBFs - 1) * B1%NCBFs) / 2)
+            write (fmiout, *) "Centroid number", iTraj
+            write (fmiout, *) "Is centroid to trajectories", B1%Centroids(iTraj)%CentID
+            write (fmiout, *) "And has position: ", B1%Centroids(iTraj)%Particle(1)%get_pos()
+         end do
+         write (fmiout, *) " ----------------------------------------------------"
+
+         write (fmiout, *) " ----------------------------------------------------"
+         write (fmiout, *) "Check that TrajIDs of B1 remain unaffected"
+         write (fmiout, *) "(At the end of StochasticCollapse)"
+         do iTraj = 1, B1%NumTraj
+            write (fmiout, *) "Traj number", iTraj, "has TrajID", B1%Trajectory(iTraj)%TrajID
+         end do
+         write (fmiout, *) " ----------------------------------------------------"
+
+         write (fmiout, *) " ----------------------------------------------------"
+         write (fmiout, *) "These trajs are in B1 (very end of FMS_StochasticCollapse)"
+         do i = 1, B1%NumTraj
+            write (fmiout, *) "TrajID: ", B1%Trajectory(i)%TrajID, "CBF: ", B1%Trajectory(i)%CBF
+            write (fmiout, *) "Ms: ", B1%Trajectory(i)%Ms
+            write (fmiout, *) "Amp: ", B1%Trajectory(i)%Amplitude
+         end do
+         write (fmiout, *) " ----------------------------------------------------"
+
 
          ! Create BundlesMultDim many temp bundles and fill them up
          ! with corresponding trajs from B1
@@ -354,175 +493,175 @@ contains
          ! and remember actual norm within total bundle (for continuing propagation after SS)
          ! ---> SaveNorms
 
-         allocate (SaveNorms(2))
-         !allocate (SaveTrajAmps(B1%NumTraj + 1, 2))
-         write (fmiout, *) "What's the norm of the newly created bundles?"
-         do i = 1, 2
-            if (IsSelection(i)) then
-               write (fmiout, *) "Block ", i, "Norm: ", FMS_Norm(BundlesMult(i))
-               SaveNorms(i) = FMS_Norm(BundlesMult(i))
-               !call FMS_Branching(BundlesMult(i), SaveTrajAmps(i,:))
-            end if
-         end do
-         write (fmiout, *) "Did we copy over to SaveNorms correctly?", SaveNorms
+         !allocate (SaveNorms(2))
+         !!allocate (SaveTrajAmps(B1%NumTraj + 1, 2))
+         !write (fmiout, *) "What's the norm of the newly created bundles?"
+         !do i = 1, 2
+         !   if (IsSelection(i)) then
+         !      write (fmiout, *) "Block ", i, "Norm: ", FMS_Norm(BundlesMult(i))
+         !      SaveNorms(i) = FMS_Norm(BundlesMult(i))
+         !      !call FMS_Branching(BundlesMult(i), SaveTrajAmps(i,:))
+         !   end if
+         !end do
+         !write (fmiout, *) "Did we copy over to SaveNorms correctly?", SaveNorms
 
-         do i = 1, 2
-            if (IsSelection(i)) then
-               do iTraj = 1, NumTrajSepBlock(i)
-                  write(fmiout, *) "Amplitude of traj", BundlesMult(i)%Trajectory(iTraj)%TrajID , &
-                                   BundlesMult(i)%Trajectory(iTraj)%Amplitude
-                  !SaveTrajAmps(iTraj, i) = BundlesMult(i)%Trajectory(iTraj)%Amplitude
-               end do
-            end if
-         end do
+         !do i = 1, 2
+         !   if (IsSelection(i)) then
+         !      do iTraj = 1, NumTrajSepBlock(i)
+         !         write(fmiout, *) "Amplitude of traj", BundlesMult(i)%Trajectory(iTraj)%TrajID , &
+         !                          BundlesMult(i)%Trajectory(iTraj)%Amplitude
+         !         !SaveTrajAmps(iTraj, i) = BundlesMult(i)%Trajectory(iTraj)%Amplitude
+         !      end do
+         !   end if
+         !end do
 
-         write (fmiout, *) "-----------------------------------------------------------"
-         write (fmiout, *) "The B1 norm is: "
-         write (fmiout, *) "Norm: ", FMS_Norm(B1)
-         write (fmiout, *) "and the corresponding amplitudes are"
-         do iTraj = 1, B1%NumTraj
-            write (fmiout, *) "Trajectory ", iTraj, "TrajID ", B1%Trajectory(iTraj)%TrajID, &
-                              "AMplitude: ", B1%Trajectory(iTraj)%Amplitude
-         end do
+         !write (fmiout, *) "-----------------------------------------------------------"
+         !write (fmiout, *) "The B1 norm is: "
+         !write (fmiout, *) "Norm: ", FMS_Norm(B1)
+         !write (fmiout, *) "and the corresponding amplitudes are"
+         !do iTraj = 1, B1%NumTraj
+         !   write (fmiout, *) "Trajectory ", iTraj, "TrajID ", B1%Trajectory(iTraj)%TrajID, &
+         !                     "AMplitude: ", B1%Trajectory(iTraj)%Amplitude
+         !end do
 
-         write (fmiout, *) "----------------------------"
-         write (fmiout, *) "Normalizing..."
+         !write (fmiout, *) "----------------------------"
+         !write (fmiout, *) "Normalizing..."
 
-         do i = 1, 2
-            if (IsSelection(i)) then
-               write (fmiout, *) "SaveNorms(i)", SaveNorms(i)
-               write (fmiout, *) "NumTrajSepBlock(i)", NumTrajSepBlock(i)
-               write (fmiout, *) "MergedBlockTrajID(:,i)", MergedBlockTrajID(:,i)
-               !call FMS_RenormalizeBlockAmplitudes(BundlesMult(i), SaveNorms(i), NumTrajSepBlock(i), MergedBlockTrajID(:,i))
-               do j = 1, NumTrajSepBlock(i)
-                  !iTraj = MergedBlockTrajID(j,i)
-                  !BundlesMult(i)%Trajectory(j)%Amplitude = BundlesMult(i)%Trajectory(j)%Amplitude &
-                  !                                             * dcmplx( 1.d0 / sqrt(SaveNorms(i)) )
-                  BundlesMult(i)%Trajectory(j)%Amplitude = BundlesMult(i)%Trajectory(j)%Amplitude &
-                                                               * dcmplx( 1.d0 / sqrt(SaveNorms(i)) )
-               end do
-            end if
-         end do
+         !do i = 1, 2
+         !   if (IsSelection(i)) then
+         !      write (fmiout, *) "SaveNorms(i)", SaveNorms(i)
+         !      write (fmiout, *) "NumTrajSepBlock(i)", NumTrajSepBlock(i)
+         !      write (fmiout, *) "MergedBlockTrajID(:,i)", MergedBlockTrajID(:,i)
+         !      !call FMS_RenormalizeBlockAmplitudes(BundlesMult(i), SaveNorms(i), NumTrajSepBlock(i), MergedBlockTrajID(:,i))
+         !      do j = 1, NumTrajSepBlock(i)
+         !         !iTraj = MergedBlockTrajID(j,i)
+         !         !BundlesMult(i)%Trajectory(j)%Amplitude = BundlesMult(i)%Trajectory(j)%Amplitude &
+         !         !                                             * dcmplx( 1.d0 / sqrt(SaveNorms(i)) )
+         !         BundlesMult(i)%Trajectory(j)%Amplitude = BundlesMult(i)%Trajectory(j)%Amplitude &
+         !                                                      * dcmplx( 1.d0 / sqrt(SaveNorms(i)) )
+         !      end do
+         !   end if
+         !end do
          
-         write (fmiout, *) "After Normalizing prior to SS, the sep bundle norms are: "
-         do i = 1, 2
-            if (IsSelection(i)) then
-               write (fmiout, *) "Block ", i, "Norm: ", FMS_Norm(BundlesMult(i))
-               write (fmiout, *) "and the corresponding amplitudes are"
-               do iTraj = 1, NumTrajSepBlock(i)
-                  write (fmiout, *) "Trajectory ", iTraj, "TrajID ", BundlesMult(i)%Trajectory(iTraj)%TrajID, & 
-                                    "AMplitude: ", BundlesMult(i)%Trajectory(iTraj)%Amplitude
-               end do
-            end if
-         end do
-         write (fmiout, *) "----------------------------"
+         !write (fmiout, *) "After Normalizing prior to SS, the sep bundle norms are: "
+         !do i = 1, 2
+         !   if (IsSelection(i)) then
+         !      write (fmiout, *) "Block ", i, "Norm: ", FMS_Norm(BundlesMult(i))
+         !      write (fmiout, *) "and the corresponding amplitudes are"
+         !      do iTraj = 1, NumTrajSepBlock(i)
+         !         write (fmiout, *) "Trajectory ", iTraj, "TrajID ", BundlesMult(i)%Trajectory(iTraj)%TrajID, & 
+         !                           "AMplitude: ", BundlesMult(i)%Trajectory(iTraj)%Amplitude
+         !      end do
+         !   end if
+         !end do
+         !write (fmiout, *) "----------------------------"
 
          ! (3) Perform SS on the separated bundles
          !do i = 1, nblockMerged
-         do i = 1, 2
+         !do i = 1, 2
 
-            if (IsSelection(i) .eqv. .true.) then
+         !   if (IsSelection(i) .eqv. .true.) then
 
-               !write (fmiout, *) "StoSelMode for block ", i, "is ", StoSelMode(i)
-               ! Do the stochastic selection
-               write (fmiout, *) "Performing stochastic selection for block Bundle", i, &
-                                 "with", BundlesMult(i)%NCBFs, "CBFs"
+         !      !write (fmiout, *) "StoSelMode for block ", i, "is ", StoSelMode(i)
+         !      ! Do the stochastic selection
+         !      write (fmiout, *) "Performing stochastic selection for block Bundle", i, &
+         !                        "with", BundlesMult(i)%NCBFs, "CBFs"
 
-               !call perform_stochastic_selection(BundlesMult(i), selectionTime, IsSelection)
-               call perform_stochastic_selection(BundlesMult(i), selectionTime)
+         !      !call perform_stochastic_selection(BundlesMult(i), selectionTime, IsSelection)
+         !      call perform_stochastic_selection(BundlesMult(i), selectionTime)
 
-               ! Adjust gliForceKill only if selection actually happened
-               if (IsSelection(i)) then
+         !      ! Adjust gliForceKill only if selection actually happened
+         !      if (IsSelection(i)) then
 
-                  write (fmiout, *) "Number of dead trajs: ", B1%NumDeadTraj
-                  do j = 1, B1%NumDeadTraj
-                     write (fmiout, *) "TrajID of dead traj", j, ": ", B1%DeadTraj(j)%TrajID
-                  end do
+         !         write (fmiout, *) "Number of dead trajs: ", B1%NumDeadTraj
+         !         do j = 1, B1%NumDeadTraj
+         !            write (fmiout, *) "TrajID of dead traj", j, ": ", B1%DeadTraj(j)%TrajID
+         !         end do
 
-               end if
+         !      end if
 
-               ! Adjust gliForceKill only if selection actually happened
-               !if (i>1 .and. IsSelection) then
-               !   !write (fmiout, *) "Adjusting gliForceKill using MergedSepBlockTrajID (this is the full matrix): "
-               !   !do j = 1, B1%NumTraj + 1
-               !   !   write (fmiout, *) MergedSepBlockTrajID(j,:)
-               !   !end do
+         !      ! Adjust gliForceKill only if selection actually happened
+         !      !if (i>1 .and. IsSelection) then
+         !      !   !write (fmiout, *) "Adjusting gliForceKill using MergedSepBlockTrajID (this is the full matrix): "
+         !      !   !do j = 1, B1%NumTraj + 1
+         !      !   !   write (fmiout, *) MergedSepBlockTrajID(j,:)
+         !      !   !end do
 
-               !   !write (fmiout, *) "and MergedBlockTrajID (this is the full matrix): "
-               !   !do j = 1, B1%NumTraj + 1
-               !   !   write (fmiout, *) MergedBlockTrajID(j,:)
-               !   !end do
+         !      !   !write (fmiout, *) "and MergedBlockTrajID (this is the full matrix): "
+         !      !   !do j = 1, B1%NumTraj + 1
+         !      !   !   write (fmiout, *) MergedBlockTrajID(j,:)
+         !      !   !end do
 
-               !   write (fmiout, *) "gliForcKill for block Bundle", i
-               !   write (fmiout, *) gliForceKill
-               !   !write (fmiout, *) "adjusting to B1 indiced..."
+         !      !   write (fmiout, *) "gliForcKill for block Bundle", i
+         !      !   write (fmiout, *) gliForceKill
+         !      !   !write (fmiout, *) "adjusting to B1 indiced..."
 
-               !   SaveForceKill = gliForceKill
+         !      !   SaveForceKill = gliForceKill
 
-               !   do iTraj = 1, B1%NumTraj + 1                       ! Why did I ever start this one from 2??
-               !      do j = 1, B1%NumTraj + 1
-               !         if (MergedSepBlockTrajID(iTraj,j) == 0) cycle
-               !         do DeadID = 1, size(SaveForceKill)
-               !            !write (fmiout, *) "many numbers (?)", SaveForceKill(DeadID)
-               !            if (MergedSepBlockTrajID(iTraj,j) == SaveForceKill(DeadID)) then
-               !               write (fmiout, *) "Match for gliForceKill: ", SaveForceKill(DeadID)
-               !               write (fmiout, *) "with MergedSepblock: ", MergedSepBlockTrajID(iTraj,j)
-               !               write (fmiout, *) "i and j are: ", iTraj, j
-               !               write (fmiout, *) "Corresponding MergedBlock: ", MergedBlockTrajID(iTraj,j)
-               !               gliForceKill(DeadID) = MergedBlockTrajID(iTraj,j)
-               !            end if
-               !         end do
-               !      end do
-               !   end do
+         !      !   do iTraj = 1, B1%NumTraj + 1                       ! Why did I ever start this one from 2??
+         !      !      do j = 1, B1%NumTraj + 1
+         !      !         if (MergedSepBlockTrajID(iTraj,j) == 0) cycle
+         !      !         do DeadID = 1, size(SaveForceKill)
+         !      !            !write (fmiout, *) "many numbers (?)", SaveForceKill(DeadID)
+         !      !            if (MergedSepBlockTrajID(iTraj,j) == SaveForceKill(DeadID)) then
+         !      !               write (fmiout, *) "Match for gliForceKill: ", SaveForceKill(DeadID)
+         !      !               write (fmiout, *) "with MergedSepblock: ", MergedSepBlockTrajID(iTraj,j)
+         !      !               write (fmiout, *) "i and j are: ", iTraj, j
+         !      !               write (fmiout, *) "Corresponding MergedBlock: ", MergedBlockTrajID(iTraj,j)
+         !      !               gliForceKill(DeadID) = MergedBlockTrajID(iTraj,j)
+         !      !            end if
+         !      !         end do
+         !      !      end do
+         !      !   end do
 
-               !   write (fmiout, *) "Adjusted gliForcKill for block Bundle", i, "and obtained"
-               !   write (fmiout, *) gliForceKill
-               !end if
+         !      !   write (fmiout, *) "Adjusted gliForcKill for block Bundle", i, "and obtained"
+         !      !   write (fmiout, *) gliForceKill
+         !      !end if
 
-               if (IsSelection(i)) then
-                  write (fmiout, *) "(Before copying back to original Bundle)"
-                  write (fmiout, *) "Number of Dead Trajs is now: ", B1%NumDeadTraj
-               end if
+         !      if (IsSelection(i)) then
+         !         write (fmiout, *) "(Before copying back to original Bundle)"
+         !         write (fmiout, *) "Number of Dead Trajs is now: ", B1%NumDeadTraj
+         !      end if
 
-               !if (B1%NumDeadTraj > 0) then
+         !      !if (B1%NumDeadTraj > 0) then
 
-               !   do iTraj = 1, B1%NumDeadTraj
-               !      write (fmiout, *) "IDs of dead traj ", iTraj, ": ", B1%DeadTraj(iTraj)%TrajID
-               !   end do
+         !      !   do iTraj = 1, B1%NumDeadTraj
+         !      !      write (fmiout, *) "IDs of dead traj ", iTraj, ": ", B1%DeadTraj(iTraj)%TrajID
+         !      !   end do
 
-               !   !if (B1%NumDeadTraj >= 2) then
-               !   !   call FMS_DieError("That's enough for now...")
-               !   !end if
+         !      !   !if (B1%NumDeadTraj >= 2) then
+         !      !   !   call FMS_DieError("That's enough for now...")
+         !      !   !end if
 
-               !end if
+         !      !end if
 
-            !else
-            !   if (any(blocktrajid(:,i) /= 0)) then
-            !      write (fmiout, *) "No stochastic selection because block Bundle", i, "contains a mix of S and T"
-            !   else
-            !      write (fmiout, *) "No stochastic selection because block Bundle", i, "was merged into other block"
-            !   end if
+         !   !else
+         !   !   if (any(blocktrajid(:,i) /= 0)) then
+         !   !      write (fmiout, *) "No stochastic selection because block Bundle", i, "contains a mix of S and T"
+         !   !   else
+         !   !      write (fmiout, *) "No stochastic selection because block Bundle", i, "was merged into other block"
+         !   !   end if
 
-            end if
+         !   end if
 
-         end do
+         !end do
 
 
          ! Set the norm of each temporary bundle back to SaveNorms
          ! and renormalize adjusting traj amplitudes
          ! ---> call FMS_Renormalize
-         write (fmiout, *) "----------------------------"
-         write (fmiout, *) "After Selection, the sep bundle norms are: "
-         do i = 1, 2
-            if (IsSelection(i)) then
-               write (fmiout, *) "Block ", i, "Norm: ", FMS_Norm(BundlesMult(i))
-               write (fmiout, *) "and the corresponding amplitudes are"
-               do iTraj = 1, NumTrajSepBlock(i)
-                  write (fmiout, *) "Trajectory ", iTraj, "TrajID ", BundlesMult(i)%Trajectory(iTraj)%TrajID, & 
-                                    "AMplitude: ", BundlesMult(i)%Trajectory(iTraj)%Amplitude
-               end do
-            end if
-         end do
+         !write (fmiout, *) "----------------------------"
+         !write (fmiout, *) "After Selection, the sep bundle norms are: "
+         !do i = 1, 2
+         !   if (IsSelection(i)) then
+         !      write (fmiout, *) "Block ", i, "Norm: ", FMS_Norm(BundlesMult(i))
+         !      write (fmiout, *) "and the corresponding amplitudes are"
+         !      do iTraj = 1, NumTrajSepBlock(i)
+         !         write (fmiout, *) "Trajectory ", iTraj, "TrajID ", BundlesMult(i)%Trajectory(iTraj)%TrajID, & 
+         !                           "AMplitude: ", BundlesMult(i)%Trajectory(iTraj)%Amplitude
+         !      end do
+         !   end if
+         !end do
 
          !write (fmiout, *) "Renormalizing..."
          !do i = 1,  BundlesMultDim
@@ -570,101 +709,101 @@ contains
          !   write (fmiout, *) MergedBlockTrajID(i,:)
          !end do
 
-         write (fmiout, *) "----------------------------"
-         write (fmiout, *) "Renormalizing..."
+         !write (fmiout, *) "----------------------------"
+         !write (fmiout, *) "Renormalizing..."
 
-         do i = 1, 2
-            if (IsSelection(i)) then
-               write (fmiout, *) "SaveNorms(i)", SaveNorms(i)
-               write (fmiout, *) "NumTrajSepBlock(i)", NumTrajSepBlock(i)
-               write (fmiout, *) "MergedBlockTrajID(:,i)", MergedBlockTrajID(:,i)
-               !call FMS_RenormalizeBlockAmplitudes(BundlesMult(i), SaveNorms(i), NumTrajSepBlock(i), MergedBlockTrajID(:,i))
-               RNorm = FMS_Norm(BundlesMult(i))
-               write (fmiout, *) "RNorm", RNorm
-               do j = 1, NumTrajSepBlock(i)
-                  !iTraj = MergedBlockTrajID(j,i)
-                  !BundlesMult(i)%Trajectory(j)%Amplitude = BundlesMult(i)%Trajectory(j)%Amplitude &
-                  !                                             * dcmplx( sqrt(SaveNorms(i)) )
-                  BundlesMult(i)%Trajectory(j)%Amplitude = BundlesMult(i)%Trajectory(j)%Amplitude &
-                                                               * dcmplx( sqrt(SaveNorms(i) / RNorm ) )
-               end do
-            end if
-         end do
+         !do i = 1, 2
+         !   if (IsSelection(i)) then
+         !      write (fmiout, *) "SaveNorms(i)", SaveNorms(i)
+         !      write (fmiout, *) "NumTrajSepBlock(i)", NumTrajSepBlock(i)
+         !      write (fmiout, *) "MergedBlockTrajID(:,i)", MergedBlockTrajID(:,i)
+         !      !call FMS_RenormalizeBlockAmplitudes(BundlesMult(i), SaveNorms(i), NumTrajSepBlock(i), MergedBlockTrajID(:,i))
+         !      RNorm = FMS_Norm(BundlesMult(i))
+         !      write (fmiout, *) "RNorm", RNorm
+         !      do j = 1, NumTrajSepBlock(i)
+         !         !iTraj = MergedBlockTrajID(j,i)
+         !         !BundlesMult(i)%Trajectory(j)%Amplitude = BundlesMult(i)%Trajectory(j)%Amplitude &
+         !         !                                             * dcmplx( sqrt(SaveNorms(i)) )
+         !         BundlesMult(i)%Trajectory(j)%Amplitude = BundlesMult(i)%Trajectory(j)%Amplitude &
+         !                                                      * dcmplx( sqrt(SaveNorms(i) / RNorm ) )
+         !      end do
+         !   end if
+         !end do
          
-         write (fmiout, *) "After Renormalizing prior to copying back, the sep bundle norms are: "
-         do i = 1, 2
-            if (IsSelection(i)) then
-               write (fmiout, *) "Block ", i, "Norm: ", FMS_Norm(BundlesMult(i))
-               write (fmiout, *) "and the corresponding amplitudes are"
-               do iTraj = 1, NumTrajSepBlock(i)
-                  write (fmiout, *) "Trajectory ", iTraj, "TrajID ", BundlesMult(i)%Trajectory(iTraj)%TrajID, & 
-                                    "AMplitude: ", BundlesMult(i)%Trajectory(iTraj)%Amplitude
-               end do
-            end if
-         end do
-         write (fmiout, *) "----------------------------"
+         !write (fmiout, *) "After Renormalizing prior to copying back, the sep bundle norms are: "
+         !do i = 1, 2
+         !   if (IsSelection(i)) then
+         !      write (fmiout, *) "Block ", i, "Norm: ", FMS_Norm(BundlesMult(i))
+         !      write (fmiout, *) "and the corresponding amplitudes are"
+         !      do iTraj = 1, NumTrajSepBlock(i)
+         !         write (fmiout, *) "Trajectory ", iTraj, "TrajID ", BundlesMult(i)%Trajectory(iTraj)%TrajID, & 
+         !                           "AMplitude: ", BundlesMult(i)%Trajectory(iTraj)%Amplitude
+         !      end do
+         !   end if
+         !end do
+         !write (fmiout, *) "----------------------------"
 
-         do iBlocks = 1, 2
-            if (IsSelection(iBlocks)) then
-               call copy_MultBundles_to_original_bundle(B1, BundlesMult(iBlocks), iBlocks, NumTrajSepBlock(iBlocks), &
-                                                        MergedBlockTrajID(:,iBlocks)) !, MergedSepBlockTrajID)
-               ! 18/05/26: Don't we need to normalise here ???!!?!?!
-               write (fmiout, *) "States were copied back without error"
-            end if
-         end do
+         !do iBlocks = 1, 2
+         !   if (IsSelection(iBlocks)) then
+         !      call copy_MultBundles_to_original_bundle(B1, BundlesMult(iBlocks), iBlocks, NumTrajSepBlock(iBlocks), &
+         !                                               MergedBlockTrajID(:,iBlocks)) !, MergedSepBlockTrajID)
+         !      ! 18/05/26: Don't we need to normalise here ???!!?!?!
+         !      write (fmiout, *) "States were copied back without error"
+         !   end if
+         !end do
 
-         do iBlocks = 1, 2
-            if (IsSelection(iBlocks)) then
-               write (fmiout, *) "(After copying back to original Bundle)"
-               write (fmiout, *) "Number of Dead Trajs is now: ", B1%NumDeadTraj
+         !do iBlocks = 1, 2
+         !   if (IsSelection(iBlocks)) then
+         !      write (fmiout, *) "(After copying back to original Bundle)"
+         !      write (fmiout, *) "Number of Dead Trajs is now: ", B1%NumDeadTraj
 
-               write (fmiout, *) "After copy_MultBundles_to_original_Bundle, the B1 norm is: "
-               write (fmiout, *) "Norm: ", FMS_Norm(B1)
-               write (fmiout, *) "and the corresponding amplitudes are"
-               do iTraj = 1, B1%NumTraj
-                  write (fmiout, *) "Trajectory ", iTraj, "has ID", B1%Trajectory(iTraj)%TrajID, "and AMplitude: ", &
-                                    B1%Trajectory(iTraj)%Amplitude
-               end do
-            end if
-         end do
+         !      write (fmiout, *) "After copy_MultBundles_to_original_Bundle, the B1 norm is: "
+         !      write (fmiout, *) "Norm: ", FMS_Norm(B1)
+         !      write (fmiout, *) "and the corresponding amplitudes are"
+         !      do iTraj = 1, B1%NumTraj
+         !         write (fmiout, *) "Trajectory ", iTraj, "has ID", B1%Trajectory(iTraj)%TrajID, "and AMplitude: ", &
+         !                           B1%Trajectory(iTraj)%Amplitude
+         !      end do
+         !   end if
+         !end do
 
-         write (fmiout, *) "-----------------------------------------------------------"
+         !write (fmiout, *) "-----------------------------------------------------------"
          
          ! Destroy the temporary block bundles
          !do i = 1, nblockMerged
-         do iBlocks = 1, 2
-            if (IsSelection(iBlocks)) then
-               call BundlesMult(iBlocks)%destroy()
-            end if
-         end do
-         deallocate(SaveNorms, BundlesMult, StoSelMode)
+         !do iBlocks = 1, 2
+         !   if (IsSelection(iBlocks)) then
+         !      call BundlesMult(iBlocks)%destroy()
+         !   end if
+         !end do
+         !deallocate(SaveNorms, BundlesMult, StoSelMode)
 
-         write (fmiout, *) " ----------------------------------------------------"
-         write (fmiout, *) "Check that Centroids of B1 remain unaffected"
-         write (fmiout, *) "Part 2: B1 Centroids after"
-         do iTraj = 1, (((B1%NCBFs - 1) * B1%NCBFs) / 2)
-            write (fmiout, *) "Centroid number", iTraj
-            write (fmiout, *) "Is centroid to trajectories", B1%Centroids(iTraj)%CentID
-            write (fmiout, *) "And has position: ", B1%Centroids(iTraj)%Particle(1)%get_pos()
-         end do
-         write (fmiout, *) " ----------------------------------------------------"
+         !write (fmiout, *) " ----------------------------------------------------"
+         !write (fmiout, *) "Check that Centroids of B1 remain unaffected"
+         !write (fmiout, *) "Part 2: B1 Centroids after"
+         !do iTraj = 1, (((B1%NCBFs - 1) * B1%NCBFs) / 2)
+         !   write (fmiout, *) "Centroid number", iTraj
+         !   write (fmiout, *) "Is centroid to trajectories", B1%Centroids(iTraj)%CentID
+         !   write (fmiout, *) "And has position: ", B1%Centroids(iTraj)%Particle(1)%get_pos()
+         !end do
+         !write (fmiout, *) " ----------------------------------------------------"
 
-         write (fmiout, *) " ----------------------------------------------------"
-         write (fmiout, *) "Check that TrajIDs of B1 remain unaffected"
-         write (fmiout, *) "(At the end of StochasticCollapse)"
-         do iTraj = 1, B1%NumTraj
-            write (fmiout, *) "Traj number", iTraj, "has TrajID", B1%Trajectory(iTraj)%TrajID
-         end do
-         write (fmiout, *) " ----------------------------------------------------"
+         !write (fmiout, *) " ----------------------------------------------------"
+         !write (fmiout, *) "Check that TrajIDs of B1 remain unaffected"
+         !write (fmiout, *) "(At the end of StochasticCollapse)"
+         !do iTraj = 1, B1%NumTraj
+         !   write (fmiout, *) "Traj number", iTraj, "has TrajID", B1%Trajectory(iTraj)%TrajID
+         !end do
+         !write (fmiout, *) " ----------------------------------------------------"
 
-         write (fmiout, *) " ----------------------------------------------------"
-         write (fmiout, *) "These trajs are in B1 (very end of FMS_StochasticCollapse)"
-         do i = 1, B1%NumTraj
-            write (fmiout, *) "TrajID: ", B1%Trajectory(i)%TrajID, "CBF: ", B1%Trajectory(i)%CBF
-            write (fmiout, *) "Ms: ", B1%Trajectory(i)%Ms
-            write (fmiout, *) "Amp: ", B1%Trajectory(i)%Amplitude
-         end do
-         write (fmiout, *) " ----------------------------------------------------"
+         !write (fmiout, *) " ----------------------------------------------------"
+         !write (fmiout, *) "These trajs are in B1 (very end of FMS_StochasticCollapse)"
+         !do i = 1, B1%NumTraj
+         !   write (fmiout, *) "TrajID: ", B1%Trajectory(i)%TrajID, "CBF: ", B1%Trajectory(i)%CBF
+         !   write (fmiout, *) "Ms: ", B1%Trajectory(i)%Ms
+         !   write (fmiout, *) "Amp: ", B1%Trajectory(i)%Amplitude
+         !end do
+         !write (fmiout, *) " ----------------------------------------------------"
 
          !call FMS_DieError("Now, please go back and reconsider your life choices!")
 
