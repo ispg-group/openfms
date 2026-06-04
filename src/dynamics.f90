@@ -31,7 +31,7 @@
          real(kind=DefReal), intent(in) :: GoalTime, Timestep
 
          integer(kind=DefInt), parameter :: RecursionMax = 4
-         integer(kind=DefInt) :: iTraj
+         !integer(kind=DefInt) :: iTraj
          real(kind=DefReal) :: RedoGoalTime, RedoTimeStep
 
          logical, save :: FirstTime = .true.
