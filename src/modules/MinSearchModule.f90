@@ -10,13 +10,12 @@
 module MinSearchModule
    use GlobalModule
    use TrajectoryModule
-   use TrajectoryCalcsModule
+   use TrajectoryCalcsModule, only: FMS_MMForces, FMS_MMPot, FMS_PotentialT, FMS_Forces
    use TrajectoryIOModule, only: FMS_WriteFXYZ
    use QM_MM_Module, only: qczPCharge, qczQMMM, qcNumQM
    implicit none
    private
    public :: FMS_Minimizer
-   save
 
    ! enumerate tyoe for the minimization
    integer(DefInt), public :: mnMinType
@@ -55,7 +54,7 @@ contains
    ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    function FMS_MSfunc(P) result(pot)
       ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      use RattleModule
+      use RattleModule, only: nconstraint, cn_type_list, constraint
       use TrajectoryModule
       real(kind=DefReal) :: P(:)
       real(kind=DefReal) :: pot
@@ -91,7 +90,7 @@ contains
    subroutine FMS_MSdfunc(P, grad)
       ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       use TrajectoryModule
-      use RattleModule
+      use RattleModule, only: nconstraint, d_constraint, cn_type_list, constraint
       real(DefReal), intent(in) :: P(:)
       real(DefReal), intent(out) :: grad(size(P))
 
@@ -140,7 +139,9 @@ contains
       !<
       use TrajectoryModule
       use ElecStrucModule, only: eszPartialCharges
-      use RattleModule
+      use RattleModule, only: nconstraint, all_position_constrained, &
+                              Rattle_ReadConstraints, Rattle_SetConstraints, &
+                              cn_atom_list, cn_type_list
       use QM_MM_Module
       integer(kind=DefInt) :: iter, FMS_Minimizer
       real(kind=DefReal) :: toler
@@ -215,7 +216,7 @@ contains
 
          mniStartPtcle = qcNumQM
          mnNumPartSearch = qcNumMM
-         ctype = "Fx"
+         ctype = 'Fx'
          qczPCharge = .true.
 
       case default
@@ -333,13 +334,11 @@ contains
       real(kind=DefReal) :: p(:), fret
       character(len=64) :: comment
       logical :: MErr
-      integer(kind=DefInt) :: jPtcle, its
-      integer(kind=DefInt) :: iPtcle, iState, iOrb, jOrb
+      integer(kind=DefInt) :: iPtcle, jPtcle, its
       real(kind=DefReal), allocatable, save :: DimArray(:, :), ForceVec(:)
       real(kind=DefReal), allocatable, save :: PotEn(:), d(:)
       real(kind=Defreal), allocatable, save :: Orbitals(:, :), CIVec(:, :)
       real(kind=DefReal) :: rms
-      character(len=256) :: cTemp
 
       integer(kind=DefInt), save :: LastPSize = 0
 
@@ -383,87 +382,6 @@ contains
       do iPtcle = 1, mnT1%NumParticles
          DimArray(iPtcle, 1:3) = mnT1%Particle(iPtcle)%get_pos()
       end do
-
-      ! Maybe we want to print out something more, e.g. energy, force.
-      ! Informations below can be saved & printed out in RestartModule format.
-      ! However, for now we skip this part.
-      return
-!
-!     For QM calculations only
-!
-      if (mnMinType == Min_QM .or. mnMinType == Min_Both) then
-!     Write forces
-         ForceVec = FMS_Forces(mnT1)
-         do iPtcle = 1, mnT1%NumParticles
-            DimArray(iPtcle, 1:3) = ForceVec(3 * iPtcle - 2:3 * iPtcle)
-         end do
-
-!     Write couplings
-         do iState = 1, mnT1%NumStates
-            if (iState == mnT1%StateID) cycle
-            ForceVec = FMS_Coupling(mnT1, mnT1%StateID, iState)
-            do iPtcle = 1, mnT1%NumParticles
-               DimArray(iPtcle, 1:3) = ForceVec(3 * iPtcle - 2:3 * iPtcle)
-            end do
-         end do
-
-!     Write transition dipole moment
-         if (eszTransDipole) then
-            do iState = 2, mnT1%NumStates
-               cTemp = FMS_NumberedFileName('TransDip', 1)
-               cTemp = FMS_NumberedFileName(trim(cTemp), iState)
-            end do
-         end if
-
-!     Write dipole moment
-         if (eszDipoleMoment) then
-!           call FMS_H5DAppend('DipoleMoment',mnT1%h5Group,
-!    $           FMS_Dipole(mnT1,mnT1%StateID))
-         end if
-
-!     Write potential energies
-         do iState = 1, mnT1%NumStates
-            PotEn(iState) = FMS_PotentialT(mnT1, iState)
-         end do
-!        call FMS_H5DAppend(h5cPotEn,mnT1%h5Group,PotEn)
-      end if
-
-!     Write electronic structure stuff for restarting:
-!
-      if (mnMinType == Min_Both .or. mnMinType == Min_QM) then
-!     Write orbitals
-         if (esnBasis > 0) then
-            do iOrb = 1, esNBasis
-               do jOrb = 1, esNBasis
-                  Orbitals(iOrb, jOrb) = FMS_Orbitals(mnT1, iOrb, jOrb)
-               end do
-            end do
-!           call FMS_H5DWrite('LastOrbitals',mnT1%h5Group,Orbitals)
-         end if
-
-!     Write CI Vector
-         if (eslCIVec > 0) then
-            do iState = 1, mnT1%NumStates
-               do iOrb = 1, eslCIVec
-                  CIVec(iState, iOrb) = FMS_CIVec(mnT1, iState, iOrb)
-               end do
-            end do
-!           call FMS_H5DWrite('LastCIVec',mnT1%h5Group,CIVec)
-         end if
-      end if
-
-!     Write QM partial charges if you're using them
-      if (qczQMMM .and. qczPCharge .and. eszPartialCharges) then
-!        call FMS_H5DAppend('Charges',mnT1%h5Group,mnT1%Particle%Charge)
-      end if
-
-!     For QM/MM, write MM forces and energy
-      if (qczQMMM .and. eszMMForce) then
-         ForceVec = FMS_MMForces(mnT1)
-         do iPtcle = 1, mnT1%NumParticles
-            DimArray(iPtcle, 1:3) = ForceVec(3 * iPtcle - 2:3 * iPtcle)
-         end do
-      end if
 
    end function FMS_MSWrite
 

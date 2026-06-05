@@ -8,7 +8,6 @@ module QM_MM_Module
    implicit none
    public
    private :: defInt, defReal, MaxParticles
-   save
 
    logical :: qcZQMMM = .false. !< Is this a QM/MM simulation?
    integer(kind=DefInt) :: qcNumMM = 0 !< Number of MM atoms

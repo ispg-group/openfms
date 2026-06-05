@@ -90,7 +90,7 @@ program OpenFMS
    ! Construct initial system state
    if (inIRestart == 0) then
       call FMS_InitialCond(Bundle)
-      call FMS_DeleteFile("Checkpoint.txt")
+      call FMS_DeleteFile('Checkpoint.txt')
    else
       call GetRestart(Bundle, RestartTime)
       call FMS_UpdateBundle(Bundle)
@@ -208,23 +208,27 @@ contains
 !<
    subroutine print_header()
       character(len=256) :: host
-      character(len=*), parameter :: divider = '--------------------------------------------'
+      character(len=*), parameter :: divider = &
+                                     '--------------------------------------------------------------------------------'
+      character(len=*), parameter :: title = 'OpenFMS'
+      character(len=*), parameter :: subtitle = 'FMS for the Masses...'
+      character(len=*), parameter :: credit = 'Courtesy TJM and MBN'
 
       call hostnm(host)
 
-      write (fmiOut, *) divider
-      write (fmiOut, *) '                    OpenFMS'
+      write (fmiOut, '(a)') divider
+      write (fmiOut, '(a)') repeat(' ', (len(divider) - len(title)) / 2)//title
       write (fmiOut, *)
-      write (fmiOut, *) '              FMS for the Masses...'
-      write (fmiOut, *) '              Courtesy TJM and MBN'
+      write (fmiOut, '(a)') repeat(' ', (len(divider) - len(subtitle)) / 2)//subtitle
+      write (fmiOut, '(a)') repeat(' ', (len(divider) - len(credit)) / 2)//credit
       write (fmiOut, *)
 
-      ! Defined in print_version.F90
-      call print_version(fmiOut)
+      ! Defined in generated build_info.F90
+      call print_build_info(fmiOut)
 
-      write (fmiOut, *) 'host: '//trim(adjustl(host))
+      write (fmiOut, '(1x, a, t25, a)') 'host:', trim(adjustl(host))
       write (fmiOut, *)
-      write (fmiOut, *) divider
+      write (fmiOut, '(a)') divider
       write (fmiOut, *)
 
 !     NOTE(danielhollas): We do not print out the following list
@@ -414,24 +418,24 @@ contains
       if (NumInitBasis > 1) then
 
          !T1(1)%Amplitude=DMTemp
-         T1(1)%Amplitude=DMTemp / NumInitBasis        ! for equally distributing initial amp
+         T1(1)%Amplitude = DMTemp / NumInitBasis ! for equally distributing initial amp
 
          do ITraj = 2, NumTraj
             T1(ITraj) = T1(1)
             ! DH: This seems weird???
-            !T1(ITraj)%Amplitude=0.0 
-            write (fmiout, *) "Theamplitude of traj ", ITraj, " will be set to", DMTemp / NumInitBasis
-            T1(ITraj)%Amplitude=DMTemp / NumInitBasis  ! for equally distributing initial amp
+            !T1(ITraj)%Amplitude=0.0
+            write (fmiout, *) 'Theamplitude of traj ', ITraj, ' will be set to', DMTemp / NumInitBasis
+            T1(ITraj)%Amplitude = DMTemp / NumInitBasis ! for equally distributing initial amp
 !           T1(ITraj)%Amplitude = DMTemp
          end do
 
          do ITraj = 1, NumTraj
-            write (fmiout, *) "This is the amplitude of traj ", ITraj, "  before adding to Bundle:", T1(ITraj)%Amplitude
+            write (fmiout, *) 'This is the amplitude of traj ', ITraj, '  before adding to Bundle:', T1(ITraj)%Amplitude
          end do
 
       else
          T1(1)%Amplitude = DMTemp
-      endif
+      end if
 
 !     Check if we are initialising on a triplet state
       if (NTrip /= 0) then
@@ -448,7 +452,7 @@ contains
       end do
 
       do ITraj = 1, NumTraj
-         write (fmiout, *) "This is the actual amplitude of traj ", ITraj, " :", B1%Trajectory(ITraj)%Amplitude
+         write (fmiout, *) 'This is the actual amplitude of traj ', ITraj, ' :', B1%Trajectory(ITraj)%Amplitude
       end do
 
       !write (fmiout, *) "Trajectories in initially in Bundle: (after adding them)", B1%NumTraj

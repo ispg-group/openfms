@@ -181,7 +181,6 @@ contains
          call FMS_GroupIntoBlocks(B1, Coupled, blocktrajid, ntrajblock, NumBlockOuter)
          !write (fmiout, *) "Number of Blocks: ", NumBlockOuter
 
-
          ! Get isSIng, isTrip, isSingTrip for each block in the original, total Coupled matrix
          allocate (StoSelMode(NumBlockOuter))
          StoSelMode = 0
@@ -209,7 +208,7 @@ contains
 
          MergedBlockTrajID = 0
          call FMS_getMergedBlockTrajID(B1, NumBlockOuter, StoSelMode, ntrajblock, blocktrajid, &
-                                   MergedBlockTrajID)
+                                       MergedBlockTrajID)
 
          !write (fmiout, *) "MergedBlockTrajID after merging: "
          !do i = 1, B1%NumTraj + 1
@@ -218,9 +217,9 @@ contains
 
          !MergedBlockTrajID = blocktrajid
          !nblockMerged = NumBlockOuter        ! TODO: For now, nblockMerged is not used, but do we need to account for change
-                                            ! in number of blocks after merging (so, nblockMerged < NumBlockOuter depending
-                                            ! on how many blocks we merged???
-                                            ! This is actually done two steps later I think
+         ! in number of blocks after merging (so, nblockMerged < NumBlockOuter depending
+         ! on how many blocks we merged???
+         ! This is actually done two steps later I think
 
          ! Generate 2nd version of MergedBlockTrajID w/ indices ref to what will become the sep bundles
          ! This is the MergedSepBlockTrajID matrx (sorry complicated.. :( )
@@ -228,7 +227,7 @@ contains
          ! while in MergedBlockTrajID indices continue
          ! ------------------------------------------------------------------------------------------------
          ! TODO: this doesn't seem robust at all, go back later and improve
-         ! edit: seems a little more robust now, at least (still problematic: 
+         ! edit: seems a little more robust now, at least (still problematic:
          !                                                 - is it fine to only adjust indices after the
          !                                                   first column = from the second block onwards??)
 
@@ -258,10 +257,9 @@ contains
          !   end do
          !end do
 
-
          ! ----------------------------- !!! --------------------------------------------------
          ! 21/04/26: Dead Traj IDs need to be incorporated to MergedBlockTrajID
-         !           
+         !
          ! 22/04/26: Check with unsep SS: does BlockTrajID account for Dead Trajs?
          !           If so, why does it not in my case?
          ! ----------------------------- !!! --------------------------------------------------
@@ -322,9 +320,9 @@ contains
 
          IsSelection = .false.
          do iBlocks = 1, 2
-            if (NumCBFsBlock(iBlocks) > 1 ) then
+            if (NumCBFsBlock(iBlocks) > 1) then
                IsSelection(iBlocks) = .true. ! Set StoSelMode of block to zero if we have
-                                             ! no more than one CBF in the block
+               ! no more than one CBF in the block
             end if
          end do
          !write (fmiout, *) "Singlet selection set to ", IsSelection(1), "Triplet selection set to ", IsSelection(2)
@@ -351,14 +349,14 @@ contains
                ! Create and fill temp separated bundles
                ! with corresponding trajs from B1
 
-               call FMS_getMultBundles(B1, sepB, iBlocks, MergedBlockTrajID(:, iBlocks), BlockCBFID(:,iBlocks), &
-                                   NumTrajSepBlock(iBlocks), NumCBFsBlock(iBlocks))
+               call FMS_getMultBundles(B1, sepB, iBlocks, MergedBlockTrajID(:, iBlocks), BlockCBFID(:, iBlocks), &
+                                       NumTrajSepBlock(iBlocks), NumCBFsBlock(iBlocks))
 
                !write (fmiout, *) "After creating the sep bundle norms are: "
                !write (fmiout, *) "Block ", iBlocks, "Norm: ", FMS_Norm(sepB(iBlocks))
                !write (fmiout, *) "and the corresponding amplitudes are"
                !do j = 1, NumTrajSepBlock(iBlocks)
-               !   write (fmiout, *) "Trajectory ", j, "TrajID ", sepB(iBlocks)%Trajectory(j)%TrajID, & 
+               !   write (fmiout, *) "Trajectory ", j, "TrajID ", sepB(iBlocks)%Trajectory(j)%TrajID, &
                !                     "AMplitude: ", sepB(iBlocks)%Trajectory(j)%Amplitude
                !end do
                !write (fmiout, *) "----------------------------"
@@ -381,14 +379,14 @@ contains
                !write (fmiout, *) "MergedBlockTrajID(:,iBlocks)", MergedBlockTrajID(:,iBlocks)
                do j = 1, NumTrajSepBlock(iBlocks)
                   sepB(iBlocks)%Trajectory(j)%Amplitude = sepB(iBlocks)%Trajectory(j)%Amplitude &
-                                                               * dcmplx( 1.d0 / sqrt(SaveNorms(iBlocks)) )
+                                                          * dcmplx(1.d0 / sqrt(SaveNorms(iBlocks)))
                end do
 
                !write (fmiout, *) "After Normalizing prior to SS, the sep bundle norms are: "
                !write (fmiout, *) "Block ", iBlocks, "Norm: ", FMS_Norm(sepB(iBlocks))
                !write (fmiout, *) "and the corresponding amplitudes are"
                !do j = 1, NumTrajSepBlock(iBlocks)
-               !   write (fmiout, *) "Trajectory ", j, "TrajID ", sepB(iBlocks)%Trajectory(j)%TrajID, & 
+               !   write (fmiout, *) "Trajectory ", j, "TrajID ", sepB(iBlocks)%Trajectory(j)%TrajID, &
                !                     "AMplitude: ", sepB(iBlocks)%Trajectory(j)%Amplitude
                !end do
                !write (fmiout, *) "----------------------------"
@@ -408,7 +406,7 @@ contains
                !write (fmiout, *) "Block ", iBlocks, "Norm: ", FMS_Norm(sepB(iBlocks))
                !write (fmiout, *) "and the corresponding amplitudes are"
                !do j = 1, NumTrajSepBlock(iBlocks)
-               !   write (fmiout, *) "Trajectory ", j, "TrajID ", sepB(iBlocks)%Trajectory(j)%TrajID, & 
+               !   write (fmiout, *) "Trajectory ", j, "TrajID ", sepB(iBlocks)%Trajectory(j)%TrajID, &
                !                     "AMplitude: ", sepB(iBlocks)%Trajectory(j)%Amplitude
                !end do
                !
@@ -428,9 +426,9 @@ contains
                if (iBlocks == 1) then
                   if (any(gliForceKill(:) /= 0)) then
                      do j = 1, NumTrajSepBlock(1)
-                        gliForceKill( NumTrajSepBlock(2)+j ) = gliForceKill(j)
-                        write (fmiout, *) "gliForceKill element ", NumTrajSepBlock(2)+j, &
-                                          "will be overwritten to ", gliForceKill(j)
+                        gliForceKill(NumTrajSepBlock(2) + j) = gliForceKill(j)
+                        write (fmiout, *) 'gliForceKill element ', NumTrajSepBlock(2) + j, &
+                           'will be overwritten to ', gliForceKill(j)
                      end do
                   end if
                end if
@@ -439,7 +437,7 @@ contains
                !write (fmiout, *) "RNorm", RNorm
                do j = 1, NumTrajSepBlock(iBlocks)
                   sepB(iBlocks)%Trajectory(j)%Amplitude = sepB(iBlocks)%Trajectory(j)%Amplitude &
-                                                               * dcmplx( sqrt(SaveNorms(iBlocks) / RNorm ) )
+                                                          * dcmplx(sqrt(SaveNorms(iBlocks) / RNorm))
                end do
 
                !write (fmiout, *) "After Renormalizing prior to copying back, the sep bundle norms are: "
@@ -447,32 +445,31 @@ contains
                !write (fmiout, *) "Block ", iBlocks, "Norm: ", FMS_Norm(sepB(iBlocks))
                !write (fmiout, *) "and the corresponding amplitudes are"
                !do j = 1, NumTrajSepBlock(iBlocks)
-               !   write (fmiout, *) "Trajectory ", j, "TrajID ", sepB(iBlocks)%Trajectory(j)%TrajID, & 
+               !   write (fmiout, *) "Trajectory ", j, "TrajID ", sepB(iBlocks)%Trajectory(j)%TrajID, &
                !                     "AMplitude: ", sepB(iBlocks)%Trajectory(j)%Amplitude
                !end do
                !write (fmiout, *) "----------------------------"
 
                call FMS_copy_sepB_to_original_bundle(B1, sepB(iBlocks), iBlocks, NumTrajSepBlock(iBlocks), &
-                                                        MergedBlockTrajID(:,iBlocks)) !, MergedSepBlockTrajID)
+                                                     MergedBlockTrajID(:, iBlocks)) !, MergedSepBlockTrajID)
                !write (fmiout, *) "States were copied back without error"
 
                !write (fmiout, *) "(After copying back to original Bundle)"
                !write (fmiout, *) "Number of Dead Trajs is now: ", B1%NumDeadTraj
 
-
                ! Destroy the temporary block bundle
                call sepB(iBlocks)%destroy()
 
-            !else if (iBlocks == 1) then
-            !   write (fmiout, *) "No separated Bundle created for the singlet block &
-            !                      because no more than one CBF."
-            !else if (iBlocks == 2) then
-            !   write (fmiout, *) "No separated Bundle created for the triplet block &
-            !                      because no more than one CBF."
+               !else if (iBlocks == 1) then
+               !   write (fmiout, *) "No separated Bundle created for the singlet block &
+               !                      because no more than one CBF."
+               !else if (iBlocks == 2) then
+               !   write (fmiout, *) "No separated Bundle created for the triplet block &
+               !                      because no more than one CBF."
             end if
          end do
 
-         deallocate(SaveNorms, sepB, StoSelMode)
+         deallocate (SaveNorms, sepB, StoSelMode)
 
          !write (fmiout, *) "After copy_MultBundles_to_original_Bundle, the B1 norm is: "
          !write (fmiout, *) "Norm: ", FMS_Norm(B1)
@@ -510,7 +507,6 @@ contains
          !   write (fmiout, *) "Amp: ", B1%Trajectory(i)%Amplitude
          !end do
          !write (fmiout, *) " ----------------------------------------------------"
-
 
          ! Create BundlesMultDim many temp bundles and fill them up
          ! with corresponding trajs from B1
@@ -571,14 +567,14 @@ contains
          !      end do
          !   end if
          !end do
-         
+
          !write (fmiout, *) "After Normalizing prior to SS, the sep bundle norms are: "
          !do i = 1, 2
          !   if (IsSelection(i)) then
          !      write (fmiout, *) "Block ", i, "Norm: ", FMS_Norm(sepB(i))
          !      write (fmiout, *) "and the corresponding amplitudes are"
          !      do iTraj = 1, NumTrajSepBlock(i)
-         !         write (fmiout, *) "Trajectory ", iTraj, "TrajID ", sepB(i)%Trajectory(iTraj)%TrajID, & 
+         !         write (fmiout, *) "Trajectory ", iTraj, "TrajID ", sepB(i)%Trajectory(iTraj)%TrajID, &
          !                           "AMplitude: ", sepB(i)%Trajectory(iTraj)%Amplitude
          !      end do
          !   end if
@@ -675,7 +671,6 @@ contains
 
          !end do
 
-
          ! Set the norm of each temporary bundle back to SaveNorms
          ! and renormalize adjusting traj amplitudes
          ! ---> call FMS_Renormalize
@@ -686,7 +681,7 @@ contains
          !      write (fmiout, *) "Block ", i, "Norm: ", FMS_Norm(sepB(i))
          !      write (fmiout, *) "and the corresponding amplitudes are"
          !      do iTraj = 1, NumTrajSepBlock(i)
-         !         write (fmiout, *) "Trajectory ", iTraj, "TrajID ", sepB(i)%Trajectory(iTraj)%TrajID, & 
+         !         write (fmiout, *) "Trajectory ", iTraj, "TrajID ", sepB(i)%Trajectory(iTraj)%TrajID, &
          !                           "AMplitude: ", sepB(i)%Trajectory(iTraj)%Amplitude
          !      end do
          !   end if
@@ -705,7 +700,7 @@ contains
          !do i = 1, BundlesMultDim
          !   write (fmiout, *) "Block: ", i
          !   do iTraj = 1, sepB(i)%NumTraj
-         !      write (fmiout, *) "Trajectory ", iTraj, "TrajID ", sepB(i)%Trajectory(iTraj)%TrajID, & 
+         !      write (fmiout, *) "Trajectory ", iTraj, "TrajID ", sepB(i)%Trajectory(iTraj)%TrajID, &
          !                        "AMplitude: ", sepB(i)%Trajectory(iTraj)%Amplitude
          !   end do
          !end do
@@ -715,13 +710,12 @@ contains
          ! If selection happened, copy information which trajs died
 
          !if (any(gliForceKill(:) /= 0)) then ! TODO: use something else here
-                                             ! otherwise copy_MultBundles_to_original_bundle always gets called as soon as 
-                                             ! we have a number in gliForceKill
-                                             ! How to determine if kill happened?
-                                             ! ---
-                                             ! For now, go with setting gliForceKill back to zero at the start of each
-                                             ! StoSel (but not sure if that breaks things somewhere...?)
-
+         ! otherwise copy_MultBundles_to_original_bundle always gets called as soon as
+         ! we have a number in gliForceKill
+         ! How to determine if kill happened?
+         ! ---
+         ! For now, go with setting gliForceKill back to zero at the start of each
+         ! StoSel (but not sure if that breaks things somewhere...?)
 
          !write (fmiout, *) "blocktrajid right before copy_MultBundles_to_B1: "
          !do i = 1, B1%NumTraj + 1
@@ -758,14 +752,14 @@ contains
          !      end do
          !   end if
          !end do
-         
+
          !write (fmiout, *) "After Renormalizing prior to copying back, the sep bundle norms are: "
          !do i = 1, 2
          !   if (IsSelection(i)) then
          !      write (fmiout, *) "Block ", i, "Norm: ", FMS_Norm(sepB(i))
          !      write (fmiout, *) "and the corresponding amplitudes are"
          !      do iTraj = 1, NumTrajSepBlock(i)
-         !         write (fmiout, *) "Trajectory ", iTraj, "TrajID ", sepB(i)%Trajectory(iTraj)%TrajID, & 
+         !         write (fmiout, *) "Trajectory ", iTraj, "TrajID ", sepB(i)%Trajectory(iTraj)%TrajID, &
          !                           "AMplitude: ", sepB(i)%Trajectory(iTraj)%Amplitude
          !      end do
          !   end if
@@ -797,7 +791,7 @@ contains
          !end do
 
          !write (fmiout, *) "-----------------------------------------------------------"
-         
+
          ! Destroy the temporary block bundles
          !do i = 1, nblockMerged
          !do iBlocks = 1, 2
@@ -907,7 +901,7 @@ contains
 ! There should be at least one block of trajectories
       if (nblock == 0) then
          write (fmiOut, *) 'Number of trajectory basis blocks is zero'
-         call FMS_DieError("ERROR in FMS_StochasticCollapse")
+         call FMS_DieError('ERROR in FMS_StochasticCollapse')
       end if
 ! If just a single block then no more work to be done
       !if (nblock == 1) write (fmiout, *) "Only one block. No selection!"
@@ -1013,7 +1007,7 @@ contains
 ! multi-state spawning (may change in the future)
       if (childSt == parentSt) then
          write (fmiOut, *) "SWISS: States don't differ, decoherence not possible"
-         call FMS_DieError("ERROR in FMS_CalculateDecoherenceTime")
+         call FMS_DieError('ERROR in FMS_CalculateDecoherenceTime')
       end if
 
       decoherenceRate2 = 0.d0
@@ -1149,7 +1143,7 @@ contains
 
       ntraj = B1%NumTraj
 
-      write (fmiout, *) "FMS_BuildCoupled_ESS is getting called :S"
+      write (fmiout, *) 'FMS_BuildCoupled_ESS is getting called :S'
       !write (fmiout, *) "Calculating coupling for trajs in bundle"
       !write (fmiout, *) " ----------------------------------------------------"
       !write (fmiout, *) "Are traj indices still fine here?"
@@ -1599,7 +1593,7 @@ contains
       type(T_TrajectoryBundle), intent(in) :: B1
       integer(kind=DefInt), dimension(B1%NumTraj + 1, B1%NumTraj + 1), intent(in) :: blocktrajid
       integer(kind=DefInt), intent(in) :: NumBlockOuter
-      integer(kind=DefInt), intent(inout), dimension(NumBlockOuter) :: StoSelMode(:)
+      integer(kind=DefInt), intent(inout), dimension(NumBlockOuter) :: StoSelMode
       integer(kind=DefInt) :: iBlocks, iTraj
       logical :: isSing, isTrip, isSingTrip
 
@@ -1608,7 +1602,7 @@ contains
          isTrip = .false.
          isSingTrip = .false.
          do iTraj = 1, B1%NumTraj
-            if (any(blocktrajid(:,iBlocks) == iTraj)) then
+            if (any(blocktrajid(:, iBlocks) == iTraj)) then
                if (B1%Trajectory(iTraj)%triplet) then
                   isTrip = .true.
                else
@@ -1625,7 +1619,7 @@ contains
          else if (isTrip .eqv. .true.) then
             StoSelMode(iBlocks) = 3 ! selection for Trip
          else
-            call FMS_DieError("No valid Selection mode could be determined")
+            call FMS_DieError('No valid Selection mode could be determined')
          end if
 
          !write (fmiout, *) "For block ", i, "StoSel mode is: "
@@ -1637,11 +1631,11 @@ contains
    end subroutine FMS_GroupIntoMultiplicityBlocks
 
    subroutine FMS_getMergedBlockTrajID(B1, NumBlockOuter, StoSelMode, ntrajblock, blocktrajid, &
-                                   MergedBlockTrajID)
-      
+                                       MergedBlockTrajID)
+
       type(T_TrajectoryBundle), intent(in) :: B1
       integer(kind=DefInt), intent(in) :: NumBlockOuter
-      integer(kind=DefInt), dimension(NumBlockOuter), intent(in) :: StoSelMode(:)
+      integer(kind=DefInt), dimension(NumBlockOuter), intent(in) :: StoSelMode
       integer(kind=DefInt), dimension(B1%NumTraj + 1), intent(in) :: ntrajblock
       integer(kind=DefInt), dimension(B1%NumTraj + 1, B1%NumTraj + 1), intent(in) :: blocktrajid
       integer(kind=DefInt), dimension(B1%NumTraj + 1, 2), intent(inout) :: MergedBlockTrajID
@@ -1662,26 +1656,26 @@ contains
          if (currStoSelMode == 1) then
 
             skip_positions = 1
-            do while ( MergedBlockTrajID(skip_positions, 1) /= 0 )
+            do while (MergedBlockTrajID(skip_positions, 1) /= 0)
                !write (fmiout, *) "skip_positions: ", skip_positions, "ID", MergedBlockTrajID(skip_positions, 1)
                skip_positions = skip_positions + 1
             end do
             skip_positions = skip_positions - 1
 
             do j = 1, ntrajblock(i)
-               MergedBlockTrajID(j+skip_positions, 1) = blocktrajid(j,i)
+               MergedBlockTrajID(j + skip_positions, 1) = blocktrajid(j, i)
             end do
 
          else if (currStoSelMode == 3) then
 
             skip_positions = 1
-            do while ( MergedBlockTrajID(skip_positions, 2) /= 0 )
+            do while (MergedBlockTrajID(skip_positions, 2) /= 0)
                skip_positions = skip_positions + 1
             end do
             skip_positions = skip_positions - 1
 
             do j = 1, ntrajblock(i)
-               MergedBlockTrajID(j+skip_positions, 2) = blocktrajid(j,i)
+               MergedBlockTrajID(j + skip_positions, 2) = blocktrajid(j, i)
             end do
 
          end if
@@ -1763,12 +1757,12 @@ contains
 
       ! Count how many trajs and CBFs we have in the current block
       !
-      ! - Construct NumTrajSepBlock: will be needed 4 allocating temp Bundle and 
+      ! - Construct NumTrajSepBlock: will be needed 4 allocating temp Bundle and
       !   knowing how many trajs 2 add to temp Bundles
       !
       ! - Construct BlockCBFID: equivalent of MergedBlockTrajID for CBFs, 2 keep track
       !   of CBFs corresponding 2 trajs
-      ! - and NumCBFsBlock (will be needed 4 allocating temp Bundle and 
+      ! - and NumCBFsBlock (will be needed 4 allocating temp Bundle and
       !   making sure CBF IDs in temp Bundles start from 1)
       !
       ! - CBFcurr, CBFcount: used to make sure that multiplets are copied
@@ -1777,7 +1771,7 @@ contains
       do iblocks = 1, 2
 
          CBFcount = 0
-         do iTraj =1, B1%NumTraj
+         do iTraj = 1, B1%NumTraj
 
             !write (fmiout, *) "Counting NCBFs in block ", iblocks
             !write (fmiout, *) "The current CBF is: ", CBFcurr
@@ -1830,7 +1824,7 @@ contains
       integer(kind=DefInt) :: iTraj, currTrajID, currCBFID
       ! Number of particles
       integer(kind=DefInt) :: npart
-      
+
       !! Renormalization of the separated Bundles:
       !real(kind=DefReal), dimension(B1%NumStates) :: OldNorms
       !real(kind=DefReal) :: DNorm0
@@ -1855,10 +1849,10 @@ contains
       !do iblocks = 1, BundlesMultDim
 
       call sepB(iBlocks)%create(numtraj=iNumTraj, &
-                                       numdeadtraj=0, &                 !!!!! TODO: Is it fine setting this to 0???
-                                       numstates=B1%NumStates, &        ! yes, I think it is because we are not taking
-                                       numparticles=npart, &            ! into account dead trajectories in any of
-                                       ncbfs=iNumCBF)                   ! the previous steps
+                                numdeadtraj=0, & !!!!! TODO: Is it fine setting this to 0???
+                                numstates=B1%NumStates, & ! yes, I think it is because we are not taking
+                                numparticles=npart, & ! into account dead trajectories in any of
+                                ncbfs=iNumCBF) ! the previous steps
 
       !end do
 
@@ -1897,7 +1891,7 @@ contains
          sepB(iBlocks)%Trajectory(iTraj) = B1%Trajectory(currTrajID)
          sepB(iBlocks)%Trajectory(iTraj)%TrajID = B1%Trajectory(currTrajID)%TrajID ! should give the same as...
          !sepB(iblocks)%Trajectory(currTrajID)%TrajID = currTrajID                      ! this one here
-                                                                                       
+
       end do
 
       !write (fmiout, *) "What we filled into sepB of block ", iBlocks
@@ -1980,9 +1974,8 @@ contains
       !      is_addCen = .false.
       !      do CBF_j = CBF_i + 1, B1%NCBFs ! what if CBF IDs are not in ascending order, does this still work??? :S
 
-      !         if (CenCount > (((sepB(iblocks)%NCBFs - 1) * sepB(iblocks)%NCBFs) / 2) ) cycle ! dont add more Cens
-      !                                                                                                      ! if max of cens in
-      !                                                                                                      ! temp bundle is reached
+      !         ! dont add more Cens if max of cens in temp bundle is reached
+      !         if (CenCount > (((sepB(iblocks)%NCBFs - 1) * sepB(iblocks)%NCBFs) / 2) ) cycle
 
       !         !write (fmiout, *) "CBF_i and CBF_j", CBF_i, CBF_j
       !         if (any(CBF_i == BlockCBFID(:,iblocks)) .and. any(CBF_j == BlockCBFID(:,iblocks)) .and. CBF_i /= CBF_j) then
@@ -2076,16 +2069,16 @@ contains
 ! to the original bundle. Note that we must copy over
 ! also the trajectories marked for death.
    subroutine FMS_copy_sepB_to_original_bundle(B1, sepB, iBlocks, NumTrajiBlocks, &
-                                                           MergedBlockTrajID) !, MergedSepBlockTrajID)
+                                               MergedBlockTrajID) !, MergedSepBlockTrajID)
       integer(kind=DefInt), intent(in) :: iBlocks
       integer(kind=DefInt), intent(in) :: NumTrajiBlocks
       type(T_TrajectoryBundle), intent(inout) :: B1
       type(T_TrajectoryBundle), intent(in) :: sepB
       integer(kind=DefInt), dimension(B1%NumTraj + 1, 2), intent(in) :: &
-                                                   MergedBlockTrajID !, MergedSepBlockTrajID
+         MergedBlockTrajID !, MergedSepBlockTrajID
       integer(kind=DefInt) :: iTraj, jTraj
       integer(kind=DefInt) :: add_DeadTraj, iDeadTraj
-                             !iSingTraj, iTripTraj, iCBF
+      !iSingTraj, iTripTraj, iCBF
       !integer(kind=DefInt) :: TrajIDSing, CBFIDSing, TrajIDTrip, CBFIDTrip
 
       ! I dont actually think we need to copy back the temp separated bundles
@@ -2138,22 +2131,22 @@ contains
 
          !do jTraj = 1, B1%NumTraj + B1%NumDeadTraj
 
-            !add_DeadTraj = 0
+         !add_DeadTraj = 0
 
-            !if (sepB%Trajectory(iTraj)%TrajID == jTraj) then
-            !   write (fmiout, *) "It's a match! for ", sepB(i)%Trajectory(iTraj)%TrajID, &
-            !                     "(sepB TrajID)", "and", jTraj, "(B1 TrajID)"
+         !if (sepB%Trajectory(iTraj)%TrajID == jTraj) then
+         !   write (fmiout, *) "It's a match! for ", sepB(i)%Trajectory(iTraj)%TrajID, &
+         !                     "(sepB TrajID)", "and", jTraj, "(B1 TrajID)"
 
-            !   do iDeadTraj = 1, B1%NumDeadTraj
-            !      if (B1%DeadTraj(iDeadTraj)%TrajID < jTraj) then
-            !         add_DeadTraj = add_DeadTraj + 1
-            !      end if
-            !   end do
+         !   do iDeadTraj = 1, B1%NumDeadTraj
+         !      if (B1%DeadTraj(iDeadTraj)%TrajID < jTraj) then
+         !         add_DeadTraj = add_DeadTraj + 1
+         !      end if
+         !   end do
 
-            !   write (fmiout, *) "The amplitude ", B1%Trajectory(jTraj - add_DeadTraj)%Amplitude, &
-            !                     "will be overwritten to", sepB(i)%Trajectory(iTraj)%Amplitude
-            !   B1%Trajectory(jTraj - add_DeadTraj)%Amplitude = sepB(i)%Trajectory(iTraj)%Amplitude
-            !end if
+         !   write (fmiout, *) "The amplitude ", B1%Trajectory(jTraj - add_DeadTraj)%Amplitude, &
+         !                     "will be overwritten to", sepB(i)%Trajectory(iTraj)%Amplitude
+         !   B1%Trajectory(jTraj - add_DeadTraj)%Amplitude = sepB(i)%Trajectory(iTraj)%Amplitude
+         !end if
 
          !end do
 
@@ -2211,9 +2204,9 @@ contains
       !      !write (fmiout, *) "Now, actually copy and check again: "
       !      !write (fmiout, *) " ----------------------------------------------------"
 
-      !      ! Copy back trajectories, adjust temp bundle TrajID, CBF back to refer to B1 
+      !      ! Copy back trajectories, adjust temp bundle TrajID, CBF back to refer to B1
       !      !write (fmiout, *) "Copying trajs for block bundle ", i
-      !      
+      !
       !      ! 20/05/26: Try something new -----------------------------------------------------
 
       !      write (fmiout, *) "i (the how manyth block)= ", i

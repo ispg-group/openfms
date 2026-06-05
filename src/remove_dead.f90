@@ -110,26 +110,26 @@ subroutine FMS_RemoveDead(B1)
                       .or. (PopBelowThresh .and. NotCoupled))
       ForceDead = any(gliForceKill(:) == TrajID)
       if (ForceDead) then
-              B1%Trajectory(i)%DeadTime = -9999.0d0 ! Why is this done?
+         B1%Trajectory(i)%DeadTime = -9999.0d0 ! Why is this done?
       end if
       MarkForDeath = (MarkForDeath .or. ForceDead)
 
       if (.not. MarkForDeath) then
          B1%Trajectory(i)%DeadTime = B1%CurrentTime
       else
-         write (fmiOut, '(a,i0,a)') "Traj ", TrajID, " was marked for death"
+         write (fmiOut, '(a,i0,a)') 'Traj ', TrajID, ' was marked for death'
       end if
 
 !        Workout who is getting killed
       if (B1%Trajectory(i)%is_dead()) then
          ndead = ndead + 1
          if (ForceDead) then
-            write (fmiOut, '(a,i0,a,i0)') "** Force Killing trajectory ", TrajID, " on state ", StateID
-            write (fmiout, *) "Based on gliForceKill: ", gliForceKill
-         elseif (OnIgnoreState) then
-            write (fmiOut, '(a,i0,a,i0)') "** Killing trajectory ", TrajID, " on state ", StateID
+            write (fmiOut, '(a,i0,a,i0)') '** Force killing trajectory ', TrajID, ' on state ', StateID
+            write (fmiout, *) 'Based on gliForceKill: ', gliForceKill
+         else if (OnIgnoreState) then
+            write (fmiOut, '(a,i0,a,i0)') '** Killing trajectory ', TrajID, ' on state ', StateID
          else
-            write (fmiOut, '(a,i0,a,f6.5)') "** Killing trajectory ", TrajID, " pop < ", spdPopToSpawn
+            write (fmiOut, '(a,i0,a,f6.5)') '** Killing trajectory ', TrajID, ' pop < ', spdPopToSpawn
          end if
       end if
    end do
@@ -154,7 +154,7 @@ subroutine FMS_RemoveDead(B1)
       iLive = 0
       iDead = 0
       nCBF = 0
-      write (fmiOut, '(a,/,a)') "Reconstructing trajectory bundle. Living trajectories:"
+      write (fmiOut, '(a,/,a)') 'Reconstructing trajectory bundle. Living trajectories:'
 
       do iTraj = 1, B1%NumTraj
          if (.not. B1%Trajectory(iTraj)%is_dead()) then
@@ -219,30 +219,29 @@ subroutine FMS_RemoveDead(B1)
       BTemp%NCBFs = nCBF
       B1 = BTemp
 
-      write (fmiout, *) "(After remove_dead)"
-      write (fmiout, *) "Number of Dead Trajs is now: ", B1%NumDeadTraj
+      write (fmiout, *) '(After remove_dead)'
+      write (fmiout, *) 'Number of Dead Trajs is now: ', B1%NumDeadTraj
 
       call BTemp%destroy()
 
-      write (fmiout, *) "Is Bundle still okay after remove_dead reconstruction?"
-      write (fmiout, *) " ----------------------------------------------------"
-      write (fmiout, *) "These trajs are in B1"
+      write (fmiout, *) 'Is Bundle still okay after remove_dead reconstruction?'
+      write (fmiout, *) ' ----------------------------------------------------'
+      write (fmiout, *) 'These trajs are in B1'
       do iTraj = 1, B1%NumTraj
-         write (fmiout, *) "TrajID: ", B1%Trajectory(iTraj)%TrajID, "CBF: ", B1%Trajectory(iTraj)%CBF
-         write (fmiout, *) "Ms: ", B1%Trajectory(iTraj)%Ms
-         write (fmiout, *) "Amp: ", B1%Trajectory(iTraj)%Amplitude
+         write (fmiout, *) 'TrajID: ', B1%Trajectory(iTraj)%TrajID, 'CBF: ', B1%Trajectory(iTraj)%CBF
+         write (fmiout, *) 'Ms: ', B1%Trajectory(iTraj)%Ms
+         write (fmiout, *) 'Amp: ', B1%Trajectory(iTraj)%Amplitude
       end do
-      write (fmiout, *) " ----------------------------------------------------"
+      write (fmiout, *) ' ----------------------------------------------------'
 
-      write (fmiout, *) "Centroids of B1"
-      write (fmiout, *) "Part 3: after remove_dead"
+      write (fmiout, *) 'Centroids of B1'
+      write (fmiout, *) 'Part 3: after remove_dead'
       do iTraj = 1, (((B1%NCBFs - 1) * B1%NCBFs) / 2)
-         write (fmiout, *) "Centroid number", iTraj
-         write (fmiout, *) "Is centroid to trajectories", B1%Centroids(iTraj)%CentID
-         write (fmiout, *) "And has position: ", B1%Centroids(iTraj)%Particle(1)%get_pos()
+         write (fmiout, *) 'Centroid number', iTraj
+         write (fmiout, *) 'Is centroid to trajectories', B1%Centroids(iTraj)%CentID
+         write (fmiout, *) 'And has position: ', B1%Centroids(iTraj)%Particle(1)%get_pos()
       end do
-      write (fmiout, *) " ----------------------------------------------------"
-
+      write (fmiout, *) ' ----------------------------------------------------'
 
    end if
 

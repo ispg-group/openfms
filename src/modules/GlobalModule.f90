@@ -10,7 +10,6 @@
 module GlobalModule
    implicit none
    public
-   save
 
 !---------------------------------------------------------------------------
 !                       COMPILE-TIME CONSTANTS
@@ -131,7 +130,7 @@ module GlobalModule
    real(kind=DefReal) :: glIzmCoupC
 !     Global parameter for the GAIMS model in ToyModelModule
    real(kind=DefReal) :: glGrsigma
-
+   logical :: glzSPA1_SOC_model
 !
 !-----------------------------------------------
    logical :: glzStoSwiss
@@ -204,7 +203,6 @@ module GlobalModule
    logical :: fmzAmpFile
    logical :: fmzAllText
    logical :: fmzXYZ
-   logical :: fmzDCD
    logical :: fmzWriteEveryStep
    logical :: fmzPCOlap ! print the overlap (abs, Re, Im) between parent and child
    logical :: fmzSOME ! print the SOME at the centroid position
@@ -398,7 +396,7 @@ contains
 !!    \param SetVal   Logical to flag step as rejected or not
 !<
    subroutine FMS_RejectStep(SetVal)
-      logical, intent(IN) :: SetVal
+      logical, intent(in) :: SetVal
 
       if (.not. SetVal) then
          glzRejectStep = SetVal
@@ -457,7 +455,7 @@ contains
       filePath = trim(FMSWorkingDir)//trim(fileName)
       inquire (file=filePath, exist=fileExists)
       if (fileExists) then
-         open (newunit=iunit, file=filePath, position="append")
+         open (newunit=iunit, file=filePath, position='append')
       else
          open (newunit=iunit, file=filePath)
       end if

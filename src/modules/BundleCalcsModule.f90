@@ -562,10 +562,10 @@ contains
 !        TBF within the CBF. When the next Ms=2 TBF appears, we
 !        know that a new CBF is reached.
             if (glzCentroids .and. T_i%CBF /= T_j%CBF) then
-            !write(fmiOut,*) "i, j: ", i,j
-            !write(fmiOut,*) "IDi, IDj: ",T_i%StateID,T_j%StateID
-            !write(fmiOut,*) "Msi, Msj: ", T_i%Ms,T_j%Ms
-            !write(fmiOut,*) "CBFi, CBFj: ", T_i%CBF,T_j%CBF
+               !write(fmiOut,*) "i, j: ", i,j
+               !write(fmiOut,*) "IDi, IDj: ",T_i%StateID,T_j%StateID
+               !write(fmiOut,*) "Msi, Msj: ", T_i%Ms,T_j%Ms
+               !write(fmiOut,*) "CBFi, CBFj: ", T_i%CBF,T_j%CBF
 
 !!          if( T_i%Ms.eq.2 .and. T_j%Ms.eq.2 ) then
                CBFi = T_i%CBF
@@ -621,7 +621,7 @@ contains
                         H(i, j) = overlap_KE(T_i, T_j, S(i, j)) + overlap_V(T_i, T_j, S_ij_precalc=S(i, j))
                      end if
 
-                  !write (fmiout, *) "----------------------------------------------------------------"
+                     !write (fmiout, *) "----------------------------------------------------------------"
                   end if
                end if
             end if
@@ -773,8 +773,7 @@ contains
 !     tjm  Alternative procedure is to build b=HEff1*Amp
 !     tjm  Then solve S x ampdot = b
 !     DH: Deactivate this branch to get rid of dependency on BLAS/LAPACK
-         print*,"GlzIterInv is not supported right now"
-         stop 1
+         call FMS_DieError('GlzIterInv is not supported right now')
 
          call cpu_time(time_tmp1)
 
@@ -880,10 +879,9 @@ contains
 !!    @ingroup analysis
 !<
    function FMS_KineticB(Bundle, Incoherent) result(Energy)
-      type(T_TrajectoryBundle) :: Bundle
+      type(T_TrajectoryBundle), intent(in) :: Bundle
       real(kind=DefReal) :: Energy, EnergyInc
       logical, optional :: Incoherent
-      intent(in) Bundle
       integer(kind=DefInt) :: ITraj, JTraj
       logical :: IncSum
 

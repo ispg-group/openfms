@@ -43,7 +43,6 @@ module SamplingModule
 !> For quasiclassical initial conditions, modes with extra quanta
    integer(kind=DefInt), public :: inIAddQuanta(100)
 
-   save
 contains
 
 !>
@@ -708,7 +707,7 @@ contains
 !    rotate it with our random rotation matrix.
 1        continue
          IOne = int(dble(NPSDim - 1) * FMS_ranb(i4zero) + 1.50d0)
-         if (IOne > NPSDim .or. IOne == 0) go to 1
+         if (IOne > NPSDim .or. IOne == 0) goto 1
 !    Matrix-vector multiplication CRMat*UnitVector
          do i = 1, NPSDim
             UVec(i) = real(CRMat(i, IOne))
@@ -966,12 +965,12 @@ contains
       ! TODO: call 'write_initial_condition' subroutine
       output_file = trim(FMSWorkingDir)//'Out.xyz'
       open (newunit=IGUnit, file=output_file, action='write')
-      write (IGUnit, '(A10)') "UNITS=BOHR"
+      write (IGUnit, '(A10)') 'UNITS=BOHR'
       write (IGUnit, *) natoms
       do I = 1, natoms
          write (IGUnit, 1005) T1%Particle(I)%Elmnt, (atcen((I - 1) * 3 + J), J=1, 3)
       end do
-      write (IGUnit, '(A9)') "# momenta"
+      write (IGUnit, '(A9)') '# momenta'
       do I = 1, natoms
          write (IGUnit, 1006) (atmom((I - 1) * 3 + J), J=1, 3)
       end do
@@ -1043,7 +1042,7 @@ contains
       real(DefReal), allocatable :: OReal(:, :)
 
       real(kind=DefReal) :: dmass, fac
-      integer(kind=DefInt) :: natom3, IFUnit, ios
+      integer(kind=DefInt) :: natom3, IFUnit
       integer(kind=DefInt) :: natomsin, i, j, k, ist, lst, ix, idof, ierr, ifreq
       character(len=256) :: filein, fileout, cbuffer
       character(len=10) :: method
@@ -1080,9 +1079,9 @@ contains
 
       select case (method)
 
-      case ("HESS")
+      case ('HESS')
          filein = trim(FMSWorkingDir)//'Hessian.dat'
-         open (newunit=ifunit, file=filein, status='old', action='read', iostat=ios)
+         open (newunit=ifunit, file=filein, status='old', action='read')
          write (fmiOut, *) 'Using Hessian.dat to find normal mode frequencies'
          read (IFUnit, *, end=999) natomsin
          if (natomsin /= natoms) then
@@ -1133,7 +1132,7 @@ contains
          end do
          close (IFUnit)
 
-      case ("FREQMP")
+      case ('FREQMP')
          write (fmiOut, *) 'Found FrequenciesMP.dat'
          filein = trim(FMSWorkingDir)//'FrequenciesMP.dat'
          open (newunit=ifunit, file=filein, status='old', action='read')
@@ -1169,13 +1168,13 @@ contains
          end do
          close (IFUnit)
 
-      case ("FREQ")
+      case ('FREQ')
          ! Handled below
          write (fmiOut, *) 'Found Frequencies.dat'
 
       case default
 
-         call FMS_DieError("No frequencies/Hessian found")
+         call FMS_DieError('No frequencies/Hessian found')
 
       end select
 
@@ -1276,7 +1275,7 @@ contains
       deallocate (Oreal)
 
       return
-999   call fms_dieerror("Reached end of file "//trim(filein))
+999   call fms_dieerror('Reached end of file '//trim(filein))
 
    end subroutine read_frequencies
 
@@ -1293,12 +1292,12 @@ contains
       output_file = trim(FMSWorkingDir)//'Out.xyz'
       open (newunit=IGUnit, file=output_file, action='write')
 
-      write (IGUnit, '(a)') "UNITS=BOHR"
+      write (IGUnit, '(a)') 'UNITS=BOHR'
       write (IGUnit, *) natoms
       do I = 1, natoms
          write (IGUnit, '(a,3es24.15)') T%Particle(I)%Elmnt, (R(I, J), J=1, 3)
       end do
-      write (IGUnit, '(a)') "# momenta"
+      write (IGUnit, '(a)') '# momenta'
       do I = 1, natoms
          write (IGUnit, '(3ES24.15)') (P(I, J), J=1, 3)
       end do
@@ -1339,10 +1338,10 @@ contains
       real(DefReal), parameter :: SIGMA = 0.1d0 ! size of random perturbation
       real(defReal) :: P_norm ! norm of momentum
       real(defReal) :: B1_norm
-      real(defReal) :: dspl   ! displacement in x direction of X, for tests w/ SOC model
+      real(defReal) :: dspl ! displacement in x direction of X, for tests w/ SOC model
       complex(DefComp), dimension(B1%NumTraj) :: S_if ! overlap between initial and final
 
-      write (fmiout, *) "Initializing a swarm of trajectories"
+      write (fmiout, *) 'Initializing a swarm of trajectories'
 
       ntraj = B1%NumTraj
       natom = B1%NumParticles
@@ -1362,10 +1361,10 @@ contains
 
       ! -- Added just for usage with SOC model and sepSS testing: ---------------------------------------
       if (gliModel == FMSZERO) then
-         write (fmiout, *) "Initialising for ToyModel in 1D"
+         write (fmiout, *) 'Initialising for ToyModel in 1D'
          dX = [0.5d0, 0.d0, 0.d0]
          dP = [0.d0, 0.d0, 0.d0]
-         write (fmiout, *) "dX, dP: ", dX, dP
+         write (fmiout, *) 'dX, dP: ', dX, dP
 
          if (ntraj > 2) then
             !dspl = 0.1
@@ -1374,9 +1373,9 @@ contains
                B1%Trajectory(n)%TrajID = n
                call B1%Trajectory(n)%set_pos(X + dX)
                call B1%Trajectory(n)%set_mom(P + dP) ! useless here because dP is zero, but for completeness...
-               dX = [10.0d0, 0.d0, 0.d0]             ! used for placing two Gaussians in front of, one after
-                                                     ! the crossing point
-                                                     ! the setting for running the SSGAIMS test
+               dX = [10.0d0, 0.d0, 0.d0] ! used for placing two Gaussians in front of, one after
+               ! the crossing point
+               ! the setting for running the SSGAIMS test
                !dX = [-0.25d0, 0.d0, 0.d0]            ! for having three Gaussians in front of crossing
                ! ------------------------------------------------------------------------------------------
                !dX = dX + [dspl, 0.d0, 0.d0]          ! for having many Gaussians floating around
@@ -1389,7 +1388,7 @@ contains
             call B1%Trajectory(ntraj)%set_mom(P + dP) ! useless here because dP is zero, but for completeness...
          end if
 
-      ! -------------------------------------------------------------------------------------------------
+         ! -------------------------------------------------------------------------------------------------
 
       else
          do n = 1, ntraj
@@ -1418,7 +1417,7 @@ contains
       end if
 
       do n = 1, B1%NumTraj
-         write (fmiout, *) "Before normalising Bundle: Amplitude of traj ", n, " :", B1%Trajectory(n)%Amplitude
+         write (fmiout, *) 'Before normalising Bundle: Amplitude of traj ', n, ' :', B1%Trajectory(n)%Amplitude
       end do
 
       !! normalize the Bundle
@@ -1444,7 +1443,7 @@ contains
       call T_init%destroy()
 
       B1_norm = FMS_Norm(B1)
-      !write (fmiOut, *) "Overlap between Initial Trajectory and the Bundle"
+      !write (fmiOut, *) 'Overlap between Initial Trajectory and the Bundle'
       !write (fmiOut, *) sqrt(B1_norm)
 
       ! normalize the Bundle again
@@ -1453,7 +1452,7 @@ contains
       end do
 
       do n = 1, B1%NumTraj
-         write (fmiout, *) "After normalising Bundle: Amplitude of traj ", n, " :", B1%Trajectory(n)%Amplitude
+         write (fmiout, *) 'After normalising Bundle: Amplitude of traj ', n, ' :', B1%Trajectory(n)%Amplitude
       end do
    end subroutine FMS_InitialSwarm
 

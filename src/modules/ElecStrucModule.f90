@@ -16,7 +16,6 @@
 module ElecStrucModule
    use GlobalModule, only: DefReal, DefInt, fmiOut
    implicit none
-   save
    public
 
 !     What can this electronic structure method do?
@@ -127,7 +126,7 @@ contains
 !     FMSZero: fake electronic structure
 !
       case (FMSZERO)
-         write (fmiOut, *) "FMSZero: Using toy potentials in adiabatic basis."
+         write (fmiOut, *) 'FMSZero: Using toy potentials in adiabatic basis.'
          eszAnalyticForces = .true.
          eszNACoupVec = .true.
          eszPartialCharges = .false.
@@ -138,14 +137,14 @@ contains
          case (1)
             write (fmiOut, *) 'gliMethod=1: Tully model 1'
             if (NumStates /= 2) then
-               write (fmiOut, *) "Number of states set to 2."
+               write (fmiOut, *) 'Number of states set to 2.'
                NumStates = 2
             end if
 
          case (2)
             write (fmiOut, *) 'gliMethod=2: Persico Model 2D 2-state CI'
             if (NumStates /= 2) then
-               write (fmiOut, *) "Number of states set to 2."
+               write (fmiOut, *) 'Number of states set to 2.'
                NumStates = 2
             end if
             if (NumParticles < 2) then
@@ -155,7 +154,7 @@ contains
          case (3)
             write (fmiOut, *) 'gliMethod=3: Izmaylov Model 2D 2-state CI'
             if (NumStates /= 2) then
-               write (fmiOut, *) "Number of states set to 2."
+               write (fmiOut, *) 'Number of states set to 2.'
                NumStates = 2
             end if
             if (NumParticles < 2) then
@@ -165,14 +164,14 @@ contains
          case (4) !GAIMS_model
             write (fmiOut, *) 'gliMethod=4: GAIMS Model 1D 2-state SOC'
             if (NumStates /= 2) then
-               write (fmiOut, *) "Number of states set to 2."
+               write (fmiOut, *) 'Number of states set to 2.'
                NumStates = 2
             end if
 
          case default
-            write (fmiOut, *) "Invalid gliMethod = ", gliMethod
-            write (fmiOut, *) "iMethod must be 1, 2 or 3"
-            call FMS_DieError("gliMethod not valid")
+            write (fmiOut, *) 'Invalid gliMethod = ', gliMethod
+            write (fmiOut, *) 'iMethod must be 1, 2 or 3'
+            call FMS_DieError('gliMethod not valid')
          end select
 !     end of fmszero initialization
 
@@ -180,7 +179,7 @@ contains
 !     FMSTemplate: write electronic structure input decks with templates
 !
       case (TEMPLATE)
-         write (fmiOut, *) "FMSTemplate: system call ES interface."
+         write (fmiOut, *) 'FMSTemplate: system call ES interface.'
          if (eslCIVec > 0) esnElecPhase = NumStates
 
       case (TC)
@@ -202,7 +201,7 @@ contains
          eszPartialCharges = .false.
 
       case default
-         call FMS_DieError("Invalid iModel")
+         call FMS_DieError('Invalid iModel')
 
       end select
 

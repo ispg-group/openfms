@@ -89,6 +89,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    integer(kind=DefInt) :: NumTriplets
    real(kind=DefReal) :: SOCThresh
    real(kind=DefReal) :: ShiftTrip
+   logical :: SPA1_SOC_model
 ! GAIMS added end
 
    logical :: zMMFile
@@ -270,7 +271,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
       , tspwnixf, tspwnfxf &
       ! xf added end
       ! GAIMS added
-      , NumSinglets, NumTriplets, SOCThresh, ShiftTrip &
+      , NumSinglets, NumTriplets, SOCThresh, ShiftTrip, SPA1_SOC_model &
       ! GAIMS added end
       , StochasticSwiss, StochasticStateSpecific &
       ! Toy models
@@ -325,7 +326,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    IMethod = 1
    InitBright = .false.
    InitDark = .false.
-   InitialCond = "NOSAMPLE"
+   InitialCond = 'NOSAMPLE'
    ForceKill(:) = 0
    IzmOmegax = 0.009557d0
    IzmOmegay = 0.0033515d0
@@ -364,7 +365,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    MinSearch = .false.
    MirrorBasis = .false.
    MirrorState = 1
-   Model = "UNDEF"
+   Model = 'UNDEF'
    MoldenStep = 200
    MultiSpawn = 1
    NCycles = 0
@@ -471,6 +472,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    NumTriplets = 0
    SOCThresh = 0.d0
    ShiftTrip = 0.d0
+   SPA1_SOC_model = .false.
 ! GAIMS added end
 
 !     Flag for input errors
@@ -491,7 +493,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
 
 !     Copy global parameters into Global_Module
    select case (trim(lower_case(Model)))
-   case ("undef")
+   case ('undef')
       write (error_unit, *) '"Model" must be defined in Control.dat'// &
          NL//'Available models:'//NL//'  '//AVAILABLE_MODELS
       zFatal = .true.
@@ -560,6 +562,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    glGrsigma = Grsigma
    glzFullyCoupled = FullyCoupled
    glzStochastic = Stochastic
+   glzSPA1_SOC_model = SPA1_SOC_model
 !bfec
    gldStochaThresh = StochasticThresh
    glzCentroids = CentroidApprox
@@ -601,7 +604,6 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    fmNAngles = NAngles
    fmNPyrams = NPyrams
    fmzXYZ = zXYZ
-   fmzDCD = zDCD
    fmzTrajFile = zTrajFile
    fmzPotEnFile = zPotEnFile
    fmzMMFile = zMMFile
@@ -787,6 +789,11 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    end if
 
    if (zFatal) call FMS_DieError('Namelist input failed.')
+
+   if (zDCD) then
+      call FMS_DieError('DCD output has been removed. If you need it, please comment on this this GitHub issue:'//NL// &
+                        'https://github.com/ispg-group/openfms/issues/33')
+   end if
 
 !
 !     Make sure output options make sense

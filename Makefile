@@ -48,7 +48,7 @@ ifeq ($(ESP),quantics)
    LIBS += ${QUANTICS_OBJ}/libomp.a
 endif
 
-.PHONY: makefmslib test testclean updatetestref clean veryclean list
+.PHONY: FORCE test testclean updatetestref clean veryclean list
 
 MODULEDIR=Modules/
 
@@ -59,12 +59,12 @@ SUFFIXES=.f .c .F
 ####################
 
 FMSLIB = src/libfms.a
+MAIN = src/openfms.o src/build_info.o
 
-$(FMSLIB): makefmslib
-
+$(MAIN): $(FMSLIB)
 # NOTE: It's important to use $(MAKE) for working parallel compilation!
 # https://stackoverflow.com/a/60706372/3682277
-makefmslib: CONFIGFMS
+$(FMSLIB): CONFIGFMS FORCE bin
 	@cd src; $(MAKE) -r
 
 ####################
@@ -74,25 +74,25 @@ bin:
 	mkdir bin
 
 # This is standalone OpenFMS, without external electronic structure
-bin/$(PROGBASE).zero: $(FMSLIB) $(MAKEFILE) bin
-		@rm -f bin/$(PROGBASE)
+bin/$(PROGBASE).zero: $(FMSLIB) $(MAIN) $(MAKEFILE)
 		@echo;echo "Linking $(PROGRAM) ..."
-		$(LD) $(FMSLIB) -I$(MODULEDIR) -o $(TARGET) $(LIBS) $(LDFLAGS)
+		$(LD) $(MAIN) $(FMSLIB) -I$(MODULEDIR) -o $(TARGET) $(LIBS) $(LDFLAGS)
+		@rm -f bin/$(PROGBASE)
 		@ln -s $(PROGRAM) bin/$(PROGBASE)
 		@echo "done"
 
 # OpenFMS with TeraChem interface
-bin/$(PROGBASE).tc:  $(FMSLIB) $(MAKEFILE) bin
+bin/$(PROGBASE).tc: $(FMSLIB) $(MAIN) $(MAKEFILE)
 		@rm -f bin/$(PROGBASE)
 		@echo;echo "Linking $(PROGRAM) ..."
-		$(LD) $(FFLAGS) $(FMSLIB) -o $(TARGET) $(LIBS) $(LDFLAGS)
+		$(LD) $(FFLAGS) $(MAIN) $(FMSLIB) -o $(TARGET) $(LIBS) $(LDFLAGS)
 		@ln -s $(PROGRAM) bin/$(PROGBASE)
 		@echo "done"
 
-bin/$(PROGBASE).quantics: $(FMSLIB) $(MAKEFILE) bin
+bin/$(PROGBASE).quantics: $(FMSLIB) $(MAIN) $(MAKEFILE)
 		@rm -f bin/$(PROGBASE)
 		@echo;echo "Linking $(PROGRAM) ..."
-		$(LD) $(FMSLIB) -I$(MODULEDIR) -o $(TARGET) $(LIBS) $(LDFLAGS) -J$(QUANTICS_OBJ)/include -L$(QUANTICS_DIR)/bin/dyn_libs -lsrf -lusrf -lsqlite3 -Wl,-rpath=$(QUANTICS_DIR)/bin/dyn_libs
+		$(LD) $(MAIN) $(FMSLIB) -I$(MODULEDIR) -o $(TARGET) $(LIBS) $(LDFLAGS) -J$(QUANTICS_OBJ)/include -L$(QUANTICS_DIR)/bin/dyn_libs -lsrf -lusrf -lsqlite3 -Wl,-rpath=$(QUANTICS_DIR)/bin/dyn_libs
 		@ln -s $(PROGRAM) bin/$(PROGBASE)
 		@echo "done"
 
@@ -101,7 +101,7 @@ test: ${TARGET}
 	tests/test.sh "${TARGET}" "$(TEST)" test
 
 # Unit tests
-unittest: makefmslib CONFIGFMS
+unittest: $(TARGET)
 	@cd unit_tests; $(MAKE) -r
 
 # Clean all test folders.

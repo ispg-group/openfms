@@ -37,16 +37,18 @@ module TerachemModule
    interface
       subroutine MPI_Send(buf, count, datatype, dest, tag, comm, ierr)
          implicit none
-         type(*), dimension(*) :: buf
-         integer :: count, datatype, dest, tag, comm, ierr
+         type(*), dimension(*), intent(in) :: buf
+         integer, intent(in) :: count, datatype, dest, tag, comm
+         integer, intent(inout) :: ierr
       end subroutine MPI_Send
 
       subroutine MPI_Recv(buf, count, datatype, source, tag, comm, status, ierr)
          import MPI_STATUS_SIZE
          implicit none
-         type(*), dimension(*) :: buf
-         integer :: count, datatype, source, tag, comm, ierr
-         integer :: status(MPI_STATUS_SIZE)
+         type(*), dimension(*), intent(inout) :: buf
+         integer, intent(in) :: count, datatype, source, comm, tag
+         integer, intent(inout) :: ierr
+         integer, intent(inout) :: status(MPI_STATUS_SIZE)
       end subroutine MPI_Recv
    end interface
 #endif
@@ -57,12 +59,12 @@ contains
    subroutine InitTerachem(NumParticles, NumStates)
       use GlobalModule, only: BohrToAng
       use ElecStrucModule
+      integer(kind=DefInt), intent(in) :: NumParticles, NumStates
 
       integer, parameter :: CLEN = 128
       integer(kind=DefInt) :: natoms, nqmmm
       real(kind=DefReal), allocatable :: atcoords(:, :)
       character(len=:), allocatable :: server_name
-      integer(kind=DefInt) :: NumParticles, NumStates
       character(len=2), allocatable :: atom_types(:)
       integer(kind=DefInt) :: bufints(20)
       integer :: status(MPI_STATUS_SIZE)
@@ -99,12 +101,12 @@ contains
 
       ! Read the "tc_options" file and send its contents to TeraChem
       ! If `tc_options` does not exist, try `misc_options` for backward compatibility
-      tc_options_file = "tc_options"
+      tc_options_file = 'tc_options'
       inquire (file=tc_options_file, exist=file_exists)
       if (.not. file_exists) then
-         tc_options_file = "misc_options"
+         tc_options_file = 'misc_options'
       end if
-      open (newunit=iunit, file=tc_options_file, status="old", action="read", iostat=ierr, iomsg=errmsg)
+      open (newunit=iunit, file=tc_options_file, status='old', action='read', iostat=ierr, iomsg=errmsg)
       if (ierr /= 0) then
          call FMS_DieError(trim(errmsg))
       end if
@@ -137,14 +139,14 @@ contains
 
       ! Read initial coordinates from file
       ! TODO: Use the existing subroutine for this!
-      open (newunit=iunit, file="Geometry.dat", action='read', status='old')
+      open (newunit=iunit, file='Geometry.dat', action='read', status='old')
 
       GeomInAngs = .false.
       read (iunit, *) unitname
       txt = unitname(7:7)
-      if (txt == "a" .or. txt == "A") then ! Angstrom
+      if (txt == 'a' .or. txt == 'A') then ! Angstrom
          GeomInAngs = .true.
-      elseif (txt == "b" .or. txt == "B") then ! Bohr
+      else if (txt == 'b' .or. txt == 'B') then ! Bohr
          GeomInAngs = .false.
       end if
 
@@ -232,19 +234,19 @@ contains
       character(len=MPI_MAX_PORT_NAME) :: port_name
       integer :: ierr
 
-      write (*, *) "Terachem MPI Initialization"
+      write (*, *) 'Terachem MPI Initialization'
 
       ! Initialize MPI.
       call MPI_Init(ierr)
       if (ierr /= 0) then
-         call FMS_DieError("MPI_Init failed!")
+         call FMS_DieError('MPI_Init failed!')
       end if
 
       ! Check the number of processes, only 1 is allowed!
       call MPI_Comm_size(MPI_COMM_WORLD, nproc, ierr)
       if (nproc /= 1) then
          write (*, '(A,I0)') 'Number of MPI processes: ', nproc
-         call FMS_DieError("Only one MPI process should be running")
+         call FMS_DieError('Only one MPI process should be running')
       end if
 
       ! -----------------------------------
@@ -347,6 +349,7 @@ contains
       type(T_Trajectory), intent(inout) :: T_FMS
       integer(kind=DefInt), intent(in) :: iCalcState, jCalcState
       logical, intent(in) :: CalcCoup
+
       integer(DefInt), save :: first_call = 1
       real(kind=DefReal), allocatable :: atcoords(:, :), tmpcoords(:)
       integer(kind=DefInt) :: bufints(20)
@@ -659,19 +662,19 @@ contains
 !<
    subroutine FMS_CheckOverlap(T1, SMat, nstate)
       use ElecStrucModule
-      type(T_Trajectory) :: T1
+      type(T_Trajectory), intent(inout) :: T1
+      real(kind=DefReal), intent(in) :: SMat(nstate, nstate)
+      integer(kind=DefInt), intent(in) :: nstate
 
-      integer(kind=DefInt) :: nstate
       integer(kind=DefInt) :: IState, JState, ioccstate
 
-      real(kind=DefReal) :: SMat(nstate, nstate)
       real(kind=DefReal) :: SCI_II, SCI_IJ, SCI_JI, SCI_JJ
       real(kind=defReal) :: E_occ, E_I, E_J, E_occ_old, E_I_old, E_J_old
 
       logical :: ImportantState
 
 1999  format('========================================================')
-2000  format("WARNING: Trajectory jumped an intersection.")
+2000  format('WARNING: Trajectory jumped an intersection.')
 
 !     Don't bother correcting phase if there was no electronic structure previously stored
       if (.not. T1%ESFlags%zESExists) then
@@ -695,7 +698,7 @@ contains
             SCI_IJ = SMat(IState, JState)
             SCI_JI = SMat(JState, IState)
 
-            write (*, *) "Overlap matrix for states:", IState, JState
+            write (*, *) 'Overlap matrix for states:', IState, JState
             write (*, *) SCI_II, SCI_JI
             write (*, *) SCI_IJ, SCI_JJ
             write (*, *)
@@ -840,7 +843,7 @@ contains
       c_err = usleep(usec)
       ! DH: If you ever see this warning, please report it!
       if (c_err /= 0) then
-         write (error_unit, '(a,i0)') "WARNING: usleep syscall returned an error: ", c_err
+         write (error_unit, '(a,i0)') 'WARNING: usleep syscall returned an error: ', c_err
       end if
    end subroutine milisleep
 

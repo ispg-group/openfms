@@ -421,16 +421,16 @@ contains
 !! Returns Tully 1 diabatic Hamiltonian
 !<
       subroutine Tully(x, sigma)
-         real(kind=DefReal), intent(IN) :: x
-         real(kind=DefReal), intent(OUT) :: sigma
+         real(kind=DefReal), intent(in) :: x
+         real(kind=DefReal), intent(out) :: sigma
          real(kind=DefReal) :: rsigma, drsigma
 
          rsigma = 8.0d0
          drsigma = 2.d0
          if (x <= (rsigma - (drsigma / 2.d0))) then
             sigma = 1.d0
-         elseif ((x > (rsigma - (drsigma / 2.d0))) .and. &
-                 (x < (rsigma + (drsigma / 2.d0)))) then
+         else if ((x > (rsigma - (drsigma / 2.d0))) .and. &
+                  (x < (rsigma + (drsigma / 2.d0)))) then
             sigma = 4.d0 * ((x - rsigma) / (drsigma))**3 - &
                     3.d0 * ((x - rsigma) / (drsigma))
          else
@@ -453,8 +453,8 @@ contains
 !! Returns Persico diabatic Hamiltonian
 !<
       subroutine Persico(x, y, H)
-         real(kind=DefReal), intent(IN) :: x, y
-         real(kind=DefReal), intent(OUT) :: H(2, 2)
+         real(kind=DefReal), intent(in) :: x, y
+         real(kind=DefReal), intent(out) :: H(2, 2)
          H(1, 1) = 0.5d0 * KX * (x - X1)**2 + 0.5d0 * KY * y * y
          H(2, 2) = 0.5d0 * KX * (x - X2)**2 + 0.5d0 * KY * y * y + Delta
          H(1, 2) = gamma * y * exp(-alpha * (x - X3)**2) * exp(-beta * y * y)
@@ -466,8 +466,8 @@ contains
 !<
 
       subroutine Izmaylov(x, y, H)
-         real(kind=DefReal), intent(IN) :: x, y
-         real(kind=DefReal), intent(OUT) :: H(2, 2)
+         real(kind=DefReal), intent(in) :: x, y
+         real(kind=DefReal), intent(out) :: H(2, 2)
          H(1, 1) = 0.5d0 * (W1**2) * (x + 0.5d0 * XA)**2 + 0.5d0 * (W2**2) * &
                    (y + 0.5d0 * YA)**2 + 0.5d0 * deltaE
          H(2, 2) = 0.5d0 * (W1**2) * (x - 0.5d0 * XA)**2 + 0.5d0 * (W2**2) * &
@@ -481,8 +481,8 @@ contains
 !<
 
       subroutine GAIMS_md(x, H)
-         real(kind=DefReal), intent(IN) :: x
-         real(kind=DefReal), intent(OUT) :: H(2, 2)
+         real(kind=DefReal), intent(in) :: x
+         real(kind=DefReal), intent(out) :: H(2, 2)
 
          ! Step function sigma(r) controlling SOC sign change, Eq (21)
          if (x <= r_sigma - dr_sigma / 2) then
@@ -517,8 +517,8 @@ contains
 !! This is done analytically, since we can.
 !<
       subroutine diagABBC(H, EVec1, EVec2)
-         real(kind=DefReal), intent(IN) :: H(2, 2)
-         real(kind=DefReal), intent(OUT) :: EVec1(2), EVec2(2)
+         real(kind=DefReal), intent(in) :: H(2, 2)
+         real(kind=DefReal), intent(out) :: EVec1(2), EVec2(2)
          real(kind=DefReal) :: A, B, C, norm
 
          if (H(2, 1) /= H(1, 2)) call FMS_DieError( &

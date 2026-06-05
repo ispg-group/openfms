@@ -18,7 +18,7 @@ syntax: glob
 *.Po
 *.ps
 *.pdf
-
+.DS_Store
 bin/
 
 *CONFIG*
@@ -39,5 +39,9 @@ tests/*/*.[1-9]
 
 # auto-generated stuff from FMS
 src/moddepend
+src/build_info.F90
 # from fprettify
 __pycache__/
+
+# FORD dev docs 
+developer_docs

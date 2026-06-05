@@ -1,24 +1,28 @@
-!  Copyright Todd J. Martinez and Raphael D. Levine, 1994
+!---------------------------------------------------------------------!
+!                                                                     !
+!  Copyright Todd J. Martinez and Raphael D. Levine, 1994             !
+!                                                                     !
+!---------------------------------------------------------------------!
 !>
-!! @brief Trajectory class specification and related methods
-!!
-!! This module specifies the trajectory type, and all related
-!! methods. A given instance of a trajectory object contains the
-!! classical position and momenta for a given trajectory basis function
-!! at a given instant in time. Also included in the trajectory data
-!! structure are electronic structure quantities, in the "T_ElecStruc"
-!! datatype, and flags describing those quantities in "T_ESFlags".
-!!
-!! This module also defines several other derived types, some of which
-!! are stored in T_Trajectory: T_ElecStruc, T_ESFlags, T_BFlags
-!!
-!! Methods in this module pertain to basic manipulation of T_Trajectory
-!! derived type. Methods that pertain to electronic structure are
-!! in the TrajectoryCalcsModule, while the methods related to file IO
-!! are in TrajectoryIOModule.
-!!
-!! \image latex "../sources/TrajModule.png"
-!<
+!> @brief Trajectory class specification and related methods
+!>
+!> This module specifies the trajectory type, and all related
+!> methods. A given instance of a trajectory object contains the
+!> classical position and momenta for a given trajectory basis function
+!> at a given instant in time. Also included in the trajectory data
+!> structure are electronic structure quantities, in the "T_ElecStruc"
+!> datatype, and flags describing those quantities in "T_ESFlags".
+!>
+!> This module also defines several other derived types, some of which
+!> are stored in T_Trajectory: T_ElecStruc, T_ESFlags, T_BFlags
+!>
+!> Methods in this module pertain to basic manipulation of T_Trajectory
+!> derived type. Methods that pertain to electronic structure are
+!> in the TrajectoryCalcsModule, while the methods related to file IO
+!> are in TrajectoryIOModule.
+!>
+!> \image latex "../sources/TrajModule.png"
+!>
 module TrajectoryModule
 
    use GlobalModule, only: D2, Pi, DefInt, DefReal, DefComp, fmiOut, FPZero, &
@@ -37,39 +41,54 @@ module TrajectoryModule
 !--------------------------------------------------------------------!
 
 !--------------------------------------------------------------------!
-! Flags to track electronic structure status
-   type T_ESFlags
-!        private
-      logical :: zIgnoreErrors, & !< For the first timestep of centroids only - we can ignore phasing and diabatization errors.
-                 zESExists, & !< Does a wavefunction exist to restart from?
-                 ZPotEnCurrent, & !< Is the potential calculated for the current geometry
-                 ZTransDipsCurrent, & !< If transition dipoles are calculated for this geometry
-                 ZTransDipsCurrentxf, & !< xf added
-                 ZDipolesCurrent, & !< If dipoles are calculated for this geometry
-                 ZQuadpolesCurrent, & !< If quadrupoles are calculated for this geometry
-                 zMMPotCurrent, & !< If MM potential is calculated for the current geometry
-                 zMMForceCurrent, & !< If MM forces are calculated for the current geometry
-                 zModPotCurrent !< Are external force modifications current?
 
+!>    Flags to track electronic structure status
+   type T_ESFlags
+
+      !> For the first timestep of centroids only - we can ignore
+      !> phasing and diabatization errors.
+      logical :: zIgnoreErrors
+      !> Does a wavefunction exist to restart from?
+      logical :: zESExists
+      !> Is the potential calculated for the current geometry
+      logical :: ZPotEnCurrent
+      !> If transition dipoles are calculated for this geometry
+      logical :: ZTransDipsCurrent
+      !> xf added (TODO: Needs more thorough documentation!)
+      logical :: ZTransDipsCurrentxf
+      !> If dipoles are calculated for this geometry
+      logical :: ZDipolesCurrent
+      !> If quadrupoles are calculated for this geometry
+      logical :: ZQuadpolesCurrent
+      !> If MM potential is calculated for the current geometry
+      logical :: zMMPotCurrent
+      !> If MM forces are calculated for the current geometry
+      logical :: zMMForceCurrent
+      !> Are external force modifications current?
+      logical :: zModPotCurrent
+
+      ! TODO: Add appropriate documentation here! Also the name
+      ! DerivCurrent is rather misleding, as it contains information
+      ! on if the forces/couplings are up-to-date. Maybe splitting it
+      ! up into two flags?
       !< Is the coupling current with the geometry for this state?
       !< Are the derivatives current with the geometry for this state?
       logical, allocatable :: ZDerivCurrent(:, :)
       logical, allocatable :: ZSOMCurrent(:, :, :, :)
       !< This should be replaced by zForcesCurrent
+
    end type T_ESFlags
 
-!---------------------------------------------------------------------!
-!>
-!!    Flags to track bundle status
-!<
+!>    Flags to track bundle status
    type T_BFlags
-!     private
-      logical :: zBundleCurrent, & !< Has the trajectory changed since the last bundle calculation?
-                 ZAmpDotCurrent !< Is AmpDot current?
+
+      !> Has the trajectory changed since the last bundle calculation?
+      logical :: zBundleCurrent
+      !> Is AmpDot current?
+      logical :: ZAmpDotCurrent
 
    end type T_BFlags
 
-!----------------------------------------------------------------------------
 !>
 !!     Electronic structure data for a trajectory
 !!     TODO: Should this type live in ElecStrucModule?
@@ -922,13 +941,13 @@ contains
 
       npart = T1%NumParticles
       if (i < 1 .or. npart < i) then
-         call FMS_DieError("Distance: index i out of range")
+         call FMS_DieError('Distance: index i out of range')
       end if
       if (j < 1 .or. npart < j) then
-         call FMS_DieError("Distance: index j out of range")
+         call FMS_DieError('Distance: index j out of range')
       end if
       if (i == j) then
-         call FMS_DieError("Distance: i and j the same ")
+         call FMS_DieError('Distance: i and j the same ')
       end if
 
       R = FMS_Distance(T1%Particle(i), T1%Particle(j))
@@ -963,9 +982,9 @@ contains
       integer(kind=DefInt) :: npart
 
       npart = T1%NumParticles
-      if (i < 1 .or. npart < i) call FMS_DieError("FMS_Angle_Trajectory : index i out of range")
-      if (j < 1 .or. npart < j) call FMS_DieError("FMS_Angle_Trajectory : index j out of range")
-      if (k < 1 .or. npart < k) call FMS_DieError("FMS_Angle_Trajectory : index k out of range")
+      if (i < 1 .or. npart < i) call FMS_DieError('FMS_Angle_Trajectory : index i out of range')
+      if (j < 1 .or. npart < j) call FMS_DieError('FMS_Angle_Trajectory : index j out of range')
+      if (k < 1 .or. npart < k) call FMS_DieError('FMS_Angle_Trajectory : index k out of range')
 
       theta = FMS_Angle(T1%Particle(i), T1%Particle(j), T1%Particle(k))
 
@@ -1011,16 +1030,16 @@ contains
 
       npart = T1%NumParticles
       if (i < 1 .or. npart < i) then
-         call FMS_DieError("Dihedral: index i out of range")
+         call FMS_DieError('Dihedral: index i out of range')
       end if
       if (j < 1 .or. npart < j) then
-         call FMS_DieError("Dihedral: index j out of range")
+         call FMS_DieError('Dihedral: index j out of range')
       end if
       if (k < 1 .or. npart < k) then
-         call FMS_DieError("Dihedral: index k out of range")
+         call FMS_DieError('Dihedral: index k out of range')
       end if
       if (l < 1 .or. npart < l) then
-         call FMS_DieError("Dihedral: index l out of range")
+         call FMS_DieError('Dihedral: index l out of range')
       end if
 
       phi = FMS_Dihedral(T1%Particle(i), T1%Particle(j), T1%Particle(k), T1%Particle(l))

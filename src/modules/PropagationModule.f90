@@ -277,7 +277,7 @@ contains
 
          complex(kind=DefComp), dimension(size(C_t), size(C_t)) :: Id, B, Bn, Bn2, Bn3, Bn4, tayl, tayl_prod
 
-         real*8 :: error
+         real(kind=DefReal) :: error
 
          ndim = size(C_t)
          Id = (0., 0.)
@@ -479,7 +479,7 @@ contains
       real(kind=DefReal) :: DNorm
       integer(kind=DefInt) :: IState, ITraj
 
-      write (fmiout, *) "This is OldNorms: ", OldNorms
+      write (fmiout, *) 'This is OldNorms: ', OldNorms
 
       if (B1%NumStates /= LastDimension) then
          if (LastDimension /= 0) deallocate (NewNorms)
@@ -632,7 +632,7 @@ contains
 !
       if (smSMD) then
          if (Bundle%NumTraj > 1) then
-            call FMS_DieError("SMD should only have 1 trajectory")
+            call FMS_DieError('SMD should only have 1 trajectory')
          end if
          if (SMD_Completed()) then
             call FMS_Shutdown(B1=Bundle)

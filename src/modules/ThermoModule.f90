@@ -4,10 +4,10 @@ module ThermoModule
    implicit none
    private
    public :: thermo_init, thermo, thermo_bussi_global, thermo_bussi_local, thermo_NormDist, thermo_MBDist
-   character(len=8), save :: therm = "" !which thermostat to use in simple interface
-   double precision, save :: beta_s = 0.0 !inverse temperature in simple interface
-   double precision, save :: thermtime = 0.0 !Thermostat relaxation time (in au) for simple interface
-   logical, save :: zcom_s = .true. !Do center of mass removal in simple interface?
+   character(len=8) :: therm = '' !which thermostat to use in simple interface
+   double precision :: beta_s = 0.0 !inverse temperature in simple interface
+   double precision :: thermtime = 0.0 !Thermostat relaxation time (in au) for simple interface
+   logical :: zcom_s = .true. !Do center of mass removal in simple interface?
    integer(4), parameter :: i4one = 1 !Ensure type is consistent with uses of integer(4)
 
 contains
@@ -38,11 +38,11 @@ contains
       tau = thermtime / dt
 
       select case (therm)
-      case ("bussi_g")
+      case ('bussi_g')
          call thermo_bussi_global(ndim, natom, p, mass, beta_s, tau, thermE, zcom_s)
-      case ("bussi_l")
+      case ('bussi_l')
          call thermo_bussi_local(ndim, natom, p, mass, beta_s, tau, thermE, zcom_s)
-      case ("mbdist")
+      case ('mbdist')
          call thermo_MBDist(ndim, natom, p, mass, beta_s, zcom_s)
       case default !do nothing, and return
 
@@ -221,7 +221,7 @@ contains
       integer, intent(in) :: ia
 
       gamdev = 0.0d0
-      call FMS_DieError("ERROR: gamdev not implemented")
+      call FMS_DieError('ERROR: gamdev not implemented')
    end function gamdev
 
 ! TODO: Reimplement this
@@ -229,7 +229,7 @@ contains
       double precision :: gasdev
 
       gasdev = 0.0d0
-      call FMS_DieError("ERROR: gasdev not implemented")
+      call FMS_DieError('ERROR: gasdev not implemented')
    end function gasdev
 
    subroutine thermo_ran(rnd, iseed)
@@ -237,7 +237,7 @@ contains
       integer(4), optional :: iseed
       double precision :: rnd
 
-      call FMS_DieError("ERROR: thermo_ran not implemented")
+      call FMS_DieError('ERROR: thermo_ran not implemented')
       if (present(iseed)) then
          ! TODO: Use FMS_ranb
          !rnd=ran1(iseed)
