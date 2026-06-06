@@ -10,8 +10,6 @@ FMSEXE=openfms.tc
 MPIRUN=mpiexec.hydra
 GPUS=0
 
-MPI_ADDITIONAL_ARGUMENTS='-nameserver localhost'
-
 ### Let's check all the binaries are available first
 if ! which "$MPIRUN" > /dev/null; then
   echo "ERROR: Executable $MPIRUN not found"
@@ -34,7 +32,7 @@ export MPIR_CVAR_CH4_NETMOD=ofi
 
 TCOUT=tc.out
 # shellcheck disable=SC2086
-$MPIRUN $MPI_ADDITIONAL_ARGUMENTS -n 1 "$TCEXE" -g "$GPUS" -U2 --MPIPort="$tc_server_name" &> $TCOUT &
+$MPIRUN -n 1 "$TCEXE" -g "$GPUS" -U2 --MPIPort="$tc_server_name" &> $TCOUT &
 PID_TC=$!
 
 # Grep port name from TC output
@@ -52,7 +50,7 @@ while [[ -z ${tc_port} ]]; do
 done
 
 # shellcheck disable=SC2086
-$MPIRUN $MPI_ADDITIONAL_ARGUMENTS -n 1 "$FMSEXE" --tc-port-name $tc_port &> fms.out &
+$MPIRUN -n 1 "$FMSEXE" --tc-port-name $tc_port &> fms.out &
 PID_FMS=$!
 
 echo "Both OpenFMS(pid=$PID_FMS) and TeraChem(pid=$PID_TC) have started, waiting for them to finish..."
@@ -60,7 +58,7 @@ echo "(Monitor tc.out, fms.out and FMS.out for progress)"
 # Should be replace with "wait -n" once we have bash 4.3
 # Note about 'kill -0' https://unix.stackexchange.com/questions/169898/what-does-kill-0-do
 while ( (kill -0 $PID_TC >& /dev/null) && (kill -0 $PID_FMS >& /dev/null) ); do sleep 1; done
-sleep 5 # grace time for program termination
+sleep 3 # grace time for program termination
 
 # If one dies and the other doesn't, kill the other.
 # This logic will be triggered if one dies before the other even starts,
