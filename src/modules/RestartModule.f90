@@ -159,6 +159,7 @@ contains
                            numstates=B%NumStates, &
                            numparticles=B%NumParticles, &
                            ncbfs=B%NCBFs)
+
          itrajnew = 0
          do itraj = 1, B%numTraj
 !    TODO(danielhollas): It looks like this code is currently broken from non-GAIMS simulations?
@@ -175,6 +176,7 @@ contains
 !         if (any(inirestarttraj(:).eq.B%trajectory(jtraj)%trajid)) then
                   CBFj = B%Trajectory(jtraj)%CBF !not ideal way, but for now let's see
                   jtrajnew = jtrajnew + 1
+                  if (CBFi == CBFj) cycle
                   iCent = ((CBFi - 2) * (CBFi - 1)) / 2 + CBFj
 !           jCent=((iTrajnew-2)*(iTrajnew-1))/2+jTrajnew
                   Btemp%Centroids(iCent) = B%Centroids(iCent)
@@ -191,6 +193,7 @@ contains
             end if
 !    endif
          end do
+
          if (B%NumDeadTraj > 0) then !copy dead trajectories
             do iTraj = 1, B%NumDeadTraj
                Btemp%DeadTraj(iTraj) = B%DeadTraj(iTraj)
