@@ -713,7 +713,7 @@ contains
       use ElecStrucModule, only: esNBasis, esLCIVec
       type(T_ElecStruc), intent(inout) :: ES
       integer(kind=DefInt), intent(in) :: nf
-      integer(kind=DefInt) :: ierr, rows, cols
+      integer(kind=DefInt) :: rows, cols
       character(len=500) :: header
 
 3     format(10(1x, es15.8))
@@ -751,7 +751,6 @@ contains
       !!
       integer(kind=DefInt), intent(in) :: nf
       character(len=500), intent(out) :: header
-      integer(kind=DefInt) :: ierr
 
       do
          read (nf, '(A)') header
