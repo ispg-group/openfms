@@ -254,7 +254,7 @@ contains
       ! -----------------------------------
       if (.not. allocated(port_name)) then
          server_name = get_server_name()
-         call lookup_port_via_nameserver(server_name, port_name)
+         port_name = lookup_port_via_nameserver(server_name)
       end if
 
       ! Establish new communicator via port name
@@ -291,11 +291,11 @@ contains
    end subroutine tc_finalize
 
    ! Look for server_name via MPI nameserver, get port name
-   subroutine lookup_port_via_nameserver(server_name, port_name)
+   function lookup_port_via_nameserver(server_name) result(port_name)
       use mpi, only: MPI_wtime, MPI_lookup_name, MPI_comm_set_errhandler, &
                      MPI_MAX_PORT_NAME, MPI_ERRORS_RETURN, MPI_ERRORS_ARE_FATAL, MPI_INFO_NULL
       character(len=*), intent(in) :: server_name
-      character(len=MPI_MAX_PORT_NAME), intent(out) :: port_name
+      character(len=MPI_MAX_PORT_NAME) :: port_name
       ! Give up trying to find the port after this many seconds
       integer, parameter :: connection_timeout = 30
       real(DefReal) :: timer
@@ -344,7 +344,7 @@ contains
          write (fmiOut, *) 'WARNING: Could not set MPI error handler to MPI_ERRORS_ARE_FATAL!'
       end if
 
-   end subroutine lookup_port_via_nameserver
+   end function lookup_port_via_nameserver
 
    subroutine RunTerachem(T_FMS, iCalcState, jCalcState, CalcCoup)
       use ElecStrucModule
