@@ -31,8 +31,7 @@ tc_server_name=tcfms_port$(( ( RANDOM % 10000 ) + 1 ))
 export MPIR_CVAR_CH4_NETMOD=ofi
 
 TCOUT=tc.out
-# shellcheck disable=SC2086
-$MPIRUN -n 1 "$TCEXE" -g "$GPUS" -U2 --MPIPort="$tc_server_name" &> $TCOUT &
+$MPIRUN -n 1 "$TCEXE" -g "$GPUS" -U2 --MPIPort="$tc_server_name" &> "$TCOUT" &
 PID_TC=$!
 
 # Grep port name from TC output
@@ -49,8 +48,7 @@ while [[ -z ${tc_port} ]]; do
   (( ++i ))
 done
 
-# shellcheck disable=SC2086
-$MPIRUN -n 1 "$FMSEXE" --tc-port-name $tc_port &> fms.out &
+$MPIRUN -n 1 "$FMSEXE" --tc-port-name "$tc_port" &> fms.out &
 PID_FMS=$!
 
 echo "Both OpenFMS(pid=$PID_FMS) and TeraChem(pid=$PID_TC) have started, waiting for them to finish..."
