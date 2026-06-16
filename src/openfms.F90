@@ -466,6 +466,10 @@ contains
          case ('--tc-port-name')
 #ifdef TeraChem
             i = i + 1
+            ! NOTE: Manual allocation shouldn't be needed for newer compilers
+            ! https://www.scivision.dev/fortran-character-allocatable/
+            allocate (character(MPI_MAX_PORT_NAME) :: tc_port_name)
+
             call get_command_argument(i, tc_port_name, length=len)
             if (len > MPI_MAX_PORT_NAME) then
                call FMS_DieError('--tc-port-name argument was too long')
