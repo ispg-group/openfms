@@ -31,6 +31,8 @@ foreach $file (@ARGV){
     foreach $mod (@contains){
 	$uses =~ s/$mod//ig;
     }
+# Remove mpi module
+    $uses =~ s/mpi//ig;
     if( ! $uses){ next;}
 
     $file =~ s/\.(f|F|f90|F90) *$/.o/g;
