@@ -1,7 +1,7 @@
 module test_overlap
    use testdrive, only: new_unittest, unittest_type, error_type, check
    use testutils, only: check_dieerror_called
-   use GlobalModule, only: DefReal, DefInt
+   use GlobalModule, only: DefReal, DefInt, fmiOut
    use OverlapModule, only: overlap, overlap_S_dot
    use TrajectoryModule
    implicit none
@@ -86,7 +86,8 @@ contains
       glIzmYshift = 0.0
       glIzmDeltaE = 0.01984
       glIzmCoupC = 0.0006127
-      call FMS_ESInit(num_particles, num_states, suppress_write=.true.)
+      fmiOut = open_fms_out_to_null()
+      call FMS_ESInit(num_particles, num_states)
       call T1%create(numparticles=num_particles, numstates=num_states)
       call T2%create(numparticles=num_particles, numstates=num_states)
 
@@ -130,5 +131,12 @@ contains
       call T1%destroy()
       call T2%destroy()
    end subroutine test_overlap_S_dot
+
+   function open_fms_out_to_null() result(output_unit)
+      integer :: output_unit
+      character(len=256) :: filepath
+
+      open (newunit=output_unit, file='/dev/null', status='replace')
+   end function open_fms_out_to_null
 
 end module test_overlap
