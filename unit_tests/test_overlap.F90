@@ -51,7 +51,8 @@ contains
             case ('S')
                tmp = overlap(T1_tmp, T2_tmp)
             case default
-               return
+               print*,'You really should not be seeing this error message!'
+               stop 1
             end select
             tmp_num_deriv = tmp_num_deriv + (-1)**k * tmp
          end do
@@ -118,8 +119,9 @@ contains
       ! calculates SDot numerically, (<chi_2(t)|chi_2(t+h)> - <chi_2(t)|chi_2(t-h)>)/2
       ! with seven different step sizes h = 1.d-1, 1.d-2, ..., 1.d-7
       SDot_numerical = get_numerical_time_derivative(T1, T2, 'S')
-      ! since the numerical derivative suffers from cancelations at small h,
-      ! we look for the smallest
+      ! since the numerical derivative suffers from catastrophic cancelations
+      ! at small h, we look for the smallest error
+      ! see, e.g., https://en.wikipedia.org/wiki/Numerical_differentiation#/media/File%3AAbsoluteErrorNumericalDifferentiationExample.png
       min_err = minval(abs(SDot_analytical - SDot_numerical))
       call check(error, min_err < atol + rtol * abs(SDot_analytical(1)), 'Analytical SDot ' &
                  //'significantly from numerical one')

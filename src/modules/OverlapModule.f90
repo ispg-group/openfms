@@ -910,6 +910,22 @@ contains
          S_ij = overlap_trajectory(T1, T2)
       end if
 
+!  The necessity of the minus sign in the first term can be seen by looking
+!  at the i-th TBF
+!
+!  χ_i = N exp(-α * (R - R_i)**2 + i P_i (R-R_i) + i ɣ_i)
+!
+!  Then taking the gradient of chi_i with respect to the nuclear configuration
+!  space variable R (not the parameter!) we get
+!
+!  ∇_R χ_i = [ α (R - R_i) + i P_i ] χ_i
+!
+! while if we take the gradient with respect to the parameter
+! R_i (the center of the Gaussian) we get
+!
+!  ∇_{R_i} χ_i = [- α (R - R_i) - i P_i ] χ_i
+!
+!  Thus it follows that ∇_R χ_i = - ∇_{R_i} χ_i
       S_dot = (-dot_product(T2%get_vel(), &
                             overlap_dx_trajectory(T1, T2, S_ij)) &
                + dot_product(FMS_Forces(T2), &
