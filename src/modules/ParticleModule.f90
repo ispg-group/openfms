@@ -44,6 +44,7 @@ module ParticleModule
       procedure, public :: create => create_particle
       procedure, public :: destroy => destroy_particle
       procedure, public :: print_info => print_particle_info
+      procedure, public :: copy_from
       procedure :: get_position_component
       procedure :: get_position_vec
       procedure :: get_momentum_component
@@ -144,6 +145,12 @@ contains
       P1%Momentum2 = P2%Momentum2
    end subroutine assign_particle
 
+   subroutine copy_from(P1, P2)
+      class(T_Particle), intent(inout) :: P1
+      class(T_Particle), intent(in) :: P2
+
+      call assign_particle(P1, P2)
+   end subroutine copy_from
 !>
 !!    Memory deallocation to destroy a particle structure
 !!    \param Particle Particle to annihilate

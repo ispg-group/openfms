@@ -552,7 +552,7 @@ contains
       end if
 
       do IParticle = 1, T1%NumParticles
-         T1%Particle(IParticle) = T2%Particle(IParticle)
+         call T1%Particle(IParticle)%copy_from(T2%Particle(IParticle))
       end do
 
       T1%ElecStruc%PotEn = T2%ElecStruc%PotEn
