@@ -4,6 +4,7 @@ function(openfms_add_unit_tests openfms_core_target)
     unit_tests/test_bundle.F90
     unit_tests/test_particle.F90
     unit_tests/test_trajectory.F90
+    unit_tests/test_overlap.F90
     unit_tests/testdrive.F90
     unit_tests/testutils.F90
   )
