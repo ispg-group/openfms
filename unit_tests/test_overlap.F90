@@ -24,19 +24,20 @@ contains
 
    end subroutine collect_overlap_suite
 
-   function get_numerical_time_derivative(T1, T2, integral_type) result(num_dt)
+   function get_numerical_time_derivative(T1, T2, integral_type, nr_steps, step_size) result(num_dt)
       use VerletModule, only: FMS_PropVV
       type(T_Trajectory), intent(in) :: T1, T2
       character, intent(in) :: integral_type
+      integer(kind=DefInt), intent(in) :: nr_steps
+      real(kind=DefReal), intent(in) :: step_size
+      real(kind=DefReal) :: step
       type(T_Trajectory) :: T1_tmp, T2_tmp
-      complex(kind=DefReal) :: num_dt(7)
-      real(kind=DefReal) :: step_size
+      complex(kind=DefReal) :: num_dt(nr_steps)
       complex(kind=DefReal) :: tmp_num_deriv, tmp
-      integer(kind=DefInt) :: i_direction, j_step, nr_steps, k, l
+      integer(kind=DefInt) :: j_step, k
 
-      step_size = 1.d-1
       num_dt = 0.d0
-      nr_steps = 7
+      step = step_size
       do j_step = 1, nr_steps
          tmp_num_deriv = 0.d0
 
@@ -45,7 +46,7 @@ contains
             T2_tmp = T2
 
             !call FMS_PropVV(T1_tmp, (-1.d0)**k * step_size)
-            call FMS_PropVV(T2_tmp, (-1.d0)**k * step_size)
+            call FMS_PropVV(T2_tmp, (-1.d0)**k * step)
 
             select case (integral_type)
             case ('S')
@@ -57,8 +58,8 @@ contains
             tmp_num_deriv = tmp_num_deriv + (-1)**k * tmp
          end do
 
-         num_dt = 0.5d0 * tmp_num_deriv / step_size
-         step_size = step_size * 1.d-1
+         num_dt = 0.5d0 * tmp_num_deriv / step
+         step = step * step_size
       end do
    end function get_numerical_time_derivative
 
@@ -72,7 +73,7 @@ contains
       integer(kind=DefInt) :: num_particles, num_states
       complex(kind=DefReal) :: SDot_analytical(7)
       complex(kind=DefReal) :: SDot_numerical(7)
-      real(kind=DefReal) :: pos(6), mom(6), vel(6), force(6)
+      real(kind=DefReal) :: pos(6), mom(6), vel(6)
       real(kind=DefReal) :: mass
       real(kind=DefReal) :: min_err
 
@@ -86,7 +87,7 @@ contains
       glIzmYshift = 0.0
       glIzmDeltaE = 0.01984
       glIzmCoupC = 0.0006127
-      fmiOut = open_fms_out_to_null()
+      fmiOut = open_dev_null()
       call FMS_ESInit(num_particles, num_states)
       call T1%create(numparticles=num_particles, numstates=num_states)
       call T2%create(numparticles=num_particles, numstates=num_states)
@@ -119,7 +120,7 @@ contains
       SDot_analytical = overlap_S_dot(T1, T2)
       ! calculates SDot numerically, (<chi_2(t)|chi_2(t+h)> - <chi_2(t)|chi_2(t-h)>)/2
       ! with seven different step sizes h = 1.d-1, 1.d-2, ..., 1.d-7
-      SDot_numerical = get_numerical_time_derivative(T1, T2, 'S')
+      SDot_numerical = get_numerical_time_derivative(T1, T2, 'S', 7, 1.d-1)
       ! since the numerical derivative suffers from catastrophic cancelations
       ! at small h, we look for the smallest error
       ! see, e.g., https://en.wikipedia.org/wiki/Numerical_differentiation#/media/File%3AAbsoluteErrorNumericalDifferentiationExample.png
@@ -132,11 +133,10 @@ contains
       call T2%destroy()
    end subroutine test_overlap_S_dot
 
-   function open_fms_out_to_null() result(output_unit)
+   function open_dev_null() result(output_unit)
       integer :: output_unit
-      character(len=256) :: filepath
 
-      open (newunit=output_unit, file='/dev/null', status='replace')
-   end function open_fms_out_to_null
+      open (newunit=output_unit, file='/dev/null', action='write')
+   end function open_dev_null
 
 end module test_overlap
