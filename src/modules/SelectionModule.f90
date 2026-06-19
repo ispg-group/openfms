@@ -867,7 +867,7 @@ contains
 
          do j = 1, ntrajblock(i)
             jtraj = blocktrajid(j, i)
-            BTemp%Trajectory(j) = B1%Trajectory(jtraj)
+            call BTemp%Trajectory(j)%copy_from(B1%Trajectory(jtraj))
          end do
 
          Blockpop(i) = FMS_Norm(BTemp)
@@ -1277,7 +1277,7 @@ contains
          currCBFID = B1%Trajectory(currTrajID)%CBF
 
          call sepB(iBlocks)%Trajectory(iTraj)%create(npart, B1%NumStates)
-         sepB(iBlocks)%Trajectory(iTraj) = B1%Trajectory(currTrajID)
+         call sepB(iBlocks)%Trajectory(iTraj)%copy_from(B1%Trajectory(currTrajID))
          sepB(iBlocks)%Trajectory(iTraj)%TrajID = B1%Trajectory(currTrajID)%TrajID ! should give the same as...
          !sepB(iblocks)%Trajectory(currTrajID)%TrajID = currTrajID                      ! this one here
 
@@ -1366,7 +1366,7 @@ contains
          iSSTraj = 1
          do iTraj = 1, B1%NumTraj
             if (B1%Trajectory(iTraj)%StateID == iState) then
-               BundleSS(iState)%Trajectory(iSSTraj) = B1%Trajectory(iTraj)
+               call BundleSS(iState)%Trajectory(iSSTraj)%copy_from(B1%Trajectory(iTraj))
                iSSTraj = iSSTraj + 1
             end if
          end do
@@ -1399,7 +1399,7 @@ contains
 
             do iSSTraj = 1, BSS_i%NumTraj
                if (T_i%TrajID == BSS_i%Trajectory(iSSTraj)%TrajID) then
-                  B1%Trajectory(iTrj) = BSS_i%Trajectory(iSSTraj)
+                  call B1%Trajectory(iTrj)%copy_from(BSS_i%Trajectory(iSSTraj))
                   exit
                end if
             end do

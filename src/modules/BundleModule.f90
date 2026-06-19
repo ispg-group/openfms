@@ -257,7 +257,7 @@ contains
          B1%BMatrices%AmpDot = B2%BMatrices%AmpDot
 
          do ITraj = 1, B2%NumTraj
-            B1%Trajectory(ITraj) = B2%Trajectory(ITraj)
+            call B1%Trajectory(ITraj)%copy_from(B2%Trajectory(ITraj))
             ! TODO(DH) Is this correct?? Or should it be:
             ! if (FMS_IsBundleCurrent(B2%Trajectory(ITraj))) call FMS_BundleUpdated(B1%Trajectory(ITraj))
             ! if (FMS_IsAmpDotCurrent(B2%Trajectory(ITraj))) call FMS_AmpDotUpdated(B1%Trajectory(ITraj))
@@ -268,7 +268,7 @@ contains
 
          if (glzCentroids) then
             do ITraj = 1, (B2%NCBFs * (B2%NCBFs - 1)) / 2
-               B1%Centroids(ITraj) = B2%Centroids(ITraj)
+               call B1%Centroids(ITraj)%copy_from(B2%Centroids(ITraj))
             end do
          end if
       end if
@@ -276,7 +276,7 @@ contains
       if (B2%NumDeadTraj > 0) then
          B1%NumDeadTraj = B2%NumDeadTraj
          do iTraj = 1, B2%NumDeadTraj
-            B1%DeadTraj(iTraj) = B2%DeadTraj(iTraj)
+            call B1%DeadTraj(iTraj)%copy_from(B2%DeadTraj(iTraj))
          end do
          B1%DeadH = B2%DeadH
       end if
@@ -309,12 +309,12 @@ contains
 
 !     Copy trajectories
       do ITraj = 1, B1%NumTraj
-         BTemp%Trajectory(ITraj) = B1%Trajectory(ITraj)
+         call BTemp%Trajectory(ITraj)%copy_from(B1%Trajectory(ITraj))
       end do
 
 !     Copy dead trajectories
       do iTraj = 1, B1%NumDeadTraj
-         BTemp%DeadTraj(iTraj) = B1%DeadTraj(iTraj)
+         call BTemp%DeadTraj(iTraj)%copy_from(B1%DeadTraj(iTraj))
       end do
 
 !     Copy centroids
@@ -322,10 +322,10 @@ contains
       if (glzCentroids) then
 !       do ITraj=1,((B1%NumTraj*(B1%NumTraj-1))/2)
          do ITraj = 1, ((B1%NCBFs * (B1%NCBFs - 1)) / 2)
-            BTemp%Centroids(ITraj) = B1%Centroids(ITraj)
+            call BTemp%Centroids(ITraj)%copy_from(B1%Centroids(ITraj))
          end do
 
-         BTemp%Trajectory(NumTrajP1) = T1
+         call BTemp%Trajectory(NumTrajP1)%copy_from(T1)
 !     GAIMS added
          BTemp%NCBFs = B1%NCBFs + 1
          BTemp%Trajectory(NumTrajP1)%CBF = BTemp%NCBFs
@@ -374,8 +374,8 @@ contains
       integer(kind=DefInt) :: i, j, NumCBFP1
       type(T_TrajectoryBundle) :: BTemp
 
-      T2 = T1
-      T3 = T1
+      call T2%copy_from(T1)
+      call T3%copy_from(T1)
 
       NumTrajP1 = B1%NumTraj + 3 ! Add the three sublevels of Ms=-1,0,1
       NumCBFP1 = B1%NCBFs + 1
@@ -391,25 +391,25 @@ contains
 
 !     Copy trajectories
       do ITraj = 1, B1%NumTraj
-         BTemp%Trajectory(ITraj) = B1%Trajectory(ITraj)
+         call BTemp%Trajectory(ITraj)%copy_from(B1%Trajectory(ITraj))
       end do
 
 !     Copy dead trajectories
       do iTraj = 1, B1%NumDeadTraj
-         BTemp%DeadTraj(iTraj) = B1%DeadTraj(iTraj)
+         call BTemp%DeadTraj(iTraj)%copy_from(B1%DeadTraj(iTraj))
       end do
 
 !     Copy centroids
       if (glzCentroids) then
 
          do ITraj = 1, (B1%NCBFs * (B1%NCBFs - 1)) / 2
-            BTemp%Centroids(ITraj) = B1%Centroids(ITraj)
+            call BTemp%Centroids(ITraj)%copy_from(B1%Centroids(ITraj))
          end do
 
 !        Add the new trajectories to the bundle
-         BTemp%Trajectory(NumTrajP1 - 2) = T1
-         BTemp%Trajectory(NumTrajP1 - 1) = T2
-         BTemp%Trajectory(NumTrajP1) = T3
+         call BTemp%Trajectory(NumTrajP1 - 2)%copy_from(T1)
+         call BTemp%Trajectory(NumTrajP1 - 1)%copy_from(T2)
+         call BTemp%Trajectory(NumTrajP1)%copy_from(T3)
          BTemp%NCBFs = B1%NCBFs + 1
          BTemp%Trajectory(NumTrajP1)%CBF = BTemp%NCBFs
          BTemp%Trajectory(NumTrajP1 - 1)%CBF = BTemp%NCBFs
