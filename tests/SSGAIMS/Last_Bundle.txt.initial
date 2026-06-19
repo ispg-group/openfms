@@ -1,0 +1,881 @@
+ ############### START BUNDLE #################
+       1120.37                           / Current time
+     9                                   / Number of Live Trajectories
+     0                                   / Number of Dead Trajectories
+     2                                   / Number of States
+     1                                   / Number of Singlet States
+     1                                   / Number of Particles
+     5                                   / Number of Contracted Basis Functions
+ ############ Common Particle info ###########
+     1                                   / Particle ID
+ F  / Element
+ 0.2000000000E+02                         / Width
+ 0.1999706998E+05                         / Mass
+ 0.0000000000E+00                         / Charge
+ 0.1000000000E+01                         / Atomic number
+############### Live trajectory    1 ############
+     1                                   / Traj ID
+     1                                   / CBF ID
+     1                                   / State ID
+     2                                   / State Ms
+     0                                   / Parent ID
+      -1      -1                         / Centroid ID
+   1120.3658                             / Dead time
+ F                                       / Centroid
+ F                                       / Triplet
+ # Last spawn
+       0.0000     705.1975
+ # Spawn time
+       0.0000     704.9910
+ # Positions
+  1.044625839355026E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Momenta
+  2.155380877261970E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Energies
+  4.089167677536419E-002  3.670979084632099E-002
+ # Dipoles Current
+ F
+ # Transition Dipoles Current
+ F
+ # Force 
+  3.120868713774670E-004 -0.000000000000000E+000 -0.000000000000000E+000
+ # Coupling status array
+ F T
+ # Coupling history            1           2
+  3.381760334822027E-001  3.384954867647733E-001  3.388155773877762E-001
+ # coupling            1           2
+  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
+  2.733638238552927E+00                       / Phase
+        (0.19621406169388739,9.71269330121153907E-002)  / Amplitude
+ # Orbitals           0           0
+
+ # CI vectors           0           0
+
+ # Overlap matrix
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
+############### Live trajectory    2 ############
+     2                                   / Traj ID
+     2                                   / CBF ID
+     1                                   / State ID
+     2                                   / State Ms
+     0                                   / Parent ID
+      -1      -1                         / Centroid ID
+   1120.3658                             / Dead time
+ F                                       / Centroid
+ F                                       / Triplet
+ # Last spawn
+       0.0000     236.3393
+ # Spawn time
+       0.0000     236.2360
+ # Positions
+  1.094416943446708E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Momenta
+  2.148412938388597E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Energies
+  4.074907180229430E-002  3.241319975909199E-002
+ # Dipoles Current
+ F
+ # Transition Dipoles Current
+ F
+ # Force 
+  2.621751308030049E-004 -0.000000000000000E+000 -0.000000000000000E+000
+ # Coupling status array
+ F T
+ # Coupling history            1           2
+  1.696539472570385E-001  1.697247902210383E-001  1.697956997799046E-001
+ # coupling            1           2
+  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
+  2.888028717116035E+00                       / Phase
+            (0.44824924383975306,-0.23827091975922873)  / Amplitude
+ # Orbitals           0           0
+
+ # CI vectors           0           0
+
+ # Overlap matrix
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
+############### Live trajectory    3 ############
+     3                                   / Traj ID
+     3                                   / CBF ID
+     1                                   / State ID
+     2                                   / State Ms
+     0                                   / Parent ID
+      -1      -1                         / Centroid ID
+   1120.3658                             / Dead time
+ F                                       / Centroid
+ F                                       / Triplet
+ # Last spawn
+       0.0000       0.0000
+ # Spawn time
+       0.0000       0.0000
+ # Positions
+  2.043363215241448E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Momenta
+  2.113241051874700E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Energies
+  4.002704556109569E-002  3.022849895214536E-003
+ # Dipoles Current
+ F
+ # Transition Dipoles Current
+ F
+ # Force 
+  9.465946383493133E-006 -0.000000000000000E+000 -0.000000000000000E+000
+ # Coupling status array
+ F T
+ # Coupling history            1           2
+  3.821765533638682E-002  3.821799173598918E-002  3.821832817797340E-002
+ # coupling            1           2
+  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
+  3.669025616578673E+00                       / Phase
+       (0.58413872786525711,-5.90504649852042019E-016)  / Amplitude
+ # Orbitals           0           0
+
+ # CI vectors           0           0
+
+ # Overlap matrix
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
+############### Live trajectory    4 ############
+     4                                   / Traj ID
+     4                                   / CBF ID
+     2                                   / State ID
+     2                                   / State Ms
+     1                                   / Parent ID
+      -1      -1                         / Centroid ID
+   1120.3658                             / Dead time
+ F                                       / Centroid
+ T                                       / Triplet
+ # Last spawn
+     705.1975       0.0000
+ # Spawn time
+     704.9910     704.8878
+ # Positions
+  1.048734956654658E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Momenta
+  2.543270870658059E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Energies
+  4.087894453616508E-002  3.633460913622259E-002
+ # Dipoles Current
+ F
+ # Transition Dipoles Current
+ F
+ # Force 
+  9.083652284055646E-003 -0.000000000000000E+000 -0.000000000000000E+000
+ # Coupling status array
+ T F
+ # Coupling history            2           1
+  3.112036131788951E-001  3.115196117267176E-001  3.118362469262296E-001
+ # coupling            2           1
+  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
+  4.608598786474493E+00                       / Phase
+            (0.25546216888330897,-0.11330855867548037)  / Amplitude
+ # Orbitals           0           0
+
+ # CI vectors           0           0
+
+ # Overlap matrix
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
+############### Live trajectory    5 ############
+     5                                   / Traj ID
+     4                                   / CBF ID
+     2                                   / State ID
+     1                                   / State Ms
+     1                                   / Parent ID
+      -1      -1                         / Centroid ID
+   1120.3658                             / Dead time
+ F                                       / Centroid
+ T                                       / Triplet
+ # Last spawn
+     705.1975       0.0000
+ # Spawn time
+     704.9910     704.8878
+ # Positions
+  1.048734956654658E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Momenta
+  2.543270870658059E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Energies
+  4.087894453616508E-002  3.633460913622259E-002
+ # Dipoles Current
+ F
+ # Transition Dipoles Current
+ F
+ # Force 
+  9.083652284055646E-003 -0.000000000000000E+000 -0.000000000000000E+000
+ # Coupling status array
+ T F
+ # Coupling history            2           1
+  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
+ # coupling            2           1
+  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
+  4.608598786474493E+00                       / Phase
+       (-7.10768084798825417E-002,0.18438537253722664)  / Amplitude
+ # Orbitals           0           0
+
+ # CI vectors           0           0
+
+ # Overlap matrix
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
+############### Live trajectory    6 ############
+     6                                   / Traj ID
+     4                                   / CBF ID
+     2                                   / State ID
+     3                                   / State Ms
+     1                                   / Parent ID
+      -1      -1                         / Centroid ID
+   1120.3658                             / Dead time
+ F                                       / Centroid
+ T                                       / Triplet
+ # Last spawn
+     705.1975       0.0000
+ # Spawn time
+     704.9910     704.8878
+ # Positions
+  1.048734956654658E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Momenta
+  2.543270870658059E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Energies
+  4.087894453616508E-002  3.633460913622259E-002
+ # Dipoles Current
+ F
+ # Transition Dipoles Current
+ F
+ # Force 
+  9.083652284055646E-003 -0.000000000000000E+000 -0.000000000000000E+000
+ # Coupling status array
+ T F
+ # Coupling history            2           1
+  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
+ # coupling            2           1
+  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
+  4.608598786474493E+00                       / Phase
+        (0.18438537253722037,7.10768084798818062E-002)  / Amplitude
+ # Orbitals           0           0
+
+ # CI vectors           0           0
+
+ # Overlap matrix
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
+############### Live trajectory    7 ############
+     7                                   / Traj ID
+     5                                   / CBF ID
+     2                                   / State ID
+     2                                   / State Ms
+     2                                   / Parent ID
+      -1      -1                         / Centroid ID
+   1120.3658                             / Dead time
+ F                                       / Centroid
+ T                                       / Triplet
+ # Last spawn
+     236.3393       0.0000
+ # Spawn time
+     236.2360     236.1328
+ # Positions
+  1.112214297132153E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Momenta
+  2.917821070616321E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Energies
+  4.070383510666402E-002  3.100263979669575E-002
+ # Dipoles Current
+ F
+ # Transition Dipoles Current
+ F
+ # Force 
+  7.750659949173937E-003 -0.000000000000000E+000 -0.000000000000000E+000
+ # Coupling status array
+ T F
+ # Coupling history            2           1
+  1.457772522635142E-001  1.458452397557004E-001  1.459132933435949E-001
+ # coupling            2           1
+  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
+  5.156309823261705E+00                       / Phase
+            (0.26140569764802246,-0.16291560909262487)  / Amplitude
+ # Orbitals           0           0
+
+ # CI vectors           0           0
+
+ # Overlap matrix
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
+############### Live trajectory    8 ############
+     8                                   / Traj ID
+     5                                   / CBF ID
+     2                                   / State ID
+     1                                   / State Ms
+     2                                   / Parent ID
+      -1      -1                         / Centroid ID
+   1120.3658                             / Dead time
+ F                                       / Centroid
+ T                                       / Triplet
+ # Last spawn
+     236.3393       0.0000
+ # Spawn time
+     236.2360     236.1328
+ # Positions
+  1.112214297132153E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Momenta
+  2.917821070616321E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Energies
+  4.070383510666402E-002  3.100263979669575E-002
+ # Dipoles Current
+ F
+ # Transition Dipoles Current
+ F
+ # Force 
+  7.750659949173937E-003 -0.000000000000000E+000 -0.000000000000000E+000
+ # Coupling status array
+ T F
+ # Coupling history            2           1
+  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
+ # coupling            2           1
+  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
+  5.156309823261705E+00                       / Phase
+       (-4.92450466167536904E-002,0.21216066344751663)  / Amplitude
+ # Orbitals           0           0
+
+ # CI vectors           0           0
+
+ # Overlap matrix
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
+############### Live trajectory    9 ############
+     9                                   / Traj ID
+     5                                   / CBF ID
+     2                                   / State ID
+     3                                   / State Ms
+     2                                   / Parent ID
+      -1      -1                         / Centroid ID
+   1120.3658                             / Dead time
+ F                                       / Centroid
+ T                                       / Triplet
+ # Last spawn
+     236.3393       0.0000
+ # Spawn time
+     236.2360     236.1328
+ # Positions
+  1.112214297132153E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Momenta
+  2.917821070616321E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Energies
+  4.070383510666402E-002  3.100263979669575E-002
+ # Dipoles Current
+ F
+ # Transition Dipoles Current
+ F
+ # Force 
+  7.750659949173937E-003 -0.000000000000000E+000 -0.000000000000000E+000
+ # Coupling status array
+ T F
+ # Coupling history            2           1
+  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
+ # coupling            2           1
+  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
+  5.156309823261705E+00                       / Phase
+        (0.21216066344751691,4.92450466167540374E-002)  / Amplitude
+ # Orbitals           0           0
+
+ # CI vectors           0           0
+
+ # Overlap matrix
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
+###############   Centroid         1 ############
+    -1                                   / Traj ID
+     2                                   / CBF ID
+     1                                   / State ID
+     2                                   / State Ms
+     0                                   / Parent ID
+       2       1                         / Centroid ID
+   1119.9528                             / Dead time
+ T                                       / Centroid
+ F                                       / Triplet
+ # Last spawn
+       0.0000     236.3393
+ # Spawn time
+       0.0000     236.2360
+ # Positions
+  1.069521391400867E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Momenta
+  1.987283790693612E+000  0.000000000000000E+000  0.000000000000000E+000
+ # Energies
+  4.081726980195406E-002  3.449466312078273E-002
+ # Dipoles Current
+ F
+ # Transition Dipoles Current
+ F
+ # Force 
+  2.860444306839200E-004 -0.000000000000000E+000 -0.000000000000000E+000
+ # Coupling status array
+ F T
+ # Coupling history            1           2
+  1.697247902210383E-001  1.697956997799046E-001  1.698666760270957E-001
+ # coupling            1           2
+  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
+  2.900711336617345E+00                       / Phase
+            (0.44819063674236231,-0.23828951935638412)  / Amplitude
+ # Orbitals           0           0
+
+ # CI vectors           0           0
+
+ # Overlap matrix
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
+###############   Centroid         2 ############
+    -2                                   / Traj ID
+     3                                   / CBF ID
+     1                                   / State ID
+     2                                   / State Ms
+     0                                   / Parent ID
+       3       1                         / Centroid ID
+   1119.9528                             / Dead time
+ T                                       / Centroid
+ F                                       / Triplet
+ # Last spawn
+       0.0000       0.0000
+ # Spawn time
+       0.0000       0.0000
+ # Positions
+  1.543994527298237E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Momenta
+ -0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
+ # Energies
+  4.002704969280630E-002  3.023179742540801E-003
+ # Dipoles Current
+ F
+ # Transition Dipoles Current
+ F
+ # Force 
+  9.467392482205598E-006 -0.000000000000000E+000 -0.000000000000000E+000
+ # Coupling status array
+ F F
+ # Coupling history            1           2
+  3.821799173598918E-002  3.821832817797340E-002  3.821866466234550E-002
+  3.681564777423905E+00                       / Phase
+       (0.58413872786525711,-5.89667648222202163E-016)  / Amplitude
+ # Orbitals           0           0
+
+ # CI vectors           0           0
+
+ # Overlap matrix
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
+###############   Centroid         3 ############
+    -3                                   / Traj ID
+     3                                   / CBF ID
+     1                                   / State ID
+     2                                   / State Ms
+     0                                   / Parent ID
+       3       2                         / Centroid ID
+   1119.9528                             / Dead time
+ T                                       / Centroid
+ F                                       / Triplet
+ # Last spawn
+       0.0000       0.0000
+ # Spawn time
+       0.0000       0.0000
+ # Positions
+  1.568890079344078E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Momenta
+ -0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
+ # Energies
+  4.002704969280630E-002  3.023179742540801E-003
+ # Dipoles Current
+ F
+ # Transition Dipoles Current
+ F
+ # Force 
+  9.467392482205598E-006 -0.000000000000000E+000 -0.000000000000000E+000
+ # Coupling status array
+ F F
+ # Coupling history            1           2
+  3.821799173598918E-002  3.821832817797340E-002  3.821866466234550E-002
+  3.681564777423905E+00                       / Phase
+       (0.58413872786525711,-5.89667648222202163E-016)  / Amplitude
+ # Orbitals           0           0
+
+ # CI vectors           0           0
+
+ # Overlap matrix
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
+###############   Centroid         4 ############
+    -4                                   / Traj ID
+     4                                   / CBF ID
+     2                                   / State ID
+     2                                   / State Ms
+     1                                   / Parent ID
+       4       1                         / Centroid ID
+   1119.9528                             / Dead time
+ T                                       / Centroid
+ T                                       / Triplet
+ # Last spawn
+     705.1975       0.0000
+ # Spawn time
+     704.9910     704.8878
+ # Positions
+  1.046680398004842E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Momenta
+  1.609413852224981E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Energies
+  4.088528776662261E-002  3.652171822181366E-002
+ # Dipoles Current
+ F
+ # Transition Dipoles Current
+ F
+ # Force 
+  9.130429555453415E-003 -0.000000000000000E+000 -0.000000000000000E+000
+ # Coupling status array
+ T F
+ # Coupling history            2           1
+  3.115196117267176E-001  3.118362469262296E-001  3.121535206841739E-001
+ # coupling            2           1
+  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
+  4.617547118710517E+00                       / Phase
+            (0.25541789698938255,-0.11328915616933322)  / Amplitude
+ # Orbitals           0           0
+
+ # CI vectors           0           0
+
+ # Overlap matrix
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
+###############   Centroid         5 ############
+    -5                                   / Traj ID
+     4                                   / CBF ID
+     2                                   / State ID
+     2                                   / State Ms
+     1                                   / Parent ID
+       4       2                         / Centroid ID
+   1119.9528                             / Dead time
+ T                                       / Centroid
+ T                                       / Triplet
+ # Last spawn
+     705.1975       0.0000
+ # Spawn time
+     704.9910     704.8878
+ # Positions
+  1.071575950050683E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Momenta
+  6.672840820163728E-001  0.000000000000000E+000  0.000000000000000E+000
+ # Energies
+  4.081141393124712E-002  3.431793910043131E-002
+ # Dipoles Current
+ F
+ # Transition Dipoles Current
+ F
+ # Force 
+  8.579484775107827E-003 -0.000000000000000E+000 -0.000000000000000E+000
+ # Coupling status array
+ T F
+ # Coupling history            2           1
+  3.115196117267176E-001  3.118362469262296E-001  3.121535206841739E-001
+ # coupling            2           1
+  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
+  4.617547118710517E+00                       / Phase
+            (0.25541789698938255,-0.11328915616933322)  / Amplitude
+ # Orbitals           0           0
+
+ # CI vectors           0           0
+
+ # Overlap matrix
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
+###############   Centroid         6 ############
+    -6                                   / Traj ID
+     4                                   / CBF ID
+     2                                   / State ID
+     2                                   / State Ms
+     1                                   / Parent ID
+       4       3                         / Centroid ID
+   1119.9528                             / Dead time
+ T                                       / Centroid
+ T                                       / Triplet
+ # Last spawn
+     705.1975       0.0000
+ # Spawn time
+     704.9910     704.8878
+ # Positions
+  1.546049085948053E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Momenta
+  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
+ # Energies
+  4.087910612587581E-002  3.633938039843271E-002
+ # Dipoles Current
+ F
+ # Transition Dipoles Current
+ F
+ # Force 
+  9.084845099608177E-003 -0.000000000000000E+000 -0.000000000000000E+000
+ # Coupling status array
+ F F
+ # Coupling history            2           1
+  3.115196117267176E-001  3.118362469262296E-001  3.121535206841739E-001
+  4.617547118710517E+00                       / Phase
+            (0.25541789698938255,-0.11328915616933322)  / Amplitude
+ # Orbitals           0           0
+
+ # CI vectors           0           0
+
+ # Overlap matrix
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
+###############   Centroid         7 ############
+    -7                                   / Traj ID
+     5                                   / CBF ID
+     2                                   / State ID
+     2                                   / State Ms
+     2                                   / Parent ID
+       5       1                         / Centroid ID
+   1119.9528                             / Dead time
+ T                                       / Centroid
+ T                                       / Triplet
+ # Last spawn
+     236.3393       0.0000
+ # Spawn time
+     236.2360     236.1328
+ # Positions
+  1.078420068243590E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Momenta
+ -9.743243332558493E-002 -0.000000000000000E+000 -0.000000000000000E+000
+ # Energies
+  4.079220793880034E-002  3.373574399091456E-002
+ # Dipoles Current
+ F
+ # Transition Dipoles Current
+ F
+ # Force 
+  8.433935997728641E-003 -0.000000000000000E+000 -0.000000000000000E+000
+ # Coupling status array
+ T F
+ # Coupling history            2           1
+  1.458452397557004E-001  1.459132933435949E-001  1.459814131205106E-001
+ # coupling            2           1
+  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
+  5.160943770942737E+00                       / Phase
+            (0.26141319253297535,-0.16296486521917380)  / Amplitude
+ # Orbitals           0           0
+
+ # CI vectors           0           0
+
+ # Overlap matrix
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
+###############   Centroid         8 ############
+    -8                                   / Traj ID
+     5                                   / CBF ID
+     2                                   / State ID
+     2                                   / State Ms
+     2                                   / Parent ID
+       5       2                         / Centroid ID
+   1119.9528                             / Dead time
+ T                                       / Centroid
+ T                                       / Triplet
+ # Last spawn
+     236.3393       0.0000
+ # Spawn time
+     236.2360     236.1328
+ # Positions
+  1.103315620289430E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Momenta
+ -8.813662574452382E+000 -0.000000000000000E+000 -0.000000000000000E+000
+ # Energies
+  4.072610125455533E-002  3.170007502813636E-002
+ # Dipoles Current
+ F
+ # Transition Dipoles Current
+ F
+ # Force 
+  7.925018757034091E-003 -0.000000000000000E+000 -0.000000000000000E+000
+ # Coupling status array
+ T F
+ # Coupling history            2           1
+  1.458452397557004E-001  1.459132933435949E-001  1.459814131205106E-001
+ # coupling            2           1
+  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
+  5.160943770942737E+00                       / Phase
+            (0.26141319253297535,-0.16296486521917380)  / Amplitude
+ # Orbitals           0           0
+
+ # CI vectors           0           0
+
+ # Overlap matrix
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
+###############   Centroid         9 ############
+    -9                                   / Traj ID
+     5                                   / CBF ID
+     2                                   / State ID
+     2                                   / State Ms
+     2                                   / Parent ID
+       5       3                         / Centroid ID
+   1119.9528                             / Dead time
+ T                                       / Centroid
+ T                                       / Triplet
+ # Last spawn
+     236.3393       0.0000
+ # Spawn time
+     236.2360     236.1328
+ # Positions
+  1.577788756186800E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Momenta
+  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
+ # Energies
+  4.070398356455485E-002  3.100731058209921E-002
+ # Dipoles Current
+ F
+ # Transition Dipoles Current
+ F
+ # Force 
+  7.751827645524801E-003 -0.000000000000000E+000 -0.000000000000000E+000
+ # Coupling status array
+ F F
+ # Coupling history            2           1
+  1.458452397557004E-001  1.459132933435949E-001  1.459814131205106E-001
+  5.160943770942737E+00                       / Phase
+            (0.26141319253297535,-0.16296486521917380)  / Amplitude
+ # Orbitals           0           0
+
+ # CI vectors           0           0
+
+ # Overlap matrix
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
+###############   Centroid        10 ############
+   -10                                   / Traj ID
+     5                                   / CBF ID
+     2                                   / State ID
+     2                                   / State Ms
+     2                                   / Parent ID
+       5       4                         / Centroid ID
+   1119.9528                             / Dead time
+ T                                       / Centroid
+ T                                       / Triplet
+ # Last spawn
+     236.3393       0.0000
+ # Spawn time
+     236.2360     236.1328
+ # Positions
+  1.080474626893406E+001  0.000000000000000E+000  0.000000000000000E+000
+ # Momenta
+  4.897198869094940E-001  0.000000000000000E+000  0.000000000000000E+000
+ # Energies
+  4.078653164040839E-002  3.356290808621981E-002
+ # Dipoles Current
+ F
+ # Transition Dipoles Current
+ F
+ # Force 
+  8.390727021554953E-003 -0.000000000000000E+000 -0.000000000000000E+000
+ # Coupling status array
+ T F
+ # Coupling history            2           1
+  1.458452397557004E-001  1.459132933435949E-001  1.459814131205106E-001
+ # coupling            2           1
+  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
+  5.160943770942737E+00                       / Phase
+            (0.26141319253297535,-0.16296486521917380)  / Amplitude
+ # Orbitals           0           0
+
+ # CI vectors           0           0
+
+ # Overlap matrix
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+

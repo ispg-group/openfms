@@ -144,7 +144,7 @@ subroutine FMS_RemoveDead(B1)
 
 !        Copy old dead trajectories to new bundle
       do iTraj = 1, B1%NumDeadTraj
-         BTemp%DeadTraj(iTraj) = B1%DeadTraj(iTraj)
+         call BTemp%DeadTraj(iTraj)%copy_from(B1%DeadTraj(iTraj))
          do jTraj = 1, B1%NumDeadTraj
             BTemp%DeadH(iTraj, jTraj) = B1%DeadH(iTraj, jTraj)
          end do
@@ -185,7 +185,7 @@ subroutine FMS_RemoveDead(B1)
                         jCBF = B1%Trajectory(jTraj)%CBF
                         iCent = ((iCBF - 2) * (iCBF - 1)) / 2 + jCBF
                         jCent = ((nCBF - 2) * (nCBF - 1)) / 2 + n2CBF
-                        BTemp%Centroids(jCent) = B1%Centroids(iCent)
+                        call BTemp%Centroids(jCent)%copy_from(B1%Centroids(iCent))
                         BTemp%Centroids(jCent)%CentID(1) = nCBF
                         BTemp%Centroids(jCent)%CentID(2) = n2CBF
                      end if
@@ -198,7 +198,7 @@ subroutine FMS_RemoveDead(B1)
             iDead = iDead + 1
             ! TODO: Use FMS_AssignTrajectory explicitly
             ! call FMS_AssignTrajectory(BTemp%DeadTraj(B1%NumDeadTraj + iDead), B1%Trajectory(iTraj))
-            BTemp%DeadTraj(B1%NumDeadTraj + iDead) = B1%Trajectory(iTraj)
+            call BTemp%DeadTraj(B1%NumDeadTraj + iDead)%copy_from(B1%Trajectory(iTraj))
 
 !              Set dead time of recently killed trajectory to be current time
 !              to make it easier for user to restart killed trajectories!
@@ -216,7 +216,7 @@ subroutine FMS_RemoveDead(B1)
       end do
 
       BTemp%NCBFs = nCBF
-      B1 = BTemp
+      call B1%copy_from(BTemp)
       call BTemp%destroy()
 
    end if

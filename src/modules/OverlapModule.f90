@@ -910,19 +910,22 @@ contains
          S_ij = overlap_trajectory(T1, T2)
       end if
 
-! I don't understand the need for the minus
-! but it is important, the norm is not conserved otherwise
-!
-! TODO(danielhollas): On HDF_free branch, there's this additional comment,
-! but there's no minus sign anymore! We should make sure the formula below is correct.
-!
-! Tuesday, 20 December 2011 12:01:21
-!  Worked out the problem:
-!     overlap_dx   = < g1 | d/dx | g2 >
-! This equation actually needs
-!     overlap_dx_2 = < g1 | d/dx_2 | g2 >
-! A little algebra shows
-!     overlap_dx  = -overlap_dx_2
+      !  The necessity of the minus sign in the first term can be seen by looking
+      !  at the i-th TBF
+      !
+      !  χ_i = N exp(-α * (R - R_i)**2 + i P_i (R-R_i) + i ɣ_i)
+      !
+      !  Then taking the gradient of chi_i with respect to the nuclear configuration
+      !  space variable R (not the parameter!) we get
+      !
+      !  ∇_R χ_i = [ α (R - R_i) + i P_i ] χ_i
+      !
+      ! while if we take the gradient with respect to the parameter
+      ! R_i (the center of the Gaussian) we get
+      !
+      !  ∇_{R_i} χ_i = [- α (R - R_i) - i P_i ] χ_i
+      !
+      !  Thus it follows that ∇_R χ_i = - ∇_{R_i} χ_i
       S_dot = (-dot_product(T2%get_vel(), &
                             overlap_dx_trajectory(T1, T2, S_ij)) &
                + dot_product(FMS_Forces(T2), &

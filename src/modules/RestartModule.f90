@@ -8,11 +8,16 @@ module RestartModule
    private
 
    public :: GetRestart, PutRestart
-   integer(kind=DefInt), public :: inIRestart, & !> Determines whether this is a restart (1 = restart, 0 = not restart)
-                                   RestartStep ! Number of steps between archived restarts
+   !> Determines whether this is a restart (1 = restart, 0 = not restart)
+   integer(kind=DefInt), public :: inIRestart
+   !> Number of steps between archived restarts
+   integer(kind=DefInt), public :: RestartStep
+   !> Number of steps between archived restarts
    integer(kind=DefReal), public :: inIRestartTraj(maxtrajlimit)
+   !> Time from which to restart in Checkpoint.txt
    real(kind=DefReal), public :: RestartTime
-   logical, public :: zRedoRestartES !> Redo the electronic structure calculation for restarted step?
+   !> Redo the electronic structure calculation for restarted step?
+   logical, public :: zRedoRestartES
 contains
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -159,13 +164,14 @@ contains
                            numstates=B%NumStates, &
                            numparticles=B%NumParticles, &
                            ncbfs=B%NCBFs)
+
          itrajnew = 0
          do itraj = 1, B%numTraj
 !    TODO(danielhollas): It looks like this code is currently broken from non-GAIMS simulations?
 !    The following if statement should be uncommented!
 !    if (any(inirestarttraj(:).eq.B%trajectory(itraj)%trajid)) then
             itrajnew = itrajnew + 1
-            Btemp%Trajectory(itrajnew) = B%Trajectory(itraj)
+            call Btemp%Trajectory(itrajnew)%copy_from(B%Trajectory(itraj))
 
 !bfec
             if (glzCentroids) then
@@ -175,9 +181,10 @@ contains
 !         if (any(inirestarttraj(:).eq.B%trajectory(jtraj)%trajid)) then
                   CBFj = B%Trajectory(jtraj)%CBF !not ideal way, but for now let's see
                   jtrajnew = jtrajnew + 1
+                  if (CBFi == CBFj) cycle
                   iCent = ((CBFi - 2) * (CBFi - 1)) / 2 + CBFj
 !           jCent=((iTrajnew-2)*(iTrajnew-1))/2+jTrajnew
-                  Btemp%Centroids(iCent) = B%Centroids(iCent)
+                  call Btemp%Centroids(iCent)%copy_from(B%Centroids(iCent))
 !         endif
                end do
 !       do jtraj=1,B%numTraj-1 !centroid
@@ -191,9 +198,10 @@ contains
             end if
 !    endif
          end do
+
          if (B%NumDeadTraj > 0) then !copy dead trajectories
             do iTraj = 1, B%NumDeadTraj
-               Btemp%DeadTraj(iTraj) = B%DeadTraj(iTraj)
+               call Btemp%DeadTraj(iTraj)%copy_from(B%DeadTraj(iTraj))
             end do
             Btemp%DeadH = B%DeadH
          end if
@@ -209,7 +217,9 @@ contains
 
 !Find the dead trajectory to restart from
          do itraj = 1, B%numDeadTraj
-            if (inIRestartTraj(1) == B%DeadTraj(ITraj)%TrajID) Btemp%Trajectory(1) = B%DeadTraj(ITraj)
+            if (inIRestartTraj(1) == B%DeadTraj(ITraj)%TrajID) then
+               call Btemp%Trajectory(1)%copy_from(B%DeadTraj(ITraj))
+            end if
          end do
 !Set the current time to the trajectory's deadtime
          Btemp%CurrentTime = Btemp%Trajectory(1)%DeadTime
@@ -226,7 +236,7 @@ contains
 
       end select
 
-      B = Btemp
+      call B%copy_from(Btemp)
       call Btemp%destroy()
 
    end subroutine prune_bundle
@@ -370,15 +380,15 @@ contains
 
 ! copy this info to the rest of the trajectories in the bundle
       do n = 2, ntraj
-         B%Trajectory(n) = T
+         call B%Trajectory(n)%copy_from(T)
       end do
       do n = 1, ndead
-         B%DeadTraj(n) = T
+         call B%DeadTraj(n)%copy_from(T)
       end do
 !bfec
       if (glzCentroids) then
          do n = 1, ncbfs * (ncbfs - 1) / 2
-            B%Centroids(n) = T
+            call B%Centroids(n)%copy_from(T)
          end do
       end if
 
@@ -710,7 +720,7 @@ contains
       use ElecStrucModule, only: esNBasis, esLCIVec
       type(T_ElecStruc), intent(inout) :: ES
       integer(kind=DefInt), intent(in) :: nf
-      integer(kind=DefInt) :: ierr, rows, cols
+      integer(kind=DefInt) :: rows, cols
       character(len=500) :: header
 
 3     format(10(1x, es15.8))
@@ -748,7 +758,6 @@ contains
       !!
       integer(kind=DefInt), intent(in) :: nf
       character(len=500), intent(out) :: header
-      integer(kind=DefInt) :: ierr
 
       do
          read (nf, '(A)') header

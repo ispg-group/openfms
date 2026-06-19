@@ -56,15 +56,15 @@ module TerachemModule
 contains
 
 #ifdef TeraChem
-   subroutine InitTerachem(NumParticles, NumStates)
+   subroutine InitTerachem(NumParticles, NumStates, tc_port_name)
       use GlobalModule, only: BohrToAng
       use ElecStrucModule
       integer(kind=DefInt), intent(in) :: NumParticles, NumStates
+      character(len=:), allocatable, intent(inout) :: tc_port_name
 
       integer, parameter :: CLEN = 128
       integer(kind=DefInt) :: natoms, nqmmm
       real(kind=DefReal), allocatable :: atcoords(:, :)
-      character(len=:), allocatable :: server_name
       character(len=2), allocatable :: atom_types(:)
       integer(kind=DefInt) :: bufints(20)
       integer :: status(MPI_STATUS_SIZE)
@@ -82,7 +82,6 @@ contains
 
       ! Setup on first program call
       write (fmiOut, *) '    >>>> FMS / TC <<<<'
-      server_name = get_server_name()
 
       natoms = NumParticles
       nqmmm = esNMM
@@ -91,7 +90,7 @@ contains
       ! Initialization: Connect to "terachem_port", set
       ! newcomm (global), send relevant namelist variables.
       ! ---------------------------------------------------
-      call connect_to_terachem(server_name)
+      call connect_to_terachem(tc_port_name)
 
       ! -------------------
       ! Send job info to TC
@@ -225,13 +224,13 @@ contains
    end function get_server_name
 
    ! Connect to the TeraChem server.
-   subroutine connect_to_terachem(server_name)
+   subroutine connect_to_terachem(port_name)
       use mpi, only: MPI_MAX_PORT_NAME, MPI_Init, &
                      MPI_Comm_size, MPI_COMM_CONNECT, MPI_INFO_NULL
 
-      character(len=*), intent(in) :: server_name
+      character(len=:), allocatable, intent(inout) :: port_name
+      character(len=:), allocatable :: server_name
       integer :: nproc
-      character(len=MPI_MAX_PORT_NAME) :: port_name
       integer :: ierr
 
       write (*, *) 'Terachem MPI Initialization'
@@ -253,7 +252,10 @@ contains
       ! Look for server_name, get port name
       ! After 60 seconds, exit if not found
       ! -----------------------------------
-      call lookup_port_via_nameserver(server_name, port_name)
+      if (.not. allocated(port_name)) then
+         server_name = get_server_name()
+         port_name = lookup_port_via_nameserver(server_name)
+      end if
 
       ! Establish new communicator via port name
       call MPI_COMM_CONNECT(port_name, MPI_INFO_NULL, 0, MPI_COMM_WORLD, newcomm, ierr)
@@ -289,11 +291,11 @@ contains
    end subroutine tc_finalize
 
    ! Look for server_name via MPI nameserver, get port name
-   subroutine lookup_port_via_nameserver(server_name, port_name)
+   function lookup_port_via_nameserver(server_name) result(port_name)
       use mpi, only: MPI_wtime, MPI_lookup_name, MPI_comm_set_errhandler, &
                      MPI_MAX_PORT_NAME, MPI_ERRORS_RETURN, MPI_ERRORS_ARE_FATAL, MPI_INFO_NULL
       character(len=*), intent(in) :: server_name
-      character(len=MPI_MAX_PORT_NAME), intent(out) :: port_name
+      character(len=MPI_MAX_PORT_NAME) :: port_name
       ! Give up trying to find the port after this many seconds
       integer, parameter :: connection_timeout = 30
       real(DefReal) :: timer
@@ -342,7 +344,7 @@ contains
          write (fmiOut, *) 'WARNING: Could not set MPI error handler to MPI_ERRORS_ARE_FATAL!'
       end if
 
-   end subroutine lookup_port_via_nameserver
+   end function lookup_port_via_nameserver
 
    subroutine RunTerachem(T_FMS, iCalcState, jCalcState, CalcCoup)
       use ElecStrucModule
@@ -801,8 +803,9 @@ contains
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Stub routines when FMS is compiled without TeraChem interface
    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   subroutine InitTerachem(NumParticles, NumStates)
+   subroutine InitTerachem(NumParticles, NumStates, tc_port_name)
       integer(kind=DefInt), intent(in) :: NumParticles, NumStates
+      character(len=:), allocatable, intent(inout) :: tc_port_name
       call FMS_DieError('ERROR: not compiled for use with TeraChem.')
    end subroutine InitTerachem
 
