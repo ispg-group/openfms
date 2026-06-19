@@ -216,7 +216,7 @@ subroutine FMS_RemoveDead(B1)
       end do
 
       BTemp%NCBFs = nCBF
-      B1 = BTemp
+      call B1%copy_from(BTemp)
       call BTemp%destroy()
 
    end if
