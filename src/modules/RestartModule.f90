@@ -171,7 +171,7 @@ contains
 !    The following if statement should be uncommented!
 !    if (any(inirestarttraj(:).eq.B%trajectory(itraj)%trajid)) then
             itrajnew = itrajnew + 1
-            Btemp%Trajectory(itrajnew) = B%Trajectory(itraj)
+            call Btemp%Trajectory(itrajnew)%copy_from(B%Trajectory(itraj))
 
 !bfec
             if (glzCentroids) then
@@ -184,7 +184,7 @@ contains
                   if (CBFi == CBFj) cycle
                   iCent = ((CBFi - 2) * (CBFi - 1)) / 2 + CBFj
 !           jCent=((iTrajnew-2)*(iTrajnew-1))/2+jTrajnew
-                  Btemp%Centroids(iCent) = B%Centroids(iCent)
+                  call Btemp%Centroids(iCent)%copy_from(B%Centroids(iCent))
 !         endif
                end do
 !       do jtraj=1,B%numTraj-1 !centroid
@@ -201,7 +201,7 @@ contains
 
          if (B%NumDeadTraj > 0) then !copy dead trajectories
             do iTraj = 1, B%NumDeadTraj
-               Btemp%DeadTraj(iTraj) = B%DeadTraj(iTraj)
+               call Btemp%DeadTraj(iTraj)%copy_from(B%DeadTraj(iTraj))
             end do
             Btemp%DeadH = B%DeadH
          end if
@@ -217,7 +217,9 @@ contains
 
 !Find the dead trajectory to restart from
          do itraj = 1, B%numDeadTraj
-            if (inIRestartTraj(1) == B%DeadTraj(ITraj)%TrajID) Btemp%Trajectory(1) = B%DeadTraj(ITraj)
+            if (inIRestartTraj(1) == B%DeadTraj(ITraj)%TrajID) then
+               call Btemp%Trajectory(1)%copy_from(B%DeadTraj(ITraj))
+            end if
          end do
 !Set the current time to the trajectory's deadtime
          Btemp%CurrentTime = Btemp%Trajectory(1)%DeadTime
@@ -378,15 +380,15 @@ contains
 
 ! copy this info to the rest of the trajectories in the bundle
       do n = 2, ntraj
-         B%Trajectory(n) = T
+         call B%Trajectory(n)%copy_from(T)
       end do
       do n = 1, ndead
-         B%DeadTraj(n) = T
+         call B%DeadTraj(n)%copy_from(T)
       end do
 !bfec
       if (glzCentroids) then
          do n = 1, ncbfs * (ncbfs - 1) / 2
-            B%Centroids(n) = T
+            call B%Centroids(n)%copy_from(T)
          end do
       end if
 
