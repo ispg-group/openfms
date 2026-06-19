@@ -236,7 +236,7 @@ contains
 
       end select
 
-      B = Btemp
+      call B%copy_from(Btemp)
       call Btemp%destroy()
 
    end subroutine prune_bundle

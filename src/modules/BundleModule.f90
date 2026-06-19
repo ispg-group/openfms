@@ -80,6 +80,7 @@ module BundleModule
       procedure :: destroy => destroy_bundle !< Deallocates internal bundle structures
       procedure :: add_traj => add_traj_to_bundle !< Adds trajectory to bundle
       procedure :: add_traj_triplet => add_traj_triplet_to_bundle !< Adds triplet trajectory to bundle
+      procedure, public :: copy_from
 
    end type T_TrajectoryBundle
 
@@ -282,6 +283,15 @@ contains
       end if
    end subroutine assign_bundle
 
+   subroutine copy_from(B1, B2)
+      !> Copy to B1
+      class(T_TrajectoryBundle), intent(inout) :: B1
+      !> Copy from B2
+      class(T_TrajectoryBundle), intent(in) :: B2
+
+      call assign_bundle(B1, B2)
+   end subroutine copy_from
+
 !>
 !!    Add a new trajectory to a bundle
 !!
@@ -353,7 +363,7 @@ contains
 
       if (allocated(B1%DeadH)) BTemp%DeadH = B1%DeadH
 
-      B1 = BTemp
+      call B1%copy_from(BTemp)
 
       call BTemp%destroy()
 
@@ -430,7 +440,7 @@ contains
 
       if (allocated(B1%DeadH)) BTemp%DeadH = B1%DeadH
 
-      B1 = BTemp
+      call B1%copy_from(BTemp)
 
       B1%Trajectory(NumTrajP1)%Ms = 3
       B1%Trajectory(NumTrajP1 - 1)%Ms = 1

@@ -109,7 +109,7 @@ contains
                      numstates=NUM_STATES(2), &
                      ncbfs=NCBFS(2))
 
-      B2 = B1
+      call B2%copy_from(B1)
 
       call check(error, size(B2%Trajectory), NUM_TRAJ(1))
       if (allocated(error)) return
