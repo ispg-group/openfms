@@ -4,8 +4,10 @@
 !<
 module InitialModule
    use GlobalModule, only: DefInt, DefReal, DefInt4, fmiOut
+   use ThermoModule, only: thermo_init, thermo
+   use TrajectoryModule, only: FMS_InitializeNHC
    implicit none
-   public
+   public 
    save
 
 !> Initial state to create wavefunctions on
@@ -39,6 +41,14 @@ module InitialModule
    logical :: inzNormInitial
    logical :: inzSharpEnergy
    logical :: inzOSAmp
+
+!> Thermostat
+   real(kind=DefReal), allocatable :: mNHC(:), pNHC(:), rNHC(:)
+   real(kind=DefReal) :: thermE, dt
+   logical :: inzThermostatis
+   character(len=32) :: inthermostattype
+   integer(kind=DefInt) :: inNumNHCChain
+   real(kind=DefReal) :: inNHCTau !< NHC relaxation time in atomic units
 
 !     QM/MM
 ! TODO: Remove these!
@@ -75,7 +85,10 @@ contains
    ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    subroutine FMS_SelectInitial(B1)
       ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      use GlobalModule, only: DefReal, fmiOut, FmsWorkingDir, FMS_DieError
+      use GlobalModule, only: DefReal, fmiOut, FMSWorkingDir, FMS_DieError, BoltzK, &
+                              gliNBeads, gliRPMDNNHC, gldRPMDBeta, glRPMDMethod, &
+                              glRPMDThermostat, gldRPMDTau0
+      use RingModule, only: ring_create, ring_init, FMS_ring_setup, FMS_rings
       use TrajectoryModule
       use TrajectoryCalcsModule, only: Potential
       use BundleModule
@@ -87,7 +100,12 @@ contains
       type(T_TrajectoryBundle), intent(inout) :: B1
       type(T_Trajectory) :: TTemp
 
-      integer :: ntraj, n
+      !thermostat
+      integer :: ntraj, n, i
+      ! ring polymer
+      real(kind=DefReal), allocatable :: rp_masses(:), rp_refgeom(:,:)
+      integer :: rp_ndim, rp_natom, rp_iatom
+      logical :: rp_success
 
       logical :: zExist, redo
       real(kind=DefReal) :: Etmp
@@ -201,13 +219,51 @@ contains
          write (fmiOut, *) 'Generating a swarm from Geometry.dat'
          call FMS_InitialSwarm(B1)
 
-         ! . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+      ! . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
          ! Error message
       case default
          call FMS_DieError('Initial condition not recognized.')
-
       end select
-      write (fmiOut, *)
+
+      ! . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+      ! Initialize NHC thermostat if requested (runs for all sampling methods)
+      if (inzThermostatis .and. trim(inthermostattype) == 'NHC') then
+         write (fmiOut, *) 'Initializing Nose-Hoover Chain thermostat for all trajectories.'
+         write (fmiOut, *) '  Chain length: ', inNumNHCChain
+         write (fmiOut, *) '  Temperature: ', indTemperature, ' K'
+         write (fmiOut, *) '  Relaxation time (au): ', inNHCTau
+
+         ! Initialize NHC for each trajectory
+         do i = 1, ntraj
+            call FMS_InitializeNHC(B1%Trajectory(i), inNumNHCChain, indTemperature, inNHCTau)
+         end do
+
+      end if
+
+      ! Initialize ring polymer if requested
+      if (gliNBeads > 1) then
+         write (fmiOut, *) 'Initializing ring polymer with', gliNBeads, 'beads per trajectory'
+         write (fmiOut, *) '  Method: ', trim(glRPMDMethod), '  Thermostat: ', trim(glRPMDThermostat)
+         call FMS_ring_setup(ntraj)
+         do i = 1, ntraj
+            rp_ndim = B1%Trajectory(i)%Particle(1)%NumDimensions
+            rp_natom = B1%Trajectory(i)%NumParticles
+            allocate(rp_masses(rp_natom), rp_refgeom(rp_ndim, rp_natom))
+            do rp_iatom = 1, rp_natom
+               rp_masses(rp_iatom) = B1%Trajectory(i)%get_mass(rp_iatom)
+               rp_refgeom(:, rp_iatom) = B1%Trajectory(i)%Particle(rp_iatom)%get_pos()
+            end do
+            rp_success = ring_create(FMS_rings(i), rp_ndim, rp_natom, &
+                                     gliNBeads, gliRPMDNNHC)
+            if (.not. rp_success) call FMS_DieError('ring_create failed for trajectory')
+            call ring_init(FMS_rings(i), rp_refgeom, rp_masses, gldRPMDBeta, &
+                           glRPMDMethod, 'MB        ', glRPMDThermostat, gldRPMDTau0, &
+                           .false., iniRndSeed)
+            deallocate(rp_masses, rp_refgeom)
+         end do
+      end if
+
+      write (fmiOut, *)      
 
       call TTemp%destroy()
 

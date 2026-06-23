@@ -1,15 +1,18 @@
-!> Test suite for ThermoModule (only Nose–Hoover chain components)
+!> Test suite for ThermoModule (Langevin and Nose–Hoover chain)
 !!
-!! This suite is intentionally RNG-free: it tests
+!! it tests
+!!   - LangevinThermo_O (momentum updates only, phase ignored)
 !!   - thermo_NHC_local
 !!   - thermo_NHC_global
 
 module test_thermo
    use testdrive, only: new_unittest, unittest_type, error_type, check
    use testutils, only: check_dieerror_called
-   use GlobalModule, only: DefReal, DefInt
+   use GlobalModule, only: DefReal, DefInt, BoltzK
+   use RandomModule, only: initialize_fortran_prng
    use ParticleModule
-   use ThermoModule, only: thermo_NHC_local, thermo_NHC_global
+   use TrajectoryModule
+   use ThermoModule, only: thermo_NHC_local, thermo_NHC_global, LangevinThermo_O
    implicit none
    private
 
@@ -20,218 +23,255 @@ contains
       type(unittest_type), allocatable, intent(out) :: tests(:)
 
       tests = [ &
-         new_unittest("NHC local: dt=0 leaves state unchanged",        test_nhc_local_dt0), &
-         new_unittest("NHC local: forward/backward reversibility",     test_nhc_local_reversible), &
-         new_unittest("NHC global: dt=0 leaves state unchanged",       test_nhc_global_dt0), &
-         new_unittest("NHC global: forward/backward reversibility",    test_nhc_global_reversible), &
-         new_unittest("NHC global: bypass when any particle mass=0",   test_nhc_global_mass0_bypass) &
+         new_unittest("Langevin: 1D HO OBABO canonical phase-space distribution", test_langevin_momentum_dist), &
+         new_unittest("NHC: 1D HO VRORV canonical phase-space distribution", test_nhc_momentum_dist) &
       ]
    end subroutine collect_thermo_suite
 
+   subroutine test_langevin_momentum_dist(error)
+   !! OBABO Langevin integrator for a 1D harmonic oscillator: V = 0.5*mass*omega^2*x^2
+   type(error_type), allocatable, intent(out) :: error
+   type(T_Trajectory) :: traj
+   real(kind=DefReal) :: gamma, beta, dt, g1_0, g2_0
+   real(kind=DefReal) :: mass, omega2, x, p, force, T
+   real(kind=DefReal) :: psum, p2sum, pmean, pvar, target_var
+   real(kind=DefReal) :: xsum, x2sum, xmean, xvar, target_var_x
+   real(kind=DefReal) :: Ekin_sum, Epot_sum, Ekin_mean, Epot_mean, target_Emean
+   integer, parameter :: N_equil = 2000, N_sample = 50000
+   integer :: k
 
-   subroutine test_nhc_local_dt0(error)
-      type(error_type), allocatable, intent(out) :: error
+   call traj%create(numparticles=1, numstates=1)
+   traj%StateID = 1 ! refer to ground state
+   traj%Particle(1)%Mass = 1.0d0
+   traj%ElecStruc%ModPot = 0.0d0   ! not set by FMS_CreateElectronicStructure
 
-      integer :: M, l
-      real(8) :: dt, p, p0, mass, beta, thermE, thermE_expected, tol
-      real(8), allocatable :: mNHC(:), rNHC(:), pNHC(:), r0(:), pN0(:)
+   mass   = traj%Particle(1)%Mass
+   omega2 = 1.0d0   ! omega^2; V = 0.5*mass*omega2*x^2,  F = -mass*omega2*x
+   gamma  = 5.0d0
+   T = 300.0d0
+   beta = 1.0d0 / (BoltzK*T)
+   dt     = 0.1d0
+   target_var   = mass / beta                     ! <p²> = m/β
+   target_var_x = 1.0d0 / (mass * omega2 * beta)  ! <x²> = 1/(mω²β)
+   target_Emean = 0.5d0 / beta                     ! <Ekin> = <Epot> = ½kT (equipartition)
 
-      tol  = 1.0d-12
-      M    = 4
-      dt   = 0.0d0
-      beta = 0.7d0
-      mass = 2.3d0
-      p    = 1.234d0
-      p0   = p
+   ! Start at origin with zero momentum
+   call traj%set_pos(1, 1, 0.0d0)
+   call traj%set_mom(1, 1, 0.0d0)
 
-      allocate(mNHC(M), rNHC(M), pNHC(M), r0(M), pN0(M))
+   ! DerivMat stores the gradient dV/dx = mass*omega2*x; force = -DerivMat.
+   traj%ElecStruc%DerivMat(1, 1, 1) = 0.0d0   ! dV/dx at x=0
+   traj%ElecStruc%PotEn(1)          = 0.0d0   ! V(0) = 0
+   traj%ESFlags%ZDerivCurrent       = .true.
+   traj%ESFlags%ZPotEnCurrent       = .true.
 
-      ! deterministic initial thermostat state (no RNG)
-      mNHC = [ 1.0d0, 1.7d0, 2.1d0, 3.3d0 ]
-      rNHC = [ 0.10d0, -0.05d0, 0.03d0, 0.07d0 ]
-      pNHC = [ 0.20d0, -0.10d0, 0.40d0, -0.30d0 ]
+   call initialize_fortran_prng(77777)
 
-      r0  = rNHC
-      pN0 = pNHC
+   psum  = 0.0d0
+   p2sum = 0.0d0
+   xsum  = 0.0d0
+   x2sum = 0.0d0
+   Ekin_sum = 0.0d0
+   Epot_sum = 0.0d0
 
-      call thermo_NHC_local(dt, M, p, mass, beta, rNHC, pNHC, mNHC, thermE)
+   open(unit=43, file="test_thermo/lang_momentum_T=300.dat", status="replace", action="write")
 
-      call check(error, abs(p - p0) <= tol, "p changed with dt=0 in thermo_NHC_local")
-      call check(error, maxval(abs(rNHC - r0)) <= tol, "rNHC changed with dt=0 in thermo_NHC_local")
-      call check(error, maxval(abs(pNHC - pN0)) <= tol, "pNHC changed with dt=0 in thermo_NHC_local")
+   do k = 1, N_equil + N_sample
 
-      thermE_expected = 0.0d0
-      do l = 1, M
-         thermE_expected = thermE_expected + 0.5d0*pN0(l)*pN0(l)/mNHC(l) + r0(l)/beta
-      end do
+      ! --- O (dt/2): first thermostat half-step
+      call LangevinThermo_O(traj, gamma, beta, dt, g1_0, g2_0)
 
-      call check(error, abs(thermE - thermE_expected) <= 1.0d-12, "thermE formula mismatch (local, dt=0)")
+      ! --- B (dt/2): momentum half-kick from HO force
+      x = traj%get_pos(1, 1)
+      force = -mass * omega2 * x
+      p = traj%get_mom(1, 1) + 0.5d0 * dt * force
+      call traj%set_mom(1, 1, p)
 
-      deallocate(mNHC, rNHC, pNHC, r0, pN0)
-   end subroutine test_nhc_local_dt0
+      ! --- A (dt): full position step
+      p = traj%get_mom(1, 1)
+      x = traj%get_pos(1, 1) + dt * p / mass
+      call traj%set_pos(1, 1, x)   ! triggers geom_changed() -> flags reset
+      traj%ElecStruc%DerivMat(1, 1, 1) = mass * omega2 * x
+      traj%ElecStruc%PotEn(1)          = 0.5d0 * mass * omega2 * x * x
+      traj%ESFlags%ZDerivCurrent       = .true.
+      traj%ESFlags%ZPotEnCurrent       = .true.
 
+      ! --- B (dt/2): momentum half-kick from HO force
+      force = -mass * omega2 * x
+      p = traj%get_mom(1, 1) + 0.5d0 * dt * force
+      call traj%set_mom(1, 1, p)
 
-   subroutine test_nhc_local_reversible(error)
-      type(error_type), allocatable, intent(out) :: error
+      ! --- O (dt/2): second thermostat half-step
+      call LangevinThermo_O(traj, gamma, beta, dt, g1_0, g2_0)
 
-      integer :: M
-      real(8) :: dt, p, p_init, mass, beta, thermE, tol
-      real(8), allocatable :: mNHC(:), rNHC(:), pNHC(:), r_init(:), pN_init(:)
+      if (k > N_equil) then
+         p = traj%get_mom(1, 1)
+         write(43,'(G15.8,1X,G15.8)') p, x
+         psum     = psum     + p
+         p2sum    = p2sum    + p * p
+         xsum     = xsum     + x
+         x2sum    = x2sum    + x * x
+         Ekin_sum = Ekin_sum + p * p / (2.0d0 * mass)
+         Epot_sum = Epot_sum + 0.5d0 * mass * omega2 * x * x
+      end if
 
-      tol  = 5.0d-11
-      M    = 4
-      dt   = 5.0d-3
-      beta = 0.9d0
-      mass = 1.8d0
-      p    = 0.77d0
+   end do
 
-      allocate(mNHC(M), rNHC(M), pNHC(M), r_init(M), pN_init(M))
+   close(43)
 
-      mNHC = [ 0.8d0, 1.1d0, 1.4d0, 2.0d0 ]
-      rNHC = [ 0.02d0, -0.03d0, 0.01d0, 0.00d0 ]
-      pNHC = [ 0.05d0, 0.02d0, -0.04d0, 0.01d0 ]
+   pmean = psum  / real(N_sample, kind=DefReal)
+   pvar  = p2sum / real(N_sample, kind=DefReal) - pmean**2
+   xmean = xsum  / real(N_sample, kind=DefReal)
+   xvar  = x2sum / real(N_sample, kind=DefReal) - xmean**2
 
-      p_init  = p
-      r_init  = rNHC
-      pN_init = pNHC
+   call check(error, abs(pmean) < 0.05d0, &
+              "Momentum mean not near zero: " // fmt_real(pmean))
+   if (allocated(error)) return
+   call check(error, abs(pvar - target_var) / target_var < 0.05d0, &
+              "Momentum variance wrong: got " // fmt_real(pvar) // &
+              " expected " // fmt_real(target_var))
+   if (allocated(error)) return
+   call check(error, abs(xmean) < 0.05d0, &
+              "Position mean not near zero: " // fmt_real(xmean))
+   if (allocated(error)) return
+   call check(error, abs(xvar - target_var_x) / target_var_x < 0.05d0, &
+              "Position variance wrong: got " // fmt_real(xvar) // &
+              " expected " // fmt_real(target_var_x))
+   if (allocated(error)) return
+   Ekin_mean = Ekin_sum / real(N_sample, kind=DefReal)
+   Epot_mean = Epot_sum / real(N_sample, kind=DefReal)
+   call check(error, abs(Ekin_mean - target_Emean) / target_Emean < 0.05d0, &
+              "Mean kinetic energy wrong: got " // fmt_real(Ekin_mean) // &
+              " expected " // fmt_real(target_Emean))
+   if (allocated(error)) return
+   call check(error, abs(Epot_mean - target_Emean) / target_Emean < 0.05d0, &
+              "Mean potential energy wrong: got " // fmt_real(Epot_mean) // &
+              " expected " // fmt_real(target_Emean))
 
-      ! Forward step
-      call thermo_NHC_local( dt, M, p, mass, beta, rNHC, pNHC, mNHC, thermE)
-      ! Backward step (reversibility test)
-      call thermo_NHC_local(-dt, M, p, mass, beta, rNHC, pNHC, mNHC, thermE)
-
-      call check(error, abs(p - p_init) <= tol, "local NHC not reversible: p did not return")
-      call check(error, maxval(abs(rNHC - r_init)) <= tol, "local NHC not reversible: rNHC did not return")
-      call check(error, maxval(abs(pNHC - pN_init)) <= tol, "local NHC not reversible: pNHC did not return")
-
-      deallocate(mNHC, rNHC, pNHC, r_init, pN_init)
-   end subroutine test_nhc_local_reversible
-
-
-   subroutine test_nhc_global_dt0(error)
-      type(error_type), allocatable, intent(out) :: error
-
-      integer :: M, ndim, natom, l, NTotDim
-      real(8) :: dt, beta, thermE, thermE_expected, tol
-      real(8), allocatable :: mNHC(:), rNHC(:), pNHC(:), r0(:), pN0(:)
-      real(8) :: p(3,2), p0(3,2), mass(2)
-
-      tol   = 1.0d-12
-      M     = 4
-      ndim  = 3
-      natom = 2
-      NTotDim = ndim*natom
-
-      dt   = 0.0d0
-      beta = 0.8d0
-
-      mass = [ 12.0d0, 1.0d0 ]
-      p(:,1) = [ 0.10d0, -0.20d0, 0.30d0 ]
-      p(:,2) = [ -0.05d0, 0.04d0, -0.02d0 ]
-      p0 = p
-
-      allocate(mNHC(M), rNHC(M), pNHC(M), r0(M), pN0(M))
-      mNHC = [ 1.0d0, 1.3d0, 1.9d0, 2.7d0 ]
-      rNHC = [ 0.03d0, 0.01d0, -0.02d0, 0.04d0 ]
-      pNHC = [ -0.10d0, 0.07d0, 0.02d0, -0.05d0 ]
-      r0  = rNHC
-      pN0 = pNHC
-
-      call thermo_NHC_global(dt, M, ndim, natom, p, mass, beta, rNHC, pNHC, mNHC, thermE)
-
-      call check(error, maxval(abs(p - p0)) <= tol, "p changed with dt=0 in thermo_NHC_global")
-      call check(error, maxval(abs(rNHC - r0)) <= tol, "rNHC changed with dt=0 in thermo_NHC_global")
-      call check(error, maxval(abs(pNHC - pN0)) <= tol, "pNHC changed with dt=0 in thermo_NHC_global")
-
-      thermE_expected = 0.0d0
-      thermE_expected = thermE_expected + 0.5d0*pN0(1)*pN0(1)/mNHC(1) + dble(NTotDim)*r0(1)/beta
-      do l = 2, M
-         thermE_expected = thermE_expected + 0.5d0*pN0(l)*pN0(l)/mNHC(l) + r0(l)/beta
-      end do
-
-      call check(error, abs(thermE - thermE_expected) <= 1.0d-12, "thermE formula mismatch (global, dt=0)")
-
-      deallocate(mNHC, rNHC, pNHC, r0, pN0)
-   end subroutine test_nhc_global_dt0
+   call traj%destroy()
+   end subroutine test_langevin_momentum_dist
 
 
-   subroutine test_nhc_global_reversible(error)
-      type(error_type), allocatable, intent(out) :: error
+   subroutine test_nhc_momentum_dist(error)
+   !! VRORV (NHC half-step / Velocity Verlet) for a 1D harmonic oscillator:
+   !!    V(x) = 0.5 * mass * omega^2 * x^2
+   !! Parameters: mass=1, omega=1, T=300 K
+   !!    target_var_p = m/β = mkT,  target_var_x = 1/(mω²β) = kT/(mω²)
+   !! NHC chain length M=4, mNHC = 1/(β*ω²)
+   type(error_type), allocatable, intent(out) :: error
+   real(kind=DefReal) :: mass, omega2, beta, dt, T
+   real(kind=DefReal) :: x, p, force, thermE
+   real(kind=DefReal) :: psum, p2sum, pmean, pvar, target_var
+   real(kind=DefReal) :: xsum, x2sum, xmean, xvar, target_var_x
+   real(kind=DefReal) :: Ekin_sum, Epot_sum, Ekin_mean, Epot_mean, target_Emean
+   integer, parameter :: M = 4
+   integer, parameter :: N_equil = 10000, N_sample = 50000
+   real(kind=DefReal), dimension(M) :: rNHC, pNHC, mNHC
+   integer :: k
 
-      integer :: M, ndim, natom
-      real(8) :: dt, beta, thermE, tol
-      real(8) :: p(3,2), p_init(3,2), mass(2)
-      real(8), allocatable :: mNHC(:), rNHC(:), pNHC(:), r_init(:), pN_init(:)
+   mass   = 1.0d0
+   omega2 = 1.0d0
+   T = 300.0d0
+   beta   = 1.0d0 / (BoltzK*T)
+   dt     = 0.1d0
+   target_var   = mass / beta                     ! <p²> = m/β
+   target_var_x = 1.0d0 / (mass * omega2 * beta)  ! <x²> = 1/(mω²β)
+   target_Emean = 0.5d0 / beta                     ! <Ekin> = <Epot> = ½kT (equipartition)
 
-      tol   = 1.0d-10
-      M     = 4
-      ndim  = 3
-      natom = 2
+   ! Standard NHC masses: mNHC = NTotDim * kT / omega_ref^2, NTotDim=1
+   mNHC(:) = 1.0d0 / (beta * omega2)   ! = 333.3
+   rNHC(:) = 0.5d0
+   pNHC(:) = 0.0d0
 
-      dt   = 3.0d-3
-      beta = 1.1d0
+   ! Non-zero x so the first B-step gives a nonzero impulse (x=0,p=0 is degenerate)
+   x = 0.0d0
+   p = 0.5d0
 
-      mass = [ 14.0d0, 16.0d0 ]
-      p(:,1) = [ 0.12d0, -0.08d0, 0.05d0 ]
-      p(:,2) = [ -0.03d0, 0.07d0, -0.09d0 ]
-
-      allocate(mNHC(M), rNHC(M), pNHC(M), r_init(M), pN_init(M))
-      mNHC = [ 0.9d0, 1.2d0, 1.5d0, 2.4d0 ]
-      rNHC = [ 0.01d0, -0.01d0, 0.02d0, 0.00d0 ]
-      pNHC = [ 0.03d0, -0.02d0, 0.01d0, 0.02d0 ]
-
-      p_init  = p
-      r_init  = rNHC
-      pN_init = pNHC
-
-      call thermo_NHC_global( dt, M, ndim, natom, p, mass, beta, rNHC, pNHC, mNHC, thermE)
-      call thermo_NHC_global(-dt, M, ndim, natom, p, mass, beta, rNHC, pNHC, mNHC, thermE)
-
-      call check(error, maxval(abs(p - p_init)) <= tol, "global NHC not reversible: p did not return")
-      call check(error, maxval(abs(rNHC - r_init)) <= tol, "global NHC not reversible: rNHC did not return")
-      call check(error, maxval(abs(pNHC - pN_init)) <= tol, "global NHC not reversible: pNHC did not return")
-
-      deallocate(mNHC, rNHC, pNHC, r_init, pN_init)
-   end subroutine test_nhc_global_reversible
-
-
-   subroutine test_nhc_global_mass0_bypass(error)
-      type(error_type), allocatable, intent(out) :: error
-
-      integer :: M, ndim, natom
-      real(8) :: dt, beta, thermE, thermE0, tol
-      real(8) :: p(3,2), p0(3,2), mass(2)
-      real(8), allocatable :: mNHC(:), rNHC(:), pNHC(:)
-
-      tol   = 0.0d0   ! should be exactly unchanged due to early RETURN
-      M     = 3
-      ndim  = 3
-      natom = 2
-
-      dt   = 1.0d-2
-      beta = 1.0d0
-
-      mass = [ 12.0d0, 0.0d0 ]   ! triggers bypass
-      p(:,1) = [ 0.40d0, 0.10d0, -0.20d0 ]
-      p(:,2) = [ 0.30d0, -0.50d0, 0.60d0 ]
-      p0 = p
-
-      allocate(mNHC(M), rNHC(M), pNHC(M))
-      mNHC = [ 1.0d0, 1.0d0, 1.0d0 ]
-      rNHC = [ 0.0d0, 0.0d0, 0.0d0 ]
-      pNHC = [ 0.0d0, 0.0d0, 0.0d0 ]
-
-      thermE0 = 123.456d0
-      thermE  = thermE0
-
-      call thermo_NHC_global(dt, M, ndim, natom, p, mass, beta, rNHC, pNHC, mNHC, thermE)
-
-      call check(error, maxval(abs(p - p0)) <= tol, "p changed even though mass=0 should bypass thermostat")
-      call check(error, thermE == thermE0, "thermE changed even though mass=0 bypass should return early")
-
-      deallocate(mNHC, rNHC, pNHC)
-   end subroutine test_nhc_global_mass0_bypass
+   psum  = 0.0d0
+   p2sum = 0.0d0
+   xsum  = 0.0d0
+   x2sum = 0.0d0
+   Ekin_sum = 0.0d0
+   Epot_sum = 0.0d0
 
 
+   open(unit=42, file="test_thermo/nhc_momentum_T=300.dat", status="replace", action="write")
+
+   do k = 1, N_equil + N_sample
+
+      ! --- NHC (dt/2): thermostat half-step
+      call thermo_NHC_local(0.5d0 * dt, M, p, mass, beta, rNHC, pNHC, mNHC, thermE)
+
+      ! --- B (dt/2): momentum half-kick from HO force
+      force = -mass * omega2 * x
+      p = p + 0.5d0 * dt * force
+
+      ! --- A (dt): full position step
+      x = x + dt * p / mass
+
+      ! --- B (dt/2): momentum half-kick from HO force (at new x)
+      force = -mass * omega2 * x
+      p = p + 0.5d0 * dt * force
+
+      ! --- NHC (dt/2): thermostat half-step
+      call thermo_NHC_local(0.5d0 * dt, M, p, mass, beta, rNHC, pNHC, mNHC, thermE)
+
+      if (k > N_equil) then
+         write(42,'(G15.8,1X,G15.8)') p, x
+         psum     = psum     + p
+         p2sum    = p2sum    + p * p
+         xsum     = xsum     + x
+         x2sum    = x2sum    + x * x
+         Ekin_sum = Ekin_sum + p * p / (2.0d0 * mass)
+         Epot_sum = Epot_sum + 0.5d0 * mass * omega2 * x * x
+      end if
+
+   end do
+
+   close(42)
+
+   pmean = psum  / real(N_sample, kind=DefReal)
+   pvar  = p2sum / real(N_sample, kind=DefReal) - pmean**2
+   xmean = xsum  / real(N_sample, kind=DefReal)
+   xvar  = x2sum / real(N_sample, kind=DefReal) - xmean**2
+
+   call check(error, abs(pmean) < 0.05d0, &
+              "NHC momentum mean not near zero: " // fmt_real(pmean))
+   if (allocated(error)) return
+   call check(error, abs(pvar - target_var) / target_var < 0.05d0, &
+              "NHC momentum variance wrong: got " // fmt_real(pvar) // &
+              " expected " // fmt_real(target_var))
+   if (allocated(error)) return
+   call check(error, abs(xmean) < 0.05d0, &
+              "NHC position mean not near zero: " // fmt_real(xmean))
+   if (allocated(error)) return
+   call check(error, abs(xvar - target_var_x) / target_var_x < 0.05d0, &
+              "NHC position variance wrong: got " // fmt_real(xvar) // &
+              " expected " // fmt_real(target_var_x))
+   if (allocated(error)) return
+   Ekin_mean = Ekin_sum / real(N_sample, kind=DefReal)
+   Epot_mean = Epot_sum / real(N_sample, kind=DefReal)
+   call check(error, abs(Ekin_mean - target_Emean) / target_Emean < 0.05d0, &
+              "NHC mean kinetic energy wrong: got " // fmt_real(Ekin_mean) // &
+              " expected " // fmt_real(target_Emean))
+   if (allocated(error)) return
+   call check(error, abs(Epot_mean - target_Emean) / target_Emean < 0.05d0, &
+              "NHC mean potential energy wrong: got " // fmt_real(Epot_mean) // &
+              " expected " // fmt_real(target_Emean))
+
+   end subroutine test_nhc_momentum_dist
+
+
+   function fmt_int(i) result(s)
+      integer, intent(in) :: i
+      character(len=20) :: s
+      write(s, '(I0)') i
+   end function fmt_int
+
+   function fmt_real(x) result(s)
+      real(kind=DefReal), intent(in) :: x
+      character(len=32) :: s
+      write(s, '(G15.6)') x
+   end function fmt_real
 
 end module test_thermo

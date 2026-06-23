@@ -7,6 +7,7 @@ program tester
    use test_trajectory, only: collect_trajectory_suite
    use test_bundle, only: collect_bundle_suite
    use test_thermo, only: collect_thermo_suite
+   use test_ring,   only: collect_ring_suite
    use GlobalModule, only: set_error_handler
 #ifndef __GNUC__
 ! Needed for isatty intrinsic
@@ -31,7 +32,8 @@ program tester
                 new_testsuite("ParticleModule", collect_particle_suite), &
                 new_testsuite("TrajectoryModule", collect_trajectory_suite), &
                 new_testsuite("BundleModule", collect_bundle_suite), &
-                new_testsuite("ThermoModule",collect_thermo_suite) &
+                new_testsuite("ThermoModule",collect_thermo_suite), &
+                new_testsuite("RingModule",  collect_ring_suite) &
                 ]
 
    ! Swap the default FMS_DieError handler for a unit-test friendly

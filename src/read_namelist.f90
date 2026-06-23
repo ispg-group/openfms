@@ -91,6 +91,24 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    real(kind=DefReal) :: ShiftTrip
 ! GAIMS added end
 
+! Thermostat added
+   logical :: zThermostatis
+   character(len=32) :: thermostattype
+   integer(kind=DefInt) :: NumNHCChain
+   real(kind=DefReal) :: LangevinGamma
+   real(kind=DefReal) :: LangevinTemp
+   real(kind=DefReal) :: NHCTau
+! Thermostat added end
+! RPMD added
+   integer(kind=DefInt) :: nBeads
+   character(len=8) :: RPMDMethod
+   character(len=10) :: RPMDThermostat
+   real(kind=DefReal) :: RPMDTau0
+   integer(kind=DefInt) :: RPMDNNHCChain
+! RPMD added end
+   
+
+
    logical :: zMMFile
 
    real(kind=DefReal) :: QuenchToler
@@ -173,6 +191,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    logical :: ZQMMM
    logical :: ZTurnPoint
    logical :: CentNGrad
+
 
 !     Output control
    logical :: zTrajFile
@@ -279,7 +298,11 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
       ! Backwards compat
       , Tunnel, EShellOnly, SpawnAdaptive, SteepestDescent &
       !TM
-      , NDummyParticles, DummyCoeff
+      , NDummyParticles, DummyCoeff &
+      ! Thermostat added
+      , zThermostatis, thermostattype, NumNHCChain, LangevinGamma, LangevinTemp, NHCTau &
+      ! RPMD added
+      , nBeads, RPMDMethod, RPMDThermostat, RPMDTau0, RPMDNNHCChain
 
    IRestart = 0
    IRestartTraj(:) = 0
@@ -473,6 +496,22 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    ShiftTrip = 0.d0
 ! GAIMS added end
 
+! Thermostat added
+   zThermostatis=.false.
+   thermostattype='Langevin'
+   NumNHCChain=2
+   LangevinGamma = 1.0d0
+   LangevinTemp = 300.0d0
+   NHCTau = 1000.0d0
+! Thermostat added end
+! RPMD added
+   nBeads = 1
+   RPMDMethod = 'RPMD'
+   RPMDThermostat = 'NONE'
+   RPMDTau0 = 1.0d0
+   RPMDNNHCChain = 2
+! RPMD added end
+
 !     Flag for input errors
    zFatal = .false.
 
@@ -620,6 +659,8 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    fmzPCOlap = zPCOlap
    fmzSOME = zSOME
    fmzSOCeff = zSOCeff
+   ! thermostat
+   dt = TimeStep
 
 !     Copy SMD parameters into SMDModule
    smSMD = SMD
@@ -672,6 +713,26 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    indFModeSharp = FModeSharp
    indEquilTStep = EquilTStep
    inIRestart = IRestart
+! Thermostat added
+   inzThermostatis=zThermostatis
+   inthermostattype=thermostattype
+   inNumNHCChain=NumNHCChain
+   gldLangevinGamma=LangevinGamma
+   gldLangevinTemp=LangevinTemp
+   gldThermostatTemp=LangevinTemp
+   inNHCTau=NHCTau
+   gldNHCTau=NHCTau
+! Thermostat added end
+! RPMD added
+   gliNBeads = nBeads
+   glRPMDMethod = RPMDMethod
+   glRPMDThermostat = RPMDThermostat
+   gldRPMDTau0 = RPMDTau0
+   gliRPMDNNHC = RPMDNNHCChain
+   if (nBeads > 1 .and. Temperature > 0.0d0) then
+      gldRPMDBeta = 1.0d0 / (BoltzK * Temperature)
+   end if
+! RPMD added end
 !bfec
    if (IRestart /= 0) then
       glirestTC = 1
@@ -707,6 +768,8 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    NTrip = NumTriplets
    spdSOCThresh = SOCThresh
 ! GAIMS added end
+
+
 
 !     Copy Spawning parameters into SpawnModule
    spdCSThresh = CSThresh
@@ -786,6 +849,9 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
       if (TimeStep <= 0) call NameListFail('TimeStep', int(TimeStep, DefInt))
    end if
 
+   call Thermostat_Check()
+   call RPMD_Check()
+
    if (zFatal) call FMS_DieError('Namelist input failed.')
 
 !
@@ -856,5 +922,83 @@ contains
       end do
 
    end subroutine FMS_CheckDummy
+
+   ! check thermostat variables
+
+   subroutine Thermostat_Check()
+      if (.not. zThermostatis) return
+
+      glzThermostat = zThermostatis
+      glThermostatType = thermostattype
+
+      if (thermostattype /= 'Langevin' .and. thermostattype /= 'NHC') then
+         write (error_unit, *) 'ERROR in Control.dat: Invalid thermostat type: '//trim(thermostattype)
+         write (error_unit, *) 'Valid options are: Langevin, NHC'
+         zFatal = .true.
+         return
+      end if
+
+      if (thermostattype == 'Langevin') then
+         if (LangevinGamma <= 0.0d0) then
+            write (error_unit, *) 'ERROR in Control.dat: LangevinGamma must be > 0'
+            zFatal = .true.
+         end if
+         if (LangevinTemp <= 0.0d0) then
+            write (error_unit, *) 'ERROR in Control.dat: LangevinTemp must be > 0'
+            zFatal = .true.
+         end if
+      end if
+
+      if (thermostattype == 'NHC') then
+         if (NumNHCChain < 1) then
+            write (error_unit, *) 'ERROR in Control.dat: NumNHCChain must be >= 1 for NHC thermostat'
+            zFatal = .true.
+         end if
+         if (NHCTau <= 0.0d0) then
+            write (error_unit, *) 'ERROR in Control.dat: NHCTau must be > 0'
+            zFatal = .true.
+         end if
+      end if
+   end subroutine Thermostat_Check
+
+   ! check RPMD variables
+
+   subroutine RPMD_Check()
+      if (nBeads < 1) then
+         write (error_unit, *) 'ERROR in Control.dat: nBeads must be >= 1'
+         zFatal = .true.
+         return
+      end if
+      if (nBeads == 1) return
+
+      if (RPMDMethod /= 'RPMD' .and. RPMDMethod /= 'PA-CMD' .and. RPMDMethod /= 'GAUSSAVE') then
+         write (error_unit, *) 'ERROR in Control.dat: Invalid RPMDMethod: '//trim(RPMDMethod)
+         write (error_unit, *) 'Valid options are: RPMD, PA-CMD, GAUSSAVE'
+         zFatal = .true.
+      end if
+
+      if (RPMDThermostat /= 'NONE' .and. RPMDThermostat /= 'NHC-L' .and. &
+          RPMDThermostat /= 'NHC-G' .and. RPMDThermostat /= 'PILE-L' .and. &
+          RPMDThermostat /= 'PILE-G') then
+         write (error_unit, *) 'ERROR in Control.dat: Invalid RPMDThermostat: '//trim(RPMDThermostat)
+         write (error_unit, *) 'Valid options are: NONE, NHC-L, NHC-G, PILE-L, PILE-G'
+         zFatal = .true.
+      end if
+
+      if (RPMDTau0 <= 0.0d0) then
+         write (error_unit, *) 'ERROR in Control.dat: RPMDTau0 must be > 0'
+         zFatal = .true.
+      end if
+
+      if (RPMDNNHCChain < 1) then
+         write (error_unit, *) 'ERROR in Control.dat: RPMDNNHCChain must be >= 1'
+         zFatal = .true.
+      end if
+
+      if (gldRPMDBeta <= 0.0d0) then
+         write (error_unit, *) 'ERROR in Control.dat: Temperature (or beta) must be set when nBeads > 1'
+         zFatal = .true.
+      end if
+   end subroutine RPMD_Check
 
 end subroutine FMS_ReadNameList

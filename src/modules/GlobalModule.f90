@@ -186,6 +186,29 @@ module GlobalModule
 ! GAIMS added end
 
 !---------------------------------------------------------------------------
+!                     THERMOSTAT PARAMETERS
+!---------------------------------------------------------------------------
+   logical :: glzThermostat
+   character(len=32) :: glThermostatType
+   real(kind=DefReal) :: gldThermostatTemp
+   real(kind=DefReal) :: gldThermostatCoupling
+   integer(kind=DefInt) :: gliThermostatParticles(100)
+   integer(kind=DefInt) :: gliNThermostatParticles
+   real(kind=DefReal) :: gldLangevinGamma !< Friction coefficient for Langevin thermostat
+   real(kind=DefReal) :: gldLangevinTemp !< Temperature for Langevin thermostat
+   real(kind=DefReal) :: gldNHCTau !< NHC relaxation time in atomic units
+
+!---------------------------------------------------------------------------
+!                     RING POLYMER (RPMD/CMD) PARAMETERS
+!---------------------------------------------------------------------------
+   integer(kind=DefInt) :: gliNBeads = 1
+   real(kind=DefReal) :: gldRPMDBeta = 0.0d0
+   character(len=8) :: glRPMDMethod = 'RPMD'
+   character(len=10) :: glRPMDThermostat = 'NONE'
+   real(kind=DefReal) :: gldRPMDTau0 = 1.0d0
+   integer(kind=DefInt) :: gliRPMDNNHC = 2
+
+!---------------------------------------------------------------------------
 !                      OUTPUT CONTROL
 !---------------------------------------------------------------------------
    integer, private, parameter :: MaxGeometry = 100

@@ -1,10 +1,12 @@
 ! Copyright Todd J. Martinez and Raphael D. Levine, 1994
 module ThermoModule
    use GlobalModule
+   use TrajectoryModule
+   use TrajectoryCalcsModule, only: FMS_PhaseDot, FMS_GetForce
    implicit none
    private
    public :: thermo_init, thermo, thermo_bussi_global, thermo_bussi_local, thermo_NormDist, &
-           thermo_MBDist, thermo_NHC_MBDist, thermo_NHC_local, thermo_NHC_global
+           thermo_MBDist, thermo_NHC_MBDist, thermo_NHC_local, thermo_NHC_global, LangevinThermo_O, gasdev
    character(len=8), save :: therm = "" !which thermostat to use in simple interface
    double precision, save :: beta_s = 0.0 !inverse temperature in simple interface
    double precision, save :: thermtime = 0.0 !Thermostat relaxation time (in au) for simple interface
@@ -43,8 +45,11 @@ contains
          call thermo_bussi_global(ndim, natom, p, mass, beta_s, tau, thermE, zcom_s)
       case ("bussi_l")
          call thermo_bussi_local(ndim, natom, p, mass, beta_s, tau, thermE, zcom_s)
+      !case ("langevin")
+         !call LangevinThermo_O(ndim, natom, p, mass, beta_s, thermtime, dt, thermE, zcom_s)
       case ("mbdist")
          call thermo_MBDist(ndim, natom, p, mass, beta_s, zcom_s)
+         !call thermo_NHC_MBDist(beta,M,pNHC,mNHC,thermE)
       case default !do nothing, and return
 
       end select
@@ -225,12 +230,34 @@ contains
       call FMS_DieError("ERROR: gamdev not implemented")
    end function gamdev
 
-! TODO: Reimplement this
+! Gaussian random number generator using Box-Muller transform
    function gasdev()
       double precision :: gasdev
-
-      gasdev = 0.0d0
-      call FMS_DieError("ERROR: gasdev not implemented")
+      double precision :: u1, u2, pi
+      integer :: count_attempts
+      
+      pi = 3.141592653589793238d0
+      count_attempts = 0
+      
+      ! Generate two uniform random numbers in (0,1)
+      call random_number(u1)
+      call random_number(u2)
+      
+      ! Avoid log(0) by ensuring u1 > 0
+      ! Allow up to 100 attempts to get a valid u1
+      do while (u1 <= 0.0d0 .and. count_attempts < 100)
+         call random_number(u1)
+         count_attempts = count_attempts + 1
+      end do
+      
+      ! If still u1 <= 0, use a small default value to avoid log(0)
+      if (u1 <= 0.0d0) then
+         u1 = 1.0d-10
+      end if
+      
+      ! Box-Muller transform: sqrt(-2*ln(u1)) * cos(2*pi*u2)
+      gasdev = sqrt(-2.0d0 * log(u1)) * cos(2.0d0 * pi * u2)
+      
    end function gasdev
 
    subroutine thermo_ran(rnd, iseed)
@@ -270,7 +297,7 @@ contains
    end subroutine vcom_project
 
    subroutine thermo_NHC_MBDist(beta,M,pNHC,mNHC,thermE)
-   !Initialise Nose cariables
+   !Initialise Nose variables
    integer M
    real(8) beta,thermE
    real(8),dimension(M) :: mNHC,pNHC
@@ -442,11 +469,73 @@ contains
 
 
 
-
-
-
-
-
+   subroutine LangevinThermo_O(T1, gamma, beta, dt, g1_0, g2_0)
+      !> O-step (Ornstein-Uhlenbeck) for BAOAB Langevin integrator with phase update
+      !>
+      !> Implements: p_new = exp(-gamma*dt/2)*p_old + sqrt(1-exp(-gamma*dt))*sqrt(m*kB*T)*N(0,1)
+      !>
+      !> Phase is updated using trapezoid rule (as in FMS_PropVV_b):
+      !>   ΔPhase = (g1_0 + g1_1)/2 * Δt - (g2_0 - g2_1)/8 * Δt²
+      !>
+      !> where:
+      !>   g1 = ∂τ/∂t (kinetic energy term)
+      !>   g2 = 2*F·v  (used for accurate integration)
+      !<
+      type(T_Trajectory), intent(inout) :: T1
+      real(kind=DefReal), intent(in)    :: gamma, beta, dt
+      real(kind=DefReal), intent(inout) :: g1_0, g2_0  ! Phase derivatives
+      
+      real(kind=DefReal) :: g1_1, g2_1
+      real(kind=DefReal) :: c1, c2, sigma
+      real(kind=DefReal) :: dt_half
+      integer(kind=DefInt) :: iparticle, idim
+      real(kind=DefReal) :: p_component
+      real(kind=DefReal), allocatable :: F_vec(:), V_vec(:)
+      
+      ! Safety check
+      if (gamma <= 0.0d0 .or. beta <= 0.0d0 .or. dt <= 0.0d0) then
+         return
+      end if
+      
+      ! Get phase derivatives before momentum changes
+      g1_0 = FMS_PhaseDot(T1)
+      allocate(F_vec(T1%NumDimensions))
+      allocate(V_vec(T1%NumDimensions))
+      F_vec = FMS_GetForce(T1)
+      V_vec = T1%get_vel()
+      g2_0 = 2.0d0 * dot_product(F_vec, V_vec)
+      
+      dt_half = dt * 0.5d0
+      c1 = exp(-gamma * dt_half)
+      c2 = sqrt((1.0d0 - c1*c1) / (2.0d0*gamma))
+      
+      ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      !          Momentum  update
+      ! Apply O-step: friction + noise to all momenta; sigma is per-particle
+      do iparticle = 1, T1%NumParticles
+         sigma = sqrt(2.0d0*gamma*T1%Particle(iparticle)%Mass / beta)
+         do idim = 1, T1%Particle(iparticle)%NumDimensions
+            p_component = T1%get_mom(iparticle, idim)
+            p_component = c1 * p_component + gasdev() * sigma * c2
+            call T1%set_mom(iparticle, idim, p_component)
+         end do
+      end do
+      ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      !          Nuclear phase  update
+      g1_1 = FMS_PhaseDot(T1)
+      F_vec = FMS_GetForce(T1)
+      V_vec = T1%get_vel()
+      g2_1 = 2.0d0 * dot_product(F_vec, V_vec)
+      
+      ! Update phase using trapezoid rule (as in FMS_PropVV_b)
+      T1%Phase = T1%Phase &
+                 + (g1_0 + g1_1) / 2.0d0 * dt &
+                 - (g2_0 - g2_1) / 8.0d0 * dt**2
+      
+      call T1%rescale_phases()
+      
+      deallocate(F_vec, V_vec)
+   end subroutine LangevinThermo_O
 
 
 end module ThermoModule
