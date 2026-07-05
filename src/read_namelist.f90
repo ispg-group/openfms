@@ -6,7 +6,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    use, intrinsic :: iso_fortran_env, only: error_unit
    use GlobalModule
    use QM_MM_Module
-   use SpawnModule
+   use SpawnModule, only: SpawnParams
    use InitialModule
    use SamplingModule
    use SMDModule
@@ -384,7 +384,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    nums = 0
    NumStates = -1
 !     OMAX_DEFAULT is defined in SpawnModule
-   OMax = OMAX_DEFAULT
+   OMax = SpawnParams%OMAX_DEFAULT
    OMax_intra = -1
    OMax_inter = -1
    OMin_parent = -1
@@ -707,32 +707,26 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    if (NumTriplets == 0 .and. NumSinglets == -1) NumSinglets = NumStates
    NSing = NumSinglets
    NTrip = NumTriplets
-   spdSOCThresh = SOCThresh
-! GAIMS added end
 
-!     Copy Spawning parameters into SpawnModule
-   spdCSThresh = CSThresh
-   spdCFThresh = CFThresh
-   spdPopToSpawn = PopToSpawn
-!     OMax parameter had originally multiple meanings that are now covered
-!     by separate parameters: OMin_parent, OMax_inter and OMax_intra.
-!     To preserve the meaning of existing input files,
-!     we only overwrite them if they are explicitly specified in Control.dat
-   spdOMax_intra = OMax
-   spdOMax_inter = OMax
-   spdOMin_parent = OMax
-   if (OMax_intra >= 0) then
-      spdOMax_intra = OMax_intra
+!  OMax parameter had originally multiple meanings that are now covered
+!  by separate parameters: OMin_parent, OMax_inter and OMax_intra.
+!  To preserve the meaning of existing input files, we only overwrite
+!  them with OMax if they are not explicitly specified in Control.dat
+   if (OMax_intra < 0) then
+      OMax_intra = OMax
    end if
-   if (OMax_inter >= 0) then
-      spdOMax_inter = OMax_inter
+   if (OMax_inter < 0) then
+      OMax_inter = OMax
    end if
-   if (OMin_parent >= 0) then
-      spdOMin_parent = OMin_parent
+   if (OMin_parent < 0) then
+      OMin_parent = OMax
    end if
-   spMaxTraj = MaxTraj
-   spMultiSpawn = MultiSpawn
-   spzSpawnCoupV = SpawnCoupV
+   if (MaxTraj == 0) then
+      MaxTraj = MaxTrajLimit
+   end if
+
+   call SpawnParams%initialize(CSThresh, CFThresh, PopToSpawn, OMax_inter, OMax_intra, &
+                               OMin_parent, SOCThresh, MaxTraj, MultiSpawn, SpawnCoupV)
 
 !     Copy QM/MM variables into QM_MM_Module
    qcZQMMM = ZQMMM
@@ -759,7 +753,6 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    else
       indEquilTStep = EquilTStep
    end if
-   if (spMaxTraj == 0) spMaxTraj = MaxTrajLimit
    if (gliModel == 9) qcNumMM = numas * nums
    if (ConfineK /= 0) qczConfine = .true.
    indGamma = indGamma * (1.d-15 / FsToAu) !convert from 1/s to 1/au
