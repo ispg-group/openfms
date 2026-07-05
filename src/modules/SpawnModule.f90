@@ -76,7 +76,7 @@ contains
 
    subroutine initialize_spawn_params(self, CSThresh, CFThresh, PopToSpawn, OMax_inter, OMax_intra, &
                                       OMin_parent, SOCThresh, MaxTraj, MultiSpawn, SpawnCoupV)
-      class(SpawnParams_t), intent(in) :: self
+      class(SpawnParams_t), intent(inout) :: self
       real(kind=DefReal), intent(in) :: CSThresh, CFThresh, PopToSpawn, OMax_inter, &
                                         OMax_intra, OMin_parent, SOCThresh
       integer(kind=DefInt), intent(in) :: MaxTraj, MultiSpawn
