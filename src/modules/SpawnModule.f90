@@ -16,6 +16,13 @@ module SpawnModule
    use VerletModule, only: FMS_PropVV
    implicit none
 
+   !> OMax: This is a legacy threshold value that functioned
+   !> as OMax_intra, OMax_inter and Omin_parent.
+   !> To preserve the semantics of existing input files,
+   !> OMax_intra, OMax_inter and OMin_parent are assigned the OMax value
+   !> unless the user provides their value in Control.dat
+   real(kind=DefReal), parameter :: OMAX_DEFAULT = 0.8
+
    !> Parameters controlling the spawning algorithm
    type :: SpawnParams_t
       !> threshold for entry to  spawn regions
@@ -45,12 +52,6 @@ module SpawnModule
       !> but can be less than 1 in momentum space due to
       !> velocity rescaling along the NAC vector.
       real(kind=DefReal) :: OMin_parent
-      !> OMax: This is a legacy threshold value that functioned
-      !> as OMax_intra, OMax_inter and Omin_parent.
-      !> To preserve the semantics of existing input files,
-      !> OMax_intra, OMax_inter and OMin_parent are assigned the OMax value
-      !> unless the user provides their value in Control.dat
-      real(kind=DefReal) :: OMAX_DEFAULT = 0.8
       !> Maximum number of trajectories
       integer(kind=DefInt) :: MaxTraj
       !> Flag determining if continuous spawning (0) or single spawning (1) is employed
