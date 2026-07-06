@@ -1,6 +1,7 @@
 ! Copyright Todd J. Martinez and Raphael D. Levine, 1994
 module OverlapModule
    use GlobalModule
+   use ToyModelModule, only: GAIMSParams
    use ParticleModule
    use TrajectoryModule
    use TrajectoryCalcsModule, only: FMS_Forces, FMS_PotentialT, FMS_KineticT, &
@@ -1063,8 +1064,8 @@ contains
          PotEn = dSOC * S_ij * roe
       else !for interstate case D
          !Derivative of SO_{I,J}^{Msi,Msj}(X_c) in Eq(11) from Granucci, J. Chem. Phys., 2012, 137, 22A501
-         if (((glGrsigma - 1.d0) < x_cent) .and. (x_cent < (glGrsigma + 1.d0))) then
-            sigma_G = 12.d0 * (((x_cent - glGrsigma)**2) / (2.d0**3)) - 3.d0 / 2.d0
+         if (((GAIMSParams%r_sigma - 1.d0) < x_cent) .and. (x_cent < (GAIMSParams%r_sigma + 1.d0))) then
+            sigma_G = 12.d0 * (((x_cent - GAIMSParams%r_sigma)**2) / (2.d0**3)) - 3.d0 / 2.d0
          else
             sigma_G = 0.d0
          end if
