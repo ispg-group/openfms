@@ -7,6 +7,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    use GlobalModule
    use QM_MM_Module
    use SpawnModule
+   use ToyModelModule, only: IzmaylovParams, GAIMSParams
    use InitialModule
    use SamplingModule
    use SMDModule
@@ -553,13 +554,11 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    gldTStepThresh = tStepThresh
 
    gliForceKill = ForceKill
-   glIzmOmegax = IzmOmegax
-   glIzmOmegay = IzmOmegay
-   glIzmXshift = IzmXshift
-   glIzmYshift = IzmYshift
-   glIzmDeltaE = IzmDeltaE
-   glIzmCoupC = IzmCoupC
-   glGrsigma = Grsigma
+
+   call IzmaylovParams%initialize(W1=IzmOmegax, W2=IzmOmegay, XA=IzmXshift, YA=IzmYshift, &
+                                  deltaE=IzmDeltaE, coupC=IzmCoupC)
+   call GAIMSParams%initialize(r_sigma=Grsigma)
+
    glzFullyCoupled = FullyCoupled
    glzStochastic = Stochastic
    glzSPA1_SOC_model = SPA1_SOC_model
