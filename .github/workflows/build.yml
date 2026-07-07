@@ -24,7 +24,7 @@ jobs:
         toolchain:
           - {compiler: gcc, version: latest}
           - {compiler: intel, version: latest}
-          - {compiler: nvidia-hpc, version: '26.1'}
+          - {compiler: nvidia-hpc, version: '26.5'}
           - {compiler: aocc, version: '5.1.0'}
         include:
           - os: ubuntu-22.04
