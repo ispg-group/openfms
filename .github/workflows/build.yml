@@ -22,10 +22,10 @@ jobs:
       matrix:
         os: [ubuntu-24.04]
         toolchain:
-          - {compiler: gcc, version: '15'}
+          - {compiler: gcc, version: latest}
           - {compiler: intel, version: latest}
-          - {compiler: nvidia-hpc, version: latest}
-          - {compiler: aocc, version: latest}
+          - {compiler: nvidia-hpc, version: '26.1'}
+          - {compiler: aocc, version: '5.1.0'}
         include:
           - os: ubuntu-22.04
             toolchain: {compiler: intel-classic, version: '2021.10'}

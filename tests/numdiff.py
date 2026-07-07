@@ -2,7 +2,6 @@
 import argparse
 import decimal
 import os.path
-import re
 
 # This scripts is compares differences between files
 # while disregarding insignificant numerical differences.
