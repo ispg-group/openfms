@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.6"
+# dependencies = []
+# ///
 import argparse
 import decimal
 import os.path
+import sys
 
 # This scripts is compares differences between files
 # while disregarding insignificant numerical differences.
@@ -18,7 +23,7 @@ decimal.getcontext().prec = 17
 def read_cmd():
     """Function for reading command line options.
     returns the name of the input file."""
-    desc = """Script for comparing numerical differences in between test and reference files.
+    desc = """Compare numerical differences between test and reference files.
             Parses the output of 'diff -y file file.ref'"""
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument("input_file", metavar="INPUT_FILE", help="input file")
@@ -28,12 +33,12 @@ def read_cmd():
 
 def read_custom_threshold(fname):
     """Reads a custom absolute threshold exponent from a file in a test folder"""
-    with open(fname) as f:
+    with open(fname, encoding="utf-8") as f:
         thr = int(f.read().strip())
 
     if thr < 2 or thr > 20:
         print(f"ERROR: Threshold 10^-{thr} read from {fname} is out of range")
-        exit(1)
+        sys.exit(1)
 
     return 10 ** (-thr)
 
@@ -43,7 +48,7 @@ def compare_numbers(test, reference, absolute_tolerance):
     if delta > absolute_tolerance:
         print("Significant numerical difference!")
         print(f"Reference = {reference} Test = {test} Delta = {delta:.2e}")
-        exit(1)
+        sys.exit(1)
 
 
 def compare_lines(numbers1, numbers2, absolute_tolerance):
@@ -68,7 +73,7 @@ def compare_lines(numbers1, numbers2, absolute_tolerance):
                 print("Non-numerical difference found!")
                 print(f"Test     :{test}")
                 print(f"Reference:{reference}")
-                exit(1)
+                sys.exit(1)
 
         if dec1 == dec2:
             return
@@ -95,12 +100,12 @@ def compare_lines(numbers1, numbers2, absolute_tolerance):
 
 
 def parse_diff(fname, absolute_tolerance):
-    with open(fname) as f:
+    with open(fname, encoding="locale") as f:
         # If the file is empty something is wrong
         # (e.g. file for comparison was not even generated)
         if len(f.read()) == 0:
             print(f"File '{fname}' is empty!")
-            exit(1)
+            sys.exit(1)
         f.seek(0)
 
         for line in f:
@@ -109,7 +114,7 @@ def parse_diff(fname, absolute_tolerance):
             if "<" in split or ">" in split:
                 print("There's an extra line!")
                 print(line)
-                exit(1)
+                sys.exit(1)
             # Skip line if there is no difference
             if "|" not in split:
                 continue
@@ -123,7 +128,7 @@ def parse_diff(fname, absolute_tolerance):
                 print(split[1])
                 print("Test:")
                 print(split[0])
-                exit(1)
+                sys.exit(1)
             compare_lines(diff1, diff2, absolute_tolerance)
 
 
@@ -139,4 +144,4 @@ if __name__ == "__main__":
     inpfile = read_cmd()
     print("Comparing numerical differences in file " + inpfile)
     parse_diff(inpfile, absolute_tolerance)
-    exit(0)
+    sys.exit(0)
