@@ -10,10 +10,10 @@ to keep our code nice and tidy. Instead of having the developer to
 install these and run them manually, we use a tool called `prek`
 which does this automatically on every commit.
 
-To install `prek` and the `configargparse` dependency (needed for `fprettify`) run:
+To install `prek` run:
 
 ```console
-pip install --user prek configargparse
+pip install prek
 ```
 
 Then you must run the following in the repository to install prek's [pre-commit hook](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks):
@@ -22,7 +22,7 @@ Then you must run the following in the repository to install prek's [pre-commit 
 prek install
 ```
 
-From now on, prek will execute hooks defined in `.pre-commit-config.yaml` before every commit.
+From now on, prek will execute hooks defined in `prek.toml` before every commit.
 You can also run the hooks manually at any point:
 
 ```
