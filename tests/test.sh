@@ -96,6 +96,16 @@ function diff_files {
   return $return_status
 }
 
+# Yes, I know this is silly, let me have my OCD okay?
+function num_tests {
+  local count=$1
+  if [[ count -eq 1 ]]; then
+    echo "1 test"
+  else
+    echo "$count tests"
+  fi
+}
+
 # Update already existing reference files.
 # Called by `make makeref TEST=TEST_FOLDER`
 # If you're creating a completely new test,
@@ -150,7 +160,8 @@ fi
 echo "Running tests in directories:"
 echo ${folders}
 
-global_error=0
+errors=0
+passed=0
 
 for dir in ${folders[@]}
 do
@@ -158,7 +169,7 @@ do
       echo "Directory $dir not found. Exiting prematurely."
       exit 1
    fi
-   echo "Entering directory $dir"
+   echo -en "Running $dir\t"
    cd $dir
 
    # Always clean the test directory before runnning the test.
@@ -195,25 +206,25 @@ do
 
       if diff_files; then
         echo -e "\033[0;32mPASSED\033[0m"
+        let passed++
       else
-        global_error=1
-        echo "=== FMS STDOUT & STDERR ==="
-        cat $FMSOUT
+        let errors++
+        # Uncomment these for debugging on GitHub
+        # echo "=== FMS STDOUT & STDERR ==="
+        # cat $FMSOUT
         echo -e "$dir \033[0;31mFAILED\033[0m"
       fi
    fi
 
-   echo "======================="
+   echo "---------------------------------------"
 
    cd $TESTDIR
 done
 
 echo " "
 
-if [[ ${global_error} -ne 0 ]];then
-   echo -e "Some tests \033[0;31mFAILED\033[0m."
-else
-   echo -e "\033[0;32mAll tests PASSED.\033[0m"
+echo -e "\033[0;32m$(num_tests $passed) PASSED.\033[0m"
+if [[ ${errors} -ne 0 ]];then
+  echo -e "\033[0;31m$(num_tests $errors) FAILED\033[0m."
+  exit 1
 fi
-
-exit $global_error
