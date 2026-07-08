@@ -43,7 +43,7 @@ fi
 comp=$(basename "$FC")
 if [[ "$comp" = ifx || "$comp" = ifort || "$comp" = mpiifort ]]; then
     FCTYPE=intel
-elif [[ "$comp" =~ ^gfortran || "$($comp --version | head -1)" =~ ^GNU ]]; then
+elif [[ "$comp" =~ ^gfortran || "$($FC --version 2>/dev/null | head -1)" =~ ^GNU ]]; then
     FCTYPE=gnu
 else
     FCTYPE=unknown
