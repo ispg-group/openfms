@@ -169,7 +169,7 @@ do
       echo "Directory $dir not found. Exiting prematurely."
       exit 1
    fi
-   echo -en "Running $dir\t"
+   echo "Running $dir"
    cd $dir
 
    # Always clean the test directory before runnning the test.
@@ -212,11 +212,11 @@ do
         # Uncomment these for debugging on GitHub
         # echo "=== FMS STDOUT & STDERR ==="
         # cat $FMSOUT
-        echo -e "$dir \033[0;31mFAILED\033[0m"
+        echo -e "$\033[0;31mFAILED\033[0m"
       fi
    fi
 
-   echo "---------------------------------------"
+   echo "-------------------------------"
 
    cd $TESTDIR
 done
@@ -224,7 +224,7 @@ done
 echo " "
 
 echo -e "\033[0;32m$(num_tests $passed) PASSED.\033[0m"
-if [[ ${errors} -ne 0 ]];then
+if [[ ${errors} -ne 0 ]]; then
   echo -e "\033[0;31m$(num_tests $errors) FAILED\033[0m."
   exit 1
 fi
