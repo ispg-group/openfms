@@ -176,10 +176,7 @@ contains
       integer(DefInt), save :: units(MaxTrajLimit) = 0 ! this keeps track of the
       ! unit number of the files
 
-      integer(kind=DefInt) :: i, j
-
-1     format(a10, 4000a10)
-2     format(f10.2, 4000f10.4)
+      integer(kind=DefInt) :: i
 
       ntraj = T%TrajID
       iunit = units(ntraj)
@@ -194,21 +191,42 @@ contains
             open (newunit=iunit, file=trim(file_name), position='append')
          else
             open (newunit=iunit, file=trim(file_name))
-            write (iunit, 1) '# Time', ([ &
-                                        FMS_NumberedFileName('pos', i)//'x', &
-                                        FMS_NumberedFileName('pos', i)//'y', &
-                                        FMS_NumberedFileName('pos', i)//'z'], i=1, T%NumParticles), &
-               ([FMS_NumberedFileName('mom', i)//'x', &
-                 FMS_NumberedFileName('mom', i)//'y', &
-                 FMS_NumberedFileName('mom', i)//'z'], i=1, T%NumParticles), &
+            ! Header.
+            ! The is a single line with columns for all particles.
+            ! " Time ... positions ... momenta ... phase ... stateID"
+            write (unit=iunit, fmt='(a10)', advance='no') ' # Time'
+            do i = 1, t%numParticles
+               write (unit=iunit, fmt='(3(a10))', advance='no') &
+                  FMS_NumberedFileName('pos', i)//'x', &
+                  FMS_NumberedFileName('pos', i)//'y', &
+                  FMS_NumberedFileName('pos', i)//'z'
+            end do
+            do i = 1, t%numParticles
+               write (unit=iunit, fmt='(3(a10))', advance='no') &
+                  FMS_NumberedFileName('mom', i)//'x', &
+                  FMS_NumberedFileName('mom', i)//'y', &
+                  FMS_NumberedFileName('mom', i)//'z'
+            end do
+            write (unit=iunit, fmt='(5(a10))') &
                'Phase', 'AmpReal', 'AmpImag', 'AmpNorm', 'StateID'
+            ! Data to follow ...
          end if
          units(ntraj) = iunit
       end if
 
-      write (iunit, 2) T%get_time(), (T%Particle(i)%get_pos(), i=1, T%NumParticles), &
-         ((T%Particle(i)%get_mom(j), j=1, T%Particle(i)%NumDimensions), i=1, T%NumParticles), &
-         T%Phase, real(T%Amplitude), aimag(T%Amplitude), FMS_Weight(T), dble(T%StateID)
+      ! Data ...
+      ! (time is a f10.2 format; others are f10.4; stateID could be int)
+      write (unit=iunit, fmt='(f10.2)', advance='no') t%get_time()
+      do i = 1, t%numParticles
+         write (unit=iunit, fmt='(3(f10.4))', advance='no') &
+            t%particle(i)%get_pos()
+      end do
+      do i = 1, t%numParticles
+         write (unit=iunit, fmt='(3(f10.4))', advance='no') &
+            t%particle(i)%get_mom()
+      end do
+      write (unit=iunit, fmt='(5(f10.4))') &
+         t%phase, t%amplitude%re, t%amplitude%im, FMS_Weight(t), real(t%stateID)
 
    end subroutine FMS_WriteFTrajDump
 !>
@@ -720,13 +738,7 @@ contains
       integer(kind=DefInt) :: iunit
       logical :: file_existed
 
-      integer :: nstate
       integer(kind=DefInt) :: k
-
-1     format(a10, 50(a10))
-2     format(f10.2, 1000f11.6)
-
-      nstate = T%NumStates
 
       long_file_name = trim(FMSWorkingDir)//file_name
       file_existed = .true.
@@ -736,11 +748,20 @@ contains
 
       if (.not. file_existed) then
          open (newunit=iunit, file=trim(long_file_name))
-         write (iUnit, 1) '#Time', &
-            (FMS_NumberedFileName('Mag', k), k=1, nstate), &
-            ([FMS_NumberedFileName('D', k)//'x', &
-              FMS_NumberedFileName('D', k)//'y', &
-              FMS_NumberedFileName('D', k)//'z'], k=1, nstate)
+         ! Header
+         ! "Time ... magnitudes ... components"
+         write (unit=iunit, fmt='(a10)', advance='no') '#Time'
+         do k = 1, t%numStates
+            write (unit=iunit, fmt='(a10)', advance='no') &
+               FMS_NumberedFileName('Mag', k)
+         end do
+         do k = 1, t%numStates
+            write (unit=iunit, fmt='(3(a10))', advance='no') &
+               FMS_NumberedFileName('D', k)//'x', &
+               FMS_NumberedFileName('D', k)//'y', &
+               FMS_NumberedFileName('D', k)//'z'
+         end do
+         write (unit=iunit, fmt=*) ! end of header line
       else
          open (newunit=iunit, file=trim(long_file_name), position='append')
       end if
@@ -748,9 +769,16 @@ contains
       ! 4. Write dipoles,
       ! This was writing the square of the dipole, was that
       ! intentional?
-      write (IUnit, 2) T%get_time(), &
-         (sqrt(sum(FMS_Dipole(T, k)**2)), k=1, T%NumStates), &
-         (FMS_Dipole(T, k), k=1, T%NumStates)
+
+      do k = 1, t%numStates
+         write (unit=iunit, fmt='(f11.6)', advance='no') &
+            sqrt(sum(FMS_Dipole(t, k)**2))
+      end do
+      do k = 1, t%numStates
+         write (unit=iunit, fmt='(3(f11.6))', advance='no') &
+            FMS_Dipole(t, k)
+      end do
+      write (unit=iunit, fmt=*) ! end of data line
 
       close (IUnit)
 
@@ -902,29 +930,42 @@ contains
       integer(DefInt) :: iunit
       integer(DefInt), save :: units(MaxTrajLimit) = 0 ! this keeps track of the
       logical :: file_existed
-      integer :: nstate, j
+      integer :: j
 
-1     format(a10, 50(a10))
-2     format(f10.2, 50(1x, f9.5))
-
-      nstate = T%NumStates
       iunit = units(T%TrajID)
 
       if (iunit == 0) then
          call FMS_OpenFile(FMS_NumberedFileName('TDip', T%TrajID), iunit, file_existed)
          if (.not. file_existed) then
-            write (iUnit, 1) '#Time', &
-               (FMS_NumberedFileName('Mag', j), j=2, nstate), &
-               ([FMS_NumberedFileName('TD', j)//'x', &
-                 FMS_NumberedFileName('TD', j)//'y', &
-                 FMS_NumberedFileName('TD', j)//'z'], j=2, nstate)
+            ! Header ...
+            write (unit=iunit, fmt='(a10)', advance='no') '#Time'
+            do j = 2, t%numStates
+               write (unit=iunit, fmt='(a10)', advance='no') &
+                  FMS_NumberedFileName('Mag', j)
+            end do
+            do j = 2, t%numStates
+               write (unit=iunit, fmt='(3(a10))', advance='no') &
+                  FMS_NumberedFileName('TD', j)//'x', &
+                  FMS_NumberedFileName('TD', j)//'y', &
+                  FMS_NumberedFileName('TD', j)//'z'
+            end do
+            write (unit=iunit, fmt=*) ! End of header line
          end if
          units(T%TrajID) = iunit
       end if
 
       ! 4. Write transition dipole
-      write (iunit, 2) T%get_time(), (sqrt(sum(FMS_TransDipole(T, j)**2)), j=2, nstate), &
-         (FMS_TransDipole(T, j), j=2, nstate)
+
+      write (unit=iunit, fmt='(f10.2)', advance='no') t%get_time()
+      do j = 2, t%numStates
+         write (unit=iunit, fmt='(1x,f9.5)', advance='no') &
+            sqrt(sum(FMS_TransDipole(t, j)**2))
+      end do
+      do j = 2, t%numStates
+         write (unit=iunit, fmt='(3(1x,f9.5))', advance='no') &
+            FMS_TransDipole(t, j)
+      end do
+      write (unit=iunit, fmt=*) ! End of data line
 
    end subroutine FMS_WriteFTDipole
 !>

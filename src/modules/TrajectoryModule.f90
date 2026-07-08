@@ -112,12 +112,11 @@ module TrajectoryModule
          OverlapMatrix(:, :), & !< Overlap matrix between old and new wavefunctions
          OldBlob(:), & !< Sent back and forth
          TransDipole(:, :), & !< Transition dipole between various states at current geom
-         TransDipolexf(:), & !< xf added
-         !           MSPT2S(:,:),  &      !< CASPT2 overlap matrix
-         !           MSPT2C(:,:),  &      !< MSPT2 Mixing Coefficient
-         !           OldMSPT2S(:,:),   &  !< CASPT2 overlap last timestep
-         !           Need this one for restart file
-         OldMSPT2C(:, :) !< MSPT2 Mixing Coeff last timestep
+         TransDipolexf(:) !< xf added
+      !           MSPT2S(:,:),  &      !< CASPT2 overlap matrix
+      !           MSPT2C(:,:),  &      !< MSPT2 Mixing Coefficient
+      !           OldMSPT2S(:,:),   &  !< CASPT2 overlap last timestep
+      !           OldMSPT2C(:, :) !< MSPT2 Mixing Coeff last timestep
 
       complex(kind=DefComp), allocatable :: SOMat(:, :, :, :) !< Spin Orbit Matrix (i,j,Ms)
 
@@ -464,8 +463,8 @@ contains
       !ES%MSPT2S    = 0.0d0
       !ES%MSPT2C    = 0.0d0
       !ES%OldMSPT2S = 0.0d0
-      allocate (ES%OldMSPT2C(NumStates, NumStates))
-      ES%OldMSPT2C = 0.0d0
+      ! allocate (ES%OldMSPT2C(NumStates, NumStates))
+      ! ES%OldMSPT2C = 0.0d0
    end subroutine FMS_CreateElectronicStructure
 
    subroutine FMS_DestroyElectronicStructure(ES)
@@ -492,7 +491,7 @@ contains
 !     if (allocated(ES%MSPT2S))         deallocate(ES%MSPT2S)
 !     if (allocated(ES%MSPT2C))         deallocate(ES%MSPT2C)
 !     if (allocated(ES%OldMSPT2S))      deallocate(ES%OldMSPT2S)
-      if (allocated(ES%OldMSPT2C)) deallocate (ES%OldMSPT2C)
+      ! if (allocated(ES%OldMSPT2C)) deallocate (ES%OldMSPT2C)
    end subroutine FMS_DestroyElectronicStructure
 !>
 !!    Memory allocation and book-keeping for assignment operation T1=T2
@@ -577,7 +576,7 @@ contains
       if (allocated(T2%ElecStruc%ElecPhase)) T1%ElecStruc%ElecPhase = T2%ElecStruc%ElecPhase
 
 !     if (allocated(T2%ElecStruc%MSPT2C))        T1%ElecStruc%MSPT2C        = T2%ElecStruc%MSPT2C
-      if (allocated(T2%ElecStruc%OldMSPT2C)) T1%ElecStruc%OldMSPT2C = T2%ElecStruc%OldMSPT2C
+!      if (allocated(T2%ElecStruc%OldMSPT2C)) T1%ElecStruc%OldMSPT2C = T2%ElecStruc%OldMSPT2C
 !     DH: Would probably also need this?
 !     if (allocated(T2%ElecStruc%MSPT2S))        T1%ElecStruc%MSPT2S        = T2%ElecStruc%MSPT2S
 !     if (allocated(T2%ElecStruc%OldMSPT2S))     T1%ElecStruc%OldMSPT2S     = T2%ElecStruc%OldMSPT2S
