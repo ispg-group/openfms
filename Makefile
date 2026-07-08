@@ -5,6 +5,7 @@
 #Configuration information read from CONFIGFMS:
 include CONFIGFMS
 export FC
+export FCTYPE
 export LD
 export FFLAGS
 export LDFLAGS

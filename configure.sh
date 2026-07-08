@@ -43,7 +43,7 @@ fi
 comp=$(basename "$FC")
 if [[ "$comp" = ifx || "$comp" = ifort || "$comp" = mpiifort ]]; then
     FCTYPE=intel
-elif [[ "$comp" = gfortran ]]; then
+elif [[ "$comp" =~ ^gfortran || "$($comp --version | head -1)" =~ ^GNU ]]; then
     FCTYPE=gnu
 else
     FCTYPE=unknown
@@ -71,6 +71,7 @@ cat << EOF > $VARS
 ESP = $ESP
 FC = $FC
 LD = $FC
+FCTYPE = $FCTYPE
 FFLAGS = $FFLAGS
 KERNEL = $(uname -s)
 EOF
