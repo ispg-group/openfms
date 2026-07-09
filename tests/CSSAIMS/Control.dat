@@ -34,8 +34,7 @@ Basic test for state-specific SSAIMS (Canibalistic SSAIMS)
  TimeStep = 1.0
 ! TODO: Simulation crashes at t=34., produces NaN values
 ! compile with FFLAGS = -ffpe-trap=invalid,underflow,overflow to catch this
-! SimulationTime = 200.
- SimulationTime = 50.
+ SimulationTime = 200.
  MinTimeStep = 0.01
 
 ! Spawning
