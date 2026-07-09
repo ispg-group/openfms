@@ -1,2 +1,4 @@
 #EntryTime SpawnTime  ExitTime  CID  CSt  PID  PSt   ChildKE   ChildPE  ParentKE  ParentPE 
       0.25      0.25      0.25    2    1    1    2   0.02166   0.00179   0.00415   0.01929
+     21.00     21.00     21.00    3    2    2    1   0.00614   0.01731   0.02615  -0.00270
+     33.75     33.75     33.75    4    1    1    2   0.02495  -0.00150   0.00620   0.01725
