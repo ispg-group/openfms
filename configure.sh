@@ -40,17 +40,19 @@ if [[ -z $FC ]]; then
 fi
 
 # This is a very crude heuristic
-comp=$(basename $FC)
+comp=$(basename "$FC")
 if [[ "$comp" = ifx || "$comp" = ifort || "$comp" = mpiifort ]]; then
     FCTYPE=intel
-else
+elif [[ "$comp" =~ ^gfortran || "$($FC --version 2>/dev/null | head -1)" =~ ^GNU ]]; then
     FCTYPE=gnu
+else
+    FCTYPE=unknown
 fi
 
 # Set default FFLAGS
 if [[ $FCTYPE = intel ]]; then
     DEFAULT_FFLAGS="-i4 -check bounds,nouninit,noarg_temp_created -g -traceback -O0 -heap-arrays"
-else
+elif [[ $FCTYPE = gnu ]]; then
     warning_flags="-Wall -Wno-unused-dummy-argument -Wno-integer-division -Wno-unused-function -Wno-maybe-uninitialized"
     # TODO: We should probably trap also "invalid" floating-point exception,
     # but need to fix some tests first that currently trigger them :-(
@@ -69,6 +71,7 @@ cat << EOF > $VARS
 ESP = $ESP
 FC = $FC
 LD = $FC
+FCTYPE = $FCTYPE
 FFLAGS = $FFLAGS
 KERNEL = $(uname -s)
 EOF

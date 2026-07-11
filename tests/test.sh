@@ -73,6 +73,14 @@ function diff_files {
     error_code=0
     diff -q $test_file $ref_file > /dev/null || error_code=$?
     if [[ $error_code -ne 0 ]];then
+
+       if [[ $test_file = "errors.dat" ]]; then
+          echo "Files $ref_file and $test_file differ!"
+          diff --color=always $ref_file $test_file | tee $test_file.diff
+          return_status=$error_code
+          continue
+       fi
+
        # The reference file is different, but maybe it's just numerical noise?
        error_code=0
        diff -y -W 500  $test_file $ref_file | grep -e '|' -e '<' -e '>' > $test_file.diff
@@ -86,6 +94,16 @@ function diff_files {
     fi
   done
   return $return_status
+}
+
+# Yes, I know this is silly, let me have my OCD okay?
+function num_tests {
+  local count=$1
+  if [[ count -eq 1 ]]; then
+    echo "1 test"
+  else
+    echo "$count tests"
+  fi
 }
 
 # Update already existing reference files.
@@ -142,7 +160,8 @@ fi
 echo "Running tests in directories:"
 echo ${folders}
 
-global_error=0
+errors=0
+passed=0
 
 for dir in ${folders[@]}
 do
@@ -150,7 +169,7 @@ do
       echo "Directory $dir not found. Exiting prematurely."
       exit 1
    fi
-   echo "Entering directory $dir"
+   echo "Running $dir"
    cd $dir
 
    # Always clean the test directory before runnning the test.
@@ -187,25 +206,25 @@ do
 
       if diff_files; then
         echo -e "\033[0;32mPASSED\033[0m"
+        let passed++
       else
-        global_error=1
-        echo "=== FMS STDOUT & STDERR ==="
-        cat $FMSOUT
-        echo -e "$dir \033[0;31mFAILED\033[0m"
+        let errors++
+        # Uncomment these for debugging on GitHub
+        # echo "=== FMS STDOUT & STDERR ==="
+        # cat $FMSOUT
+        echo -e "$\033[0;31mFAILED\033[0m"
       fi
    fi
 
-   echo "======================="
+   echo "-------------------------------"
 
    cd $TESTDIR
 done
 
 echo " "
 
-if [[ ${global_error} -ne 0 ]];then
-   echo -e "Some tests \033[0;31mFAILED\033[0m."
-else
-   echo -e "\033[0;32mAll tests PASSED.\033[0m"
+echo -e "\033[0;32m$(num_tests $passed) PASSED.\033[0m"
+if [[ ${errors} -ne 0 ]]; then
+  echo -e "\033[0;31m$(num_tests $errors) FAILED\033[0m."
+  exit 1
 fi
-
-exit $global_error

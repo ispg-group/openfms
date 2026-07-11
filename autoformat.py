@@ -37,9 +37,11 @@
 """
 
 import sys
+
 from fprettify import run
+
 try:
-    import configargparse
+    import configargparse  # noqa: F401
 except ImportError:
     print("ERROR: Could not find configargparse package")
     print("Please install the package, e.g. 'pip install --user configargparse'")
