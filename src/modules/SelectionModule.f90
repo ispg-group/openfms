@@ -111,7 +111,6 @@ contains
 ! 2. Perform selections within those bundles
 ! 3. Convert the results into the original bundle.
       if (glzStoStateSpecific) then
-         write (fmiout, *), 'test 4S'
 
          allocate (BundleSS(B1%NumStates))
          call fill_state_bundles(B1, BundleSS)
