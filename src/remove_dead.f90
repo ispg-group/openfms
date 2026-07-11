@@ -104,7 +104,7 @@ subroutine FMS_RemoveDead(B1)
             pop = pop + Population(n)
          end if
       end do
-      PopBelowThresh = (pop < SPawnParams%PopToSpawn)
+      PopBelowThresh = (pop < spawn_params%PopToSpawn)
 !        GAIMS changed end
       MarkForDeath = ((OnIgnoreState .and. NotCoupled .and. .not. OverSpawnThresh) &
                       .or. (PopBelowThresh .and. NotCoupled))
