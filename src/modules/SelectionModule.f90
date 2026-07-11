@@ -111,6 +111,7 @@ contains
 ! 2. Perform selections within those bundles
 ! 3. Convert the results into the original bundle.
       if (glzStoStateSpecific) then
+         write (fmiout, *), 'test 4S'
 
          allocate (BundleSS(B1%NumStates))
          call fill_state_bundles(B1, BundleSS)
@@ -127,6 +128,7 @@ contains
          end do
          deallocate (BundleSS)
 
+         return
       end if
 
 ! Multiplicity-Specific Stochastic Selection
@@ -374,6 +376,7 @@ contains
 
       else
 
+         write (fmiout, *) 'test normal'
          call perform_stochastic_selection(B1, selectionTime)
 
       end if
