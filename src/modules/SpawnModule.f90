@@ -24,7 +24,7 @@ module SpawnModule
    real(kind=DefReal), parameter :: OMAX_DEFAULT = 0.8
 
    !> Parameters controlling the spawning algorithm
-   type :: SpawnParams_t
+   type :: t_spawn_params
       !> threshold for entry to  spawn regions
       real(kind=DefReal) :: CSThresh
       !> threshold for exit from spawn regions
@@ -62,13 +62,13 @@ module SpawnModule
       real(kind=DefReal) :: SOCThresh
    contains
       procedure, public :: initialize => initialize_spawn_params
-   end type SpawnParams_t
+   end type t_spawn_params
 
-   type(SpawnParams_t) :: SpawnParams
+   type(t_spawn_params) :: spawn_params
 
 ! TODO: Make the module private by default
    public
-   public :: SpawnParams, FMS_Spawn, spawn_couple, FMS_SpawnDCouple, print_spawning_parameters
+   public :: spawn_params, FMS_Spawn, spawn_couple, FMS_SpawnDCouple, print_spawning_parameters
    private :: propagate_forward_overlap, propagate_backward
    private :: propagate_cont_spawn, propagate_recursive
    private :: FMS_AdjustEnergy2, adjust_child_energy, write_spawn_log
@@ -77,7 +77,7 @@ contains
 
    subroutine initialize_spawn_params(self, CSThresh, CFThresh, PopToSpawn, OMax_inter, OMax_intra, &
                                       OMin_parent, SOCThresh, MaxTraj, MultiSpawn, SpawnCoupV)
-      class(SpawnParams_t), intent(inout) :: self
+      class(t_spawn_params), intent(inout) :: self
       real(kind=DefReal), intent(in) :: CSThresh, CFThresh, PopToSpawn, OMax_inter, &
                                         OMax_intra, OMin_parent, SOCThresh
       integer(kind=DefInt), intent(in) :: MaxTraj, MultiSpawn
@@ -98,13 +98,13 @@ contains
    subroutine print_spawning_parameters(unit)
       integer, intent(in) :: unit
       write (unit, '(a30)') 'SPAWNING PARAMETERS'
-      write (unit, '(a14,i7  ,a)') 'maxTraj:    ', SpawnParams%MaxTraj, ' (Max number of Trajectories)'
-      write (unit, '(a14,f7.4,a)') 'OMin_parent:', SpawnParams%OMin_parent, ' (Min parent-child overlap to spawn)'
-      write (unit, '(a14,f7.4,a)') 'OMax_inter: ', SpawnParams%OMax_inter, ' (Max overlap between parent and existing TBFs)'
-      write (unit, '(a14,f7.4,a)') 'OMax_intra: ', SpawnParams%Omax_intra, ' (Max overlap between child and existing TBFs)'
-      write (unit, '(a14,f7.4,a)') 'CSThresh:   ', SpawnParams%CSThresh, ' (Coupling threshold to enter spawning region)'
-      write (unit, '(a14,f7.4,a)') 'CFThresh:   ', SpawnParams%CFThresh, ' (Coupling threshold to exit spawning region)'
-      write (unit, '(a14,f7.4,a)') 'PopToSpawn: ', SpawnParams%PopToSpawn, ' (Min population to Spawn)'
+      write (unit, '(a14,i7  ,a)') 'maxTraj:    ', spawn_params%MaxTraj, ' (Max number of Trajectories)'
+      write (unit, '(a14,f7.4,a)') 'OMin_parent:', spawn_params%OMin_parent, ' (Min parent-child overlap to spawn)'
+      write (unit, '(a14,f7.4,a)') 'OMax_inter: ', spawn_params%OMax_inter, ' (Max overlap between parent and existing TBFs)'
+      write (unit, '(a14,f7.4,a)') 'OMax_intra: ', spawn_params%Omax_intra, ' (Max overlap between child and existing TBFs)'
+      write (unit, '(a14,f7.4,a)') 'CSThresh:   ', spawn_params%CSThresh, ' (Coupling threshold to enter spawning region)'
+      write (unit, '(a14,f7.4,a)') 'CFThresh:   ', spawn_params%CFThresh, ' (Coupling threshold to exit spawning region)'
+      write (unit, '(a14,f7.4,a)') 'PopToSpawn: ', spawn_params%PopToSpawn, ' (Min population to Spawn)'
    end subroutine print_spawning_parameters
 
 !!    @brief Driver for spawning algorithm
@@ -184,7 +184,7 @@ contains
                   B1%Trajectory(i)%CoupHist(:, cs) = eoshift(B1%Trajectory(i)%CoupHist(:, cs), -1, coup)
                   COUP_FIELD = .true.
                end if
-               if (spawn_couple(B1%Trajectory(i), cs) > SpawnParams%CSThresh) then
+               if (spawn_couple(B1%Trajectory(i), cs) > spawn_params%CSThresh) then
                   coup = spawn_couple(B1%Trajectory(i), cs)
                   B1%Trajectory(i)%CoupHist(:, cs) = eoshift(B1%Trajectory(i)%CoupHist(:, cs), -1, coup)
                   COUP_CI = .true.
@@ -198,7 +198,7 @@ contains
 
             do j = 1, ntraj
                if (B1%Trajectory(j)%StateID == cs) then
-                  if (abs(overlap(B1%Trajectory(i), B1%Trajectory(j))) > SpawnParams%OMax_inter) then
+                  if (abs(overlap(B1%Trajectory(i), B1%Trajectory(j))) > spawn_params%OMax_inter) then
                      write (fmiOut, *) 'Significant overlap with traj', j
                      cycle state_loop
                   end if
@@ -207,8 +207,8 @@ contains
 
 !spMultiSpawn :   0 -- Continuous Spawning
 !                 1 -- Single Spawning
-            if (SpawnParams%MultiSpawn == 0) then
-               if (spawn_trajectory(B1%Trajectory(i), cs, SpawnParams%MultiSpawn, COUP_FIELD, COUP_CI)) then
+            if (spawn_params%MultiSpawn == 0) then
+               if (spawn_trajectory(B1%Trajectory(i), cs, spawn_params%MultiSpawn, COUP_FIELD, COUP_CI)) then
                   call parent_i%create(npart, nstate)
                   call parent_s%create(npart, nstate)
                   call parent_f%create(npart, nstate)
@@ -272,8 +272,8 @@ contains
                   call child_f%destroy()
                end if
 
-            else if (SpawnParams%MultiSpawn == 1) then
-               if (spawn_trajectory(B1%Trajectory(i), cs, SpawnParams%MultiSpawn, COUP_FIELD, COUP_CI)) then
+            else if (spawn_params%MultiSpawn == 1) then
+               if (spawn_trajectory(B1%Trajectory(i), cs, spawn_params%MultiSpawn, COUP_FIELD, COUP_CI)) then
                   call parent_i%create(npart, nstate)
                   call parent_s%create(npart, nstate)
                   call parent_f%create(npart, nstate)
@@ -367,7 +367,7 @@ contains
 
 !DO NOT SPAWN IF:
 ! The population is below threshold,
-      if (T1%Pop < SpawnParams%PopToSpawn) spwn = .false.
+      if (T1%Pop < spawn_params%PopToSpawn) spwn = .false.
 
 ! We have already spawned in this time period,
       if (T1%get_time() <= T1%LastSpawn(is)) spwn = .false.
@@ -379,10 +379,10 @@ contains
             if (T1%get_time() < sp_spwn_i .or. T1%get_time() > sp_spwn_f) spwn = .false.
          end if
          if (COUP_CI) then
-            if (spawn_couple(T1, is) < SpawnParams%CSThresh) spwn = .false.
+            if (spawn_couple(T1, is) < spawn_params%CSThresh) spwn = .false.
          end if
       else
-         if (spawn_couple(T1, is) < SpawnParams%CSThresh) spwn = .false.
+         if (spawn_couple(T1, is) < spawn_params%CSThresh) spwn = .false.
       end if
 ! xf added end
 
@@ -447,7 +447,7 @@ contains
                              SOM(7) * conjg(SOM(7)) + SOM(8) * conjg(SOM(8)) + SOM(9) * conjg(SOM(9))))
 
          !cutoff at 5cm-1
-         if (SONorm > SpawnParams%SOCThresh * au2invcm) then
+         if (SONorm > spawn_params%SOCThresh * au2invcm) then
             DCouple = abs(SONorm / Ediff)
          else
             DCouple = 0.d0
@@ -458,7 +458,7 @@ contains
          vec = FMS_Coupling(T1, js, is)
 
          ! Return either coupling .dot. velocity or norm of coupling
-         if (SpawnParams%SpawnCoupV) then
+         if (spawn_params%SpawnCoupV) then
             DCouple = abs(dot_product(T1%get_vel(), vec))
          else
             DCouple = sqrt(dot_product(vec, vec))
@@ -672,7 +672,7 @@ contains
                ! check the overlap with the parent, it must be big enough
                S = overlap(parent_f, child_a)
 
-               if (abs(S) > SpawnParams%OMin_parent) then
+               if (abs(S) > spawn_params%OMin_parent) then
                   success = .true.
                   child_created = .true.
                   success = .true.
@@ -701,7 +701,7 @@ contains
             end if
 
             if (COUP_CI) then
-               if (.not. child_created .and. coup < SpawnParams%CFThresh) then
+               if (.not. child_created .and. coup < spawn_params%CFThresh) then
                   write (fmiOut, *) 'Spawn fail : coupling dropped below threshold'
                   write (fmiOut, *) '             and no child could be created'
                   success = .false.
@@ -711,7 +711,7 @@ contains
 
          else
 
-            if (.not. child_created .and. coup < SpawnParams%CFThresh) then
+            if (.not. child_created .and. coup < spawn_params%CFThresh) then
                write (fmiOut, *) 'Spawn fail : coupling dropped below threshold'
                write (fmiOut, *) '             and no child could be created'
                success = .false.
@@ -1042,7 +1042,7 @@ contains
 
          S = overlap(T, B%Trajectory(n), same_state=.true.)
 
-         if (abs(S) > SpawnParams%OMax_intra) then
+         if (abs(S) > spawn_params%OMax_intra) then
             no_overlap = .false.
             return
          end if
@@ -1198,7 +1198,7 @@ contains
       if (T1%StateID == IState) return
 
 !  Return either coupling .dot. velocity or norm of coupling
-      if (SpawnParams%SpawnCoupV) then
+      if (spawn_params%SpawnCoupV) then
          DCouple = abs(FMS_CoupDotVel(T1, IState))
       else
          vec = FMS_Coupling(T1, JState, IState)

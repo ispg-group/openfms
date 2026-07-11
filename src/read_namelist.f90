@@ -6,7 +6,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    use, intrinsic :: iso_fortran_env, only: error_unit
    use GlobalModule
    use QM_MM_Module
-   use SpawnModule, only: SpawnParams, OMAX_DEFAULT
+   use SpawnModule, only: spawn_params, OMAX_DEFAULT
    use InitialModule
    use SamplingModule
    use SMDModule
@@ -725,9 +725,9 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
       MaxTraj = MaxTrajLimit
    end if
 
-   call SpawnParams%initialize(CSThresh=CSThresh, CFThresh=CFThresh, PopToSpawn=PopToSpawn, OMax_inter=OMax_inter, &
-                               OMax_intra=OMax_intra, OMin_parent=OMin_parent, SOCThresh=SOCThresh, MaxTraj=MaxTraj, &
-                               MultiSpawn=MultiSpawn, SpawnCoupV=SpawnCoupV)
+   call spawn_params%initialize(CSThresh=CSThresh, CFThresh=CFThresh, PopToSpawn=PopToSpawn, OMax_inter=OMax_inter, &
+                                OMax_intra=OMax_intra, OMin_parent=OMin_parent, SOCThresh=SOCThresh, MaxTraj=MaxTraj, &
+                                MultiSpawn=MultiSpawn, SpawnCoupV=SpawnCoupV)
 
 !     Copy QM/MM variables into QM_MM_Module
    qcZQMMM = ZQMMM
