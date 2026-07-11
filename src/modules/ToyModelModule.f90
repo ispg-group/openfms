@@ -58,7 +58,7 @@ module ToyModelModule
 !        * coupC .... linear coupling in y-direction
 !
 !-----------------------------------------------
-   type :: IzmaylovParams_t
+   type :: t_IzmaylovParams
       real(kind=DefReal) :: W1
       real(kind=DefReal) :: W2
       real(kind=DefReal) :: XA
@@ -67,7 +67,7 @@ module ToyModelModule
       real(kind=DefReal) :: coupC
    contains
       procedure, public :: initialize => initialize_izmaylov_params
-   end type IzmaylovParams_t
+   end type t_IzmaylovParams
 
 !     Parameters for GAIMS_model
 !     https://doi.org/10.1063/1.4707737
@@ -81,23 +81,23 @@ module ToyModelModule
    real(kind=DefReal), parameter :: c_0 = 0.001d0
    complex, parameter :: c_1 = (0.0005, 0.0005)
 
-   type :: GAIMSParams_t
+   type :: t_GAIMSParams
       !> controlls the position of SOC sign change
       real(kind=DefReal) :: r_sigma
    contains
       procedure, public :: initialize => initialize_gaims_params
-   end type GAIMSParams_t
+   end type t_GAIMSParams
 !-----------------------------------------------
 
-   type(IzmaylovParams_t) :: IzmaylovParams
-   type(GAIMSParams_t) :: GAIMSParams
+   type(t_IzmaylovParams) :: IzmaylovParams
+   type(t_GAIMSParams) :: GAIMSParams
 
    public :: FMS_ToyModel, IzmaylovParams, GAIMSParams
 
 contains
 
    subroutine initialize_izmaylov_params(self, W1, W2, XA, YA, deltaE, coupC)
-      class(IzmaylovParams_t), intent(inout) :: self
+      class(t_IzmaylovParams), intent(inout) :: self
       real(kind=DefReal), intent(in) :: W1, W2, XA, YA, deltaE, coupC
       self%W1 = W1
       self%W2 = W2
@@ -108,7 +108,7 @@ contains
    end subroutine initialize_izmaylov_params
 
    subroutine initialize_gaims_params(self, r_sigma)
-      class(GAIMSParams_t), intent(inout) :: self
+      class(t_GAIMSParams), intent(inout) :: self
       real(kind=DefReal), intent(in) :: r_sigma
 
       self%r_sigma = r_sigma
@@ -126,6 +126,7 @@ contains
       real(kind=DefReal) :: dv11dy, dv12dy, dv22dy
       real(kind=DefReal) :: MASSY, MASSX
       real(kind=DefReal) :: sigma_G
+      real(kind=DefReal) :: W1, W2, XA, YA, coupC
 
       select case (gliMethod)
 
@@ -306,6 +307,11 @@ contains
 !------------------------------------------
       case (3) ! Izmaylov
 
+         W1 = IzmaylovParams%W1
+         W2 = IzmaylovParams%W2
+         XA = IzmaylovParams%XA
+         YA = IzmaylovParams%YA
+         coupC = IzmaylovParams%coupC
          MASSX = T1%Particle(1)%Mass
          MASSY = T1%Particle(2)%Mass
 
@@ -326,14 +332,14 @@ contains
 !     Force
          T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, :) = 0.d0
 
-         dv11dx = IzmaylovParams%W1 * IzmaylovParams%W1 * (x + 0.5d0 * IzmaylovParams%XA)
-         dv11dy = IzmaylovParams%W2 * IzmaylovParams%W2 * (y + 0.5d0 * IzmaylovParams%YA)
+         dv11dx = W1 * W1 * (x + 0.5d0 * XA)
+         dv11dy = W2 * W2 * (y + 0.5d0 * YA)
 
          dv12dx = 0.d0
-         dv12dy = IzmaylovParams%coupC
+         dv12dy = coupC
 
-         dv22dx = IzmaylovParams%W1 * IzmaylovParams%W1 * (x - 0.5d0 * IzmaylovParams%XA)
-         dv22dy = IzmaylovParams%W2 * IzmaylovParams%W2 * (y - 0.5d0 * IzmaylovParams%YA)
+         dv22dx = W1 * W1 * (x - 0.5d0 * XA)
+         dv22dy = W2 * W2 * (y - 0.5d0 * YA)
 
          if (T1%StateID == 1) then
             T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, 1) = 0.5d0 * ( &
@@ -392,7 +398,7 @@ contains
 !     Adiabatic energy
          x = T1%Particle(1)%get_pos(1)
 
-         call GAIMS_md(x, H_Diab, sigma_G)
+         call GAIMS_model_ham(x, H_Diab, sigma_G)
          v11 = H_diab(1, 1)
          v22 = H_diab(2, 2)
          v12 = H_diab(1, 2)
@@ -491,11 +497,19 @@ contains
    subroutine Izmaylov(x, y, H)
       real(kind=DefReal), intent(in) :: x, y
       real(kind=DefReal), intent(out) :: H(2, 2)
-      H(1, 1) = 0.5d0 * (IzmaylovParams%W1**2) * (x + 0.5d0 * IzmaylovParams%XA)**2 + 0.5d0 * (IzmaylovParams%W2**2) * &
-                (y + 0.5d0 * IzmaylovParams%YA)**2 + 0.5d0 * IzmaylovParams%deltaE
-      H(2, 2) = 0.5d0 * (IzmaylovParams%W1**2) * (x - 0.5d0 * IzmaylovParams%XA)**2 + 0.5d0 * (IzmaylovParams%W2**2) * &
-                (y - 0.5d0 * IzmaylovParams%YA)**2 - 0.5d0 * IzmaylovParams%deltaE
-      H(1, 2) = IzmaylovParams%coupC * y
+      real(kind=DefReal) :: W1, W2, XA, YA, deltaE, coupC
+      W1 = IzmaylovParams%W1
+      W2 = IzmaylovParams%W2
+      XA = IzmaylovParams%XA
+      YA = IzmaylovParams%YA
+      deltaE = IzmaylovParams%deltaE
+      coupC = IzmaylovParams%coupC
+
+      H(1, 1) = 0.5d0 * (W1**2) * (x + 0.5d0 * XA)**2 + 0.5d0 * (W2**2) * &
+                (y + 0.5d0 * YA)**2 + 0.5d0 * deltaE
+      H(2, 2) = 0.5d0 * (W1**2) * (x - 0.5d0 * XA)**2 + 0.5d0 * (W2**2) * &
+                (y - 0.5d0 * YA)**2 - 0.5d0 * deltaE
+      H(1, 2) = coupC * y
       H(2, 1) = H(1, 2)
    end subroutine izmaylov
 
@@ -503,29 +517,30 @@ contains
 !! Returns GAIMS_model diabatic Hamiltonian
 !<
 
-   subroutine GAIMS_md(x, H, sigma_G)
+   subroutine GAIMS_model_ham(x, H, sigma_G)
       real(kind=DefReal), intent(in) :: x
       real(kind=DefReal), intent(out) :: H(2, 2)
       real(kind=DefReal), intent(out) :: sigma_G
-      real(kind=DefReal) :: theta_G, gamma_G
+      real(kind=DefReal) :: theta_G, gamma_G, r_sigma
 
+      r_sigma = GAIMSParams%r_sigma
       ! Step function sigma(r) controlling SOC sign change, Eq (21)
-      if (x <= GAIMSParams%r_sigma - dr_sigma / 2) then
+      if (x <= r_sigma - dr_sigma / 2) then
          sigma_G = 1.d0
-      else if ((GAIMSParams%r_sigma - dr_sigma / 2 < x) .and. &
-               (x < GAIMSParams%r_sigma + dr_sigma / 2)) then
-         sigma_G = 4.d0 * ((x - GAIMSParams%r_sigma) / dr_sigma)**3 &
-                   - 3.d0 * (x - GAIMSParams%r_sigma) / dr_sigma
-      else if (x >= GAIMSParams%r_sigma + dr_sigma / 2) then
+      else if ((r_sigma - dr_sigma / 2 < x) .and. &
+               (x < r_sigma + dr_sigma / 2)) then
+         sigma_G = 4.d0 * ((x - r_sigma) / dr_sigma)**3 &
+                   - 3.d0 * (x - r_sigma) / dr_sigma
+      else if (x >= r_sigma + dr_sigma / 2) then
          sigma_G = -1.d0
       end if
 
       gamma_G = sigma_G * sqrt(2.d0 * (real(c_1)**2 + aimag(c_1)**2) + c_0**2)
 
       ! Heaviside function for theta
-      if (x - GAIMSParams%r_sigma >= 0) then
+      if (x - r_sigma >= 0) then
          theta_G = pi
-      else if (x - GAIMSParams%r_sigma < 0) then
+      else if (x - r_sigma < 0) then
          theta_G = 0
       end if
 
@@ -534,7 +549,7 @@ contains
       H(2, 2) = a_2 * exp(-alpha_2 * x)
       H(1, 2) = gamma_G * exp(c1i * theta_G)
       H(2, 1) = gamma_G * exp(-c1i * theta_G)
-   end subroutine GAIMS_md
+   end subroutine GAIMS_model_ham
 
 !>
 !! Helper routine for numerical derivative couplings; diagonalize a 2x2

@@ -1035,6 +1035,7 @@ contains
       complex(kind=DefComp), intent(in) :: S_ij
       real(kind=DefReal) :: x_cent, x_1, x_2, p_1, p_2, sigma_G, alpha_1, alpha_2
       complex(kind=DefComp) :: PotEn, dE, dSOC, roe
+      real(kind=DefReal) :: r_sigma
 
       if (glIMethod /= 4) then
          call FMS_DieError('SPA1 only available for GAIMS 1D Toy Model')
@@ -1046,6 +1047,7 @@ contains
       p_2 = T2%Particle(1)%get_mom(1)
       alpha_1 = T1%Particle(1)%width
       alpha_2 = T2%Particle(1)%width
+      r_sigma = GAIMSParams%r_sigma
 
       x_cent = (alpha_1 * x_1 + alpha_2 * x_2) / (alpha_1 + alpha_2) !centroid position
       ! roe from appendix A of Vanicek, J. Chem. Phys.,2013 139, 034112
@@ -1064,8 +1066,8 @@ contains
          PotEn = dSOC * S_ij * roe
       else !for interstate case D
          !Derivative of SO_{I,J}^{Msi,Msj}(X_c) in Eq(11) from Granucci, J. Chem. Phys., 2012, 137, 22A501
-         if (((GAIMSParams%r_sigma - 1.d0) < x_cent) .and. (x_cent < (GAIMSParams%r_sigma + 1.d0))) then
-            sigma_G = 12.d0 * (((x_cent - GAIMSParams%r_sigma)**2) / (2.d0**3)) - 3.d0 / 2.d0
+         if (((r_sigma - 1.d0) < x_cent) .and. (x_cent < (r_sigma + 1.d0))) then
+            sigma_G = 12.d0 * (((x_cent - r_sigma)**2) / (2.d0**3)) - 3.d0 / 2.d0
          else
             sigma_G = 0.d0
          end if
