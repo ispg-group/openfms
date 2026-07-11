@@ -30,13 +30,13 @@ module ToyModelModule
 
    real(kind=DefReal), parameter :: dx = 0.005 !finite difference step
 
-!  Parameters for Tully 1
+   ! Parameters for Tully 1
    real(kind=DefReal), parameter :: A = 0.01
    real(kind=DefReal), parameter :: B = 1.6
    real(kind=DefReal), parameter :: C = 0.005
    real(kind=DefReal), parameter :: D = 1.0
 
-!  Parameters for Persico
+   ! Parameters for Persico
    real(kind=DefReal), parameter :: alpha = 3.d0
    real(kind=DefReal), parameter :: beta = 1.5d0
    real(kind=DefReal), parameter :: gamma = 0.08
@@ -49,13 +49,13 @@ module ToyModelModule
 
 !-----------------------------------------------
 !
-!     Parameters for Izmaylov:
-!        * W1 ....... frequency in x-direction (curvature of parabola)
-!        * W2 ....... frequency in y-direction (curvature of parabola)
-!        * XA ....... shift of parabola in x-direction
-!        * YA ....... shift of parabola in y-direction
-!        * deltaE ... energy difference between parabolas
-!        * coupC .... linear coupling in y-direction
+!  Parameters for Izmaylov:
+!     * W1 ....... frequency in x-direction (curvature of parabola)
+!     * W2 ....... frequency in y-direction (curvature of parabola)
+!     * XA ....... shift of parabola in x-direction
+!     * YA ....... shift of parabola in y-direction
+!     * deltaE ... energy difference between parabolas
+!     * coupC .... linear coupling in y-direction
 !
 !-----------------------------------------------
    type :: t_IzmaylovParams
@@ -69,8 +69,8 @@ module ToyModelModule
       procedure, public :: initialize => initialize_izmaylov_params
    end type t_IzmaylovParams
 
-!     Parameters for GAIMS_model
-!     https://doi.org/10.1063/1.4707737
+!  Parameters for GAIMS_model
+!  https://doi.org/10.1063/1.4707737
 !-----------------------------------------------
    real(kind=DefReal), parameter :: a_1 = 0.03452d0
    real(kind=DefReal), parameter :: a_2 = 0.5d0
@@ -142,7 +142,7 @@ contains
          T1%esflags%zpotencurrent = .true.
 !         write(fmiOut,*) x,T1%ElecStruc%PotEn(1)
 
-!     Force
+         ! Force
          T1%ElecStruc%DerivMat = 0.d0
          if (T1%StateID == 2) then
             T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, 1) = &
@@ -157,7 +157,7 @@ contains
          Coupling = 0.d0
          T1%ESFlags%zDerivCurrent = .true.
 
-!      SOC part
+!        SOC part
 
          T1%ElecStruc%SOMat = (0.d0, 0.d0)
 !       call tully(x,sigma)
@@ -216,13 +216,9 @@ contains
 !!         T1%ESFlags%zDerivCurrent(1,2)=.true.
 !!         T1%ESFlags%zDerivCurrent(2,1)=.true.
 
-! end of tully
-!------------------------------------------
-
-!-----------------------------------------
       case (2) ! Persico
 
-!     Adiabatic energy
+         ! Adiabatic energy
          x = T1%Particle(1)%get_pos(1)
          y = T1%Particle(2)%get_pos(1)
          call Persico(x, y, H_Diab)
@@ -235,7 +231,7 @@ contains
                                           sqrt(v11 * v11 - 2.d0 * v22 * v11 + v22 * v22 + 4.d0 * v12 * v12))
          T1%ESFlags%ZPotEnCurrent = .true.
 
-!     Force
+         ! Force
          T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, :) = 0.d0
 
          dv11dx = KX * (x - X1)
@@ -274,7 +270,7 @@ contains
          end if
          T1%ESFlags%zDerivCurrent(T1%StateID, T1%StateID) = .true.
 
-!     Non-adiabatic coupling (numerical)
+         ! Non-adiabatic coupling (numerical)
          Coupling = 0.d0
          call diagABBC(H_Diab, EVec1, EVec2)
 
@@ -301,10 +297,6 @@ contains
          T1%ESFlags%zDerivCurrent(1, 2) = .true.
          T1%ESFlags%zDerivCurrent(2, 1) = .true.
 
-! end of persico
-!------------------------------------------
-
-!------------------------------------------
       case (3) ! Izmaylov
 
          W1 = IzmaylovParams%W1
@@ -315,7 +307,7 @@ contains
          MASSX = T1%Particle(1)%Mass
          MASSY = T1%Particle(2)%Mass
 
-!     Adiabatic energy
+         ! Adiabatic energy
          x = T1%Particle(1)%get_pos(1)
          y = T1%Particle(2)%get_pos(1)
 
@@ -329,7 +321,7 @@ contains
                                           sqrt(v11 * v11 - 2.d0 * v22 * v11 + v22 * v22 + 4.d0 * v12 * v12))
          T1%ESFlags%ZPotEnCurrent = .true.
 
-!     Force
+         ! Force
          T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, :) = 0.d0
 
          dv11dx = W1 * W1 * (x + 0.5d0 * XA)
@@ -368,7 +360,7 @@ contains
          end if
          T1%ESFlags%zDerivCurrent(T1%StateID, T1%StateID) = .true.
 
-!     Analytical non-adiabatic coupling
+         ! Analytical non-adiabatic coupling
          Coupling = 0.d0
          call diagABBC(H_Diab, EVec1, EVec2)
 
@@ -386,16 +378,9 @@ contains
          T1%ESFlags%zDerivCurrent(1, 2) = .true.
          T1%ESFlags%zDerivCurrent(2, 1) = .true.
 
-! end of izmaylov
-!------------------------------------------
-
-!------------------------------------------
-! start of GAIMS_model
-! Equation numbers refer to: https://doi.org/10.1063/1.4707737
-
       case (4) ! GAIMS_model
 
-!     Adiabatic energy
+         ! Adiabatic energy
          x = T1%Particle(1)%get_pos(1)
 
          call GAIMS_model_ham(x, H_Diab, sigma_G)
@@ -407,7 +392,7 @@ contains
          T1%ElecStruc%PotEn(2) = v22
          T1%ESFlags%ZPotEnCurrent = .true.
 
-!     Force
+         ! Force
          T1%ElecStruc%DerivMat = 0.d0
 
          if (T1%StateID == 2) then
@@ -421,7 +406,7 @@ contains
          Coupling = 0.d0
          T1%ESFlags%zDerivCurrent = .true.
 
-!     SOC,  Eq (11)
+         ! SOC,  Eq (11) in https://doi.org/10.1063/1.4707737
          T1%ElecStruc%SOMat = (0.d0, 0.d0)
          T1%ElecStruc%SOMat(1, 2, 2, 1) = conjg(c_1 * sigma_G) ! z*  : S,T-1
          T1%ElecStruc%SOMat(1, 2, 2, 2) = c1i * c_0 * sigma_G ! ib  : S,T0
@@ -431,9 +416,6 @@ contains
          T1%ElecStruc%SOMat(2, 1, 3, 2) = conjg(c_1 * sigma_G) ! z*  : T1,S
 
          T1%ESFlags%zSOMCurrent = .true.
-
-! end of GAIMS_model
-!------------------------------------------
 
       case default
          write (fmiOut, *) 'iMethod', gliMethod
@@ -544,7 +526,7 @@ contains
          theta_G = 0
       end if
 
-      ! Eq (15)
+      ! Eq (15) in https://doi.org/10.1063/1.4707737
       H(1, 1) = a_1 * exp(-alpha_1 * x) + dE
       H(2, 2) = a_2 * exp(-alpha_2 * x)
       H(1, 2) = gamma_G * exp(c1i * theta_G)
@@ -568,7 +550,7 @@ contains
       B = H(2, 1)
       C = H(2, 2)
 
-!  Avoid numerical problems if it's already diagonal
+      ! Avoid numerical problems if it's already diagonal
       if (B < FPZero) then
          if (A < C) then
             EVec1 = [1.d0, 0.d0]
@@ -580,14 +562,14 @@ contains
          return
       end if
 
-!  1st eigenvector
+      ! 1st eigenvector
       EVec1(1) = -B
       EVec1(2) = (A - C - sqrt(C * C - 2 * A * C + A * A + 4 * B * B)) / 2.d0
       norm = sqrt(EVec1(1)**2 + EVec1(2)**2)
       EVec1(1) = EVec1(1) / norm
       EVec1(2) = EVec1(2) / norm
 
-!  2nd eigenvector
+      ! 2nd eigenvector
       EVec2(1) = -B
       EVec2(2) = (A - C + sqrt(C * C - 2 * A * C + A * A + 4 * B * B)) / 2.d0
       norm = sqrt(EVec2(1)**2 + EVec2(2)**2)
