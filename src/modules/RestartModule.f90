@@ -706,12 +706,16 @@ contains
 
       write (nf, *) '# Overlap matrix'
       write (nf, 3) ES%OverlapMatrix
-      write (nf, *) '# TC Blob'
-      write (nf, 3) ES%OldBlob
-      write (nf, *) '# MSPT2 Coeffs'
-      write (nf, 3) ES%OldMSPT2C
-      write (nf, *) '# Electronic Phases'
-      write (nf, *) ES%ElecPhase
+      if (allocated(ES%OldBlob)) then
+         write (nf, *) '# TC Blob'
+         write (nf, 3) ES%OldBlob
+      end if
+      ! write (nf, *) '# MSPT2 Coeffs'
+      ! write (nf, 3) ES%OldMSPT2C
+      if (allocated(ES%ElecPhase)) then
+         write (nf, *) '# Electronic Phases'
+         write (nf, *) ES%ElecPhase
+      end if
 
    end subroutine WriteElecStruc
 
@@ -743,12 +747,16 @@ contains
 
       call require_header(header, '# Overlap matrix')
       read (nf, 3) ES%OverlapMatrix
-      read (nf, *)
-      read (nf, 3) ES%OldBlob
-      read (nf, *)
-      read (nf, 3) ES%OldMSPT2C
-      read (nf, *)
-      read (nf, *) ES%ElecPhase
+      if (allocated(ES%OldBlob)) then
+         read (nf, *)
+         read (nf, 3) ES%OldBlob
+      end if
+      ! read (nf, *)
+      ! read (nf, 3) ES%OldMSPT2C
+      if (allocated(ES%ElecPhase)) then
+         read (nf, *)
+         read (nf, *) ES%ElecPhase
+      end if
 
    end subroutine ReadElecStruc
 
