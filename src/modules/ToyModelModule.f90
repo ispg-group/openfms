@@ -58,7 +58,7 @@ module ToyModelModule
 !     * coupC .... linear coupling in y-direction
 !
 !-----------------------------------------------
-   type :: t_IzmaylovParams
+   type :: t_izmaylov_params
       real(kind=DefReal) :: W1
       real(kind=DefReal) :: W2
       real(kind=DefReal) :: XA
@@ -67,7 +67,7 @@ module ToyModelModule
       real(kind=DefReal) :: coupC
    contains
       procedure, public :: initialize => initialize_izmaylov_params
-   end type t_IzmaylovParams
+   end type t_izmaylov_params
 
 !  Parameters for GAIMS_model
 !  https://doi.org/10.1063/1.4707737
@@ -81,23 +81,23 @@ module ToyModelModule
    real(kind=DefReal), parameter :: c_0 = 0.001d0
    complex, parameter :: c_1 = (0.0005, 0.0005)
 
-   type :: t_GAIMSParams
+   type :: t_GAIMS_params
       !> controlls the position of SOC sign change
       real(kind=DefReal) :: r_sigma
    contains
       procedure, public :: initialize => initialize_gaims_params
-   end type t_GAIMSParams
+   end type t_GAIMS_params
 !-----------------------------------------------
 
-   type(t_IzmaylovParams) :: IzmaylovParams
-   type(t_GAIMSParams) :: GAIMSParams
+   type(t_izmaylov_params) :: izmaylov_params
+   type(t_GAIMS_params) :: GAIMS_params
 
-   public :: FMS_ToyModel, IzmaylovParams, GAIMSParams
+   public :: FMS_ToyModel, izmaylov_params, GAIMS_params
 
 contains
 
    subroutine initialize_izmaylov_params(self, W1, W2, XA, YA, deltaE, coupC)
-      class(t_IzmaylovParams), intent(inout) :: self
+      class(t_izmaylov_params), intent(inout) :: self
       real(kind=DefReal), intent(in) :: W1, W2, XA, YA, deltaE, coupC
       self%W1 = W1
       self%W2 = W2
@@ -108,7 +108,7 @@ contains
    end subroutine initialize_izmaylov_params
 
    subroutine initialize_gaims_params(self, r_sigma)
-      class(t_GAIMSParams), intent(inout) :: self
+      class(t_GAIMS_params), intent(inout) :: self
       real(kind=DefReal), intent(in) :: r_sigma
 
       self%r_sigma = r_sigma
@@ -299,11 +299,11 @@ contains
 
       case (3) ! Izmaylov
 
-         W1 = IzmaylovParams%W1
-         W2 = IzmaylovParams%W2
-         XA = IzmaylovParams%XA
-         YA = IzmaylovParams%YA
-         coupC = IzmaylovParams%coupC
+         W1 = izmaylov_params%W1
+         W2 = izmaylov_params%W2
+         XA = izmaylov_params%XA
+         YA = izmaylov_params%YA
+         coupC = izmaylov_params%coupC
          MASSX = T1%Particle(1)%Mass
          MASSY = T1%Particle(2)%Mass
 
@@ -480,12 +480,12 @@ contains
       real(kind=DefReal), intent(in) :: x, y
       real(kind=DefReal), intent(out) :: H(2, 2)
       real(kind=DefReal) :: W1, W2, XA, YA, deltaE, coupC
-      W1 = IzmaylovParams%W1
-      W2 = IzmaylovParams%W2
-      XA = IzmaylovParams%XA
-      YA = IzmaylovParams%YA
-      deltaE = IzmaylovParams%deltaE
-      coupC = IzmaylovParams%coupC
+      W1 = izmaylov_params%W1
+      W2 = izmaylov_params%W2
+      XA = izmaylov_params%XA
+      YA = izmaylov_params%YA
+      deltaE = izmaylov_params%deltaE
+      coupC = izmaylov_params%coupC
 
       H(1, 1) = 0.5d0 * (W1**2) * (x + 0.5d0 * XA)**2 + 0.5d0 * (W2**2) * &
                 (y + 0.5d0 * YA)**2 + 0.5d0 * deltaE
@@ -505,7 +505,7 @@ contains
       real(kind=DefReal), intent(out) :: sigma_G
       real(kind=DefReal) :: theta_G, gamma_G, r_sigma
 
-      r_sigma = GAIMSParams%r_sigma
+      r_sigma = GAIMS_params%r_sigma
       ! Step function sigma(r) controlling SOC sign change, Eq (21)
       if (x <= r_sigma - dr_sigma / 2) then
          sigma_G = 1.d0
