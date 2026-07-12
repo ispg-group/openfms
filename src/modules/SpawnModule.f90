@@ -102,7 +102,6 @@ contains
 !  child_i  <--- child_s -----> child_f
 !
       use ElecStrucModule
-      use SelectionModule, only: FMS_CalculateSelectionTime
 
       type(T_TrajectoryBundle), target, intent(inout) :: B1
       real(kind=DefReal), intent(in) :: TimeStep
@@ -1329,5 +1328,105 @@ contains
       write (fmiOut, 2001) ScaleFactor
 
    end function FMS_AdjustEnergy
+
+! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   subroutine FMS_CalculateSelectionTime(parent_s, child_s, child_i)
+! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+!
+! Specific to AIMSWISS.
+! Called by SpawnModule:FMS_Spawn subroutine
+!
+!     parent_s and child_s are the parent and child TBFs at the spawning time,
+!     whose forces are used to calculate the selection time. Their state is not
+!     changed in this subroutine!
+!
+!     child_i is the child TBF at the entry time, which will be added to the
+!     Bundle object after this subroutine is finished. Its state is modified
+!     in this subroutine, by setting its T1%SWISS%SelectionTime variable to
+!     its current time + the decoherence time with respect to its parent.
+!
+! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+      type(T_Trajectory), intent(in) :: parent_s, child_s
+      type(T_Trajectory), intent(inout) :: child_i
+      real(kind=DefReal) :: decoherenceTime
+
+      decoherenceTime = FMS_CalculateDecoherenceTime(parent_s, child_s, parent_s%NumParticles)
+      child_i%SWISS%SelectionTime = child_i%SWISS%BirthDate + decoherenceTime
+      child_i%SWISS%ParentOverlap = abs(overlap(parent_s, child_s))**2
+
+      write (fmiOut, '(a,i0,a,f0.2)') 'SWISS: Trajectory ', parent_s%TrajID, ' and '// &
+         'its child will decohere at t = ', child_i%SWISS%SelectionTime
+      write (fmiOut, '(a,f5.3)') 'Their current absolute overlap is ', child_i%SWISS%ParentOverlap
+
+   end subroutine FMS_CalculateSelectionTime
+
+! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   function FMS_CalculateDecoherenceTime(parent, child, npart) result(decoherenceTime)
+! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+!
+! Specific to AIMSWISS.
+! Called by FMS_CalculateSelectionTime:
+!
+!   Caclculate the decoherence time (tau_D) in the following way:
+!
+!       First, we calculate the decoherence rate (Gamma_D) rate via
+!
+!          Gamma_D = (F_P - F_C)^T * alpha^-1 * (F_P - F_C) / 4,
+!
+!       where F_P and F_C are the gradients acting on the parent and child TBF,
+!       respectively, and alpha is a matrix containing the widths of the TBFs.
+!
+!       Second, we determine tau_D by taking the square root of Gamma_D and
+!       its reciprocal
+!
+!           tau_D = 1. / sqrt(Gamma_D)
+!
+! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      type(T_Trajectory), intent(in) :: parent, child
+      integer(kind=DefInt), intent(in) :: npart
+      real(kind=DefReal) :: decoherenceTime
+      integer(kind=DefInt) :: ipart, jdim, ishifted, istart, ndim, &
+                              parentSt, childSt
+      real(kind=DefReal) :: forceElementDiff2, decoherenceRate2, &
+                            parentForceElement, childForceElement, &
+                            summand2, width
+
+! Calculation of the squared decoherence rate
+      parentSt = parent%StateID
+      childSt = child%StateID
+! stochastic selection is currently only implemented for
+! multi-state spawning (may change in the future)
+      if (childSt == parentSt) then
+         write (fmiOut, *) "SWISS: States don't differ, decoherence not possible"
+         call FMS_DieError('ERROR in FMS_CalculateDecoherenceTime')
+      end if
+
+      decoherenceRate2 = 0.d0
+      forceElementDiff2 = 0.d0
+      do ipart = 1, npart
+         width = parent%Particle(ipart)%Width
+         ndim = parent%Particle(ipart)%NumDimensions
+
+         istart = (ipart - 1) * ndim
+
+         do jdim = 1, ndim
+            ishifted = jdim + istart
+            parentForceElement = parent%ElecStruc%DerivMat(parentSt, &
+                                                           parentSt, ishifted)
+            childForceElement = child%ElecStruc%DerivMat(childSt, &
+                                                         childSt, ishifted)
+            forceElementDiff2 = (parentForceElement - &
+                                 childForceElement)**2
+            summand2 = forceElementDiff2 / (4.d0 * width)
+            decoherenceRate2 = decoherenceRate2 + summand2
+         end do
+      end do
+
+      decoherenceTime = 1.d0 / sqrt(decoherenceRate2)
+
+      return
+
+   end function FMS_CalculateDecoherenceTime
 
 end module SpawnModule

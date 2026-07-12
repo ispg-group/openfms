@@ -21,6 +21,7 @@ program OpenFMS
    use ElecStrucModule, only: FMS_ESInit
    use RestartModule, only: inIRestart, RestartTime, getRestart
    use PropagationModule, only: FMS_SetTimeStep
+   use SelectionModule, only: FMS_RemoveDead
    implicit none
 
    type(T_TrajectoryBundle) :: Bundle

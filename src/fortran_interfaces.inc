@@ -37,11 +37,6 @@
       real (kind=DefReal) :: SimulationTIme
    end subroutine FMS_ReadNameList
 
-   subroutine FMS_RemoveDead(B1)
-      use BundleModule
-      type(T_TrajectoryBundle), intent(inout) :: B1
-   end subroutine FMS_RemoveDead
-
    subroutine FMS_Shutdown(B1, T1, terminate)
       use TrajectoryModule
       use BundleModule

@@ -15,7 +15,7 @@
 !!    @ingroup propagation
 !<
       recursive subroutine FMS_Dynamics(Bundle, Timestep, GoalTime)
-         use FMSModule, only: FMS_Shutdown, FMS_RemoveDead
+         use FMSModule, only: FMS_Shutdown
          use GlobalModule, only: DefReal, DefInt, FPZero, fmiOut, &
         &  FMS_StepRejected, FMS_PrintMessg, FMSWorkingDir, FMS_RejectStep, &
         &  fmzWriteEveryStep, gldCoupTimeStep, &
@@ -23,7 +23,7 @@
         &  glzStochastic, glnStepsRejected, FMS_DieError
          use BundleModule
          use BundleIOModule, only: FMS_Output
-         use SelectionModule, only: FMS_StochasticCollapse
+         use SelectionModule, only: FMS_StochasticCollapse, FMS_RemoveDead
          use RestartModule, only: PutRestart
          use PropagationModule, only: FMS_Monitor
          implicit none

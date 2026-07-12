@@ -101,9 +101,9 @@ BundleIOModule.o: BundleIOModule.f90 BundleCalcsModule.o BundleModule.o \
 			SMDModule.o OverlapModule.o SpawnModule.o
 
 SelectionModule.o: SelectionModule.f90 GlobalModule.o RandomModule.o OverlapModule.o	 \
-                   TrajectoryModule.o BundleModule.o BundleCalcsModule.o
+                   TrajectoryModule.o BundleModule.o BundleCalcsModule.o SpawnModule.o
 
-SpawnModule.o: SpawnModule.f90 GlobalModule.o SelectionModule.o FMSModule.o \
+SpawnModule.o: SpawnModule.f90 GlobalModule.o FMSModule.o \
                TrajectoryModule.o TrajectoryCalcsModule.o TrajectoryIOModule.o \
 	       BundleModule.o BundleCalcsModule.o OverlapModule.o VerletModule.o
 
