@@ -6,7 +6,7 @@ module SelectionModule
    use BundleCalcsModule, only: FMS_bH, FMS_Norm, FMS_Mulliken
    use OverlapModule, only: overlap
    use RandomModule, only: fms_ranb
-   use SpawnModule, only: spdCFthresh, spawn_couple, spdpopToSpawn
+   use SpawnModule, only: spawn_params, spawn_couple
    implicit none
 
    private
@@ -1362,14 +1362,14 @@ contains
 
          OverSpawnThresh = .false.
          do n = 1, nstate
-            OverSpawnThresh = OverSpawnThresh .or. spawn_couple(B1%Trajectory(i), n) > spdCFThresh
+            OverSpawnThresh = OverSpawnThresh .or. spawn_couple(B1%Trajectory(i), n) > spawn_params%CFThresh
          end do
 
          ! . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
          !        Update DeadTime for those who will not be killed
          NotCoupled = all(Coupled(:, i) == 0)
          OnIgnoreState = (StateID == glIgnoreState)
-         PopBelowThresh = (Population(i) < spdPopToSpawn)
+         PopBelowThresh = (Population(i) < spawn_params%PopToSpawn)
          !        GAIMS changed
          pop = 0.d0
          do n = 1, ntraj
@@ -1377,7 +1377,7 @@ contains
                pop = pop + Population(n)
             end if
          end do
-         PopBelowThresh = (pop < spdPopToSpawn)
+         PopBelowThresh = (pop < spawn_params%PopToSpawn)
          !        GAIMS changed end
          MarkForDeath = ((OnIgnoreState .and. NotCoupled .and. .not. OverSpawnThresh) &
                          .or. (PopBelowThresh .and. NotCoupled))
@@ -1401,7 +1401,7 @@ contains
             else if (OnIgnoreState) then
                write (fmiOut, '(a,i0,a,i0)') '** Killing trajectory ', TrajID, ' on state ', StateID
             else
-               write (fmiOut, '(a,i0,a,f6.5)') '** Killing trajectory ', TrajID, ' pop < ', spdPopToSpawn
+               write (fmiOut, '(a,i0,a,f6.5)') '** Killing trajectory ', TrajID, ' pop < ', spawn_params%PopToSpawn
             end if
          end if
       end do
