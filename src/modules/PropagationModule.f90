@@ -9,7 +9,7 @@ module PropagationModule
    use BundleModule
    use BundleCalcsModule, only: FMS_UpdateCentroid
    use VerletModule, only: FMS_PropVV_a, FMS_PropVV_b
-   use SpawnModule, only: FMS_Spawn, FMS_SpawnDCouple, spdCSThresh
+   use SpawnModule, only: FMS_Spawn, FMS_SpawnDCouple, spawn_params
    implicit none
 
    private
@@ -714,7 +714,7 @@ contains
             if (iState == B1%Trajectory(iTraj)%StateID) cycle
             ! TODO(DH): Switch to SpawnModule::spawn_couple
             ! https://github.com/ispg-group/fms90-redux/issues/79
-            if (abs(FMS_SpawnDCouple(B1%Trajectory(iTraj), iState)) > spdCSThresh) then
+            if (abs(FMS_SpawnDCouple(B1%Trajectory(iTraj), iState)) > spawn_params%CSThresh) then
                zCoupling = .true.
                exit
             end if
