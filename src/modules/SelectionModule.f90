@@ -375,7 +375,6 @@ contains
 
       else
 
-         write (fmiout, *) 'test normal'
          call perform_stochastic_selection(B1, selectionTime)
 
       end if
