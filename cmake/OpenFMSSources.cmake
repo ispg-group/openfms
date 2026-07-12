@@ -36,6 +36,5 @@ set(OPENFMS_CORE_SOURCES
   src/particle_types.f90
   src/read_geometry.f90
   src/read_namelist.f90
-  src/remove_dead.f90
   src/shutdown.f90
 )
