@@ -27,10 +27,11 @@ module TrajectoryModule
    use QM_MM_Module, only: qczQMMM
    implicit none
    private
-   public :: t_Trajectory, t_ElecStruc
+   public :: t_Trajectory, t_ElecStruc, t_Thermo, t_NHCChain, t_LangevinThermo
    public :: assign_trajectory, assignment(=)
    public :: FMS_Distance, FMS_Angle, FMS_Dihedral, FMS_CalcPyrAngle
    public :: FMS_D_Distance, FMS_D_Angle, FMS_D_Dihedral
+   public :: FMS_InitializeNHC
 
 !--------------------------------------------------------------------!
 !                 DERIVED TYPES FOR TRAJECTORIES                     !
@@ -114,6 +115,44 @@ module TrajectoryModule
                             BirthDate !< Time at which trajectory was created
    end type T_SWISS
 
+!----------------------------------------------------------------------------
+!>
+!!    NHC chain variables (masses, positions, momenta) for one chain.
+!!    Used for global thermostat (one chain) or per-particle local thermostat.
+!<
+   type T_NHCChain
+      real(kind=DefReal), allocatable :: mNHC(:) 
+      real(kind=DefReal), allocatable :: pNHC(:) 
+      real(kind=DefReal), allocatable :: rNHC(:) 
+   end type T_NHCChain
+
+!----------------------------------------------------------------------------
+!>
+!!    Langevin thermostat variables for one trajectory
+
+   type T_LangevinThermo
+      real(kind=DefReal) :: gamma !< Friction coefficient
+   end type T_LangevinThermo
+
+!----------------------------------------------------------------------------
+!>
+!!    Thermostat data for a trajectory.
+!!    Holds thermostat parameters (from InitialModule) and NHC variables:
+!!    global chain or local chains attached to each particle.
+!<
+   type T_Thermo
+      logical :: zActive !< Whether thermostat is active
+      character(len=32) :: thermostat_type !< e.g. 'NHC', 'bussi_g', 'bussi_l'
+      integer(kind=DefInt) :: NumNHCChain !< Length of NHC chain (M)
+      real(kind=DefReal) :: dt !< Timestep for thermostat
+      real(kind=DefReal) :: thermE !< Thermostat energy
+      ! Global NHC chain (single chain for whole system)
+      type(T_NHCChain) :: GlobalNHC
+      ! Local thermostat: one NHC chain per particle
+      type(T_NHCChain), allocatable :: LocalThermostat(:)
+      type(T_LangevinThermo) :: LangevinThermoInfo !< Information for Langevin thermostat
+   end type T_Thermo
+
 !---------------------------------------------------------------------------
 !>
 !!    This data structure holds an individual trajectory time step
@@ -150,6 +189,9 @@ module TrajectoryModule
 
       !< Particle data
       type(T_Particle), allocatable :: Particle(:)
+
+      !< Thermostat
+      type(T_Thermo) :: ThermoInfo !< thermostat information (p, r, local NHC, thermostat structure)
 
       ! Phase propagation
       complex(kind=DefComp) :: Amplitude !< Trajectory amplitude
@@ -346,6 +388,13 @@ contains
          call T1%Particle(n)%create(id=n, numdim=3)
       end do
 
+!     Thermostat: initialize structure (no NHC allocation by default)
+      T1%ThermoInfo%zActive = .false.
+      T1%ThermoInfo%thermostat_type = ''
+      T1%ThermoInfo%NumNHCChain = 0
+      T1%ThermoInfo%dt = 0.d0
+      T1%ThermoInfo%thermE = 0.d0
+
    end subroutine create_trajectory
 !>
 !!    Memory deallocation to destroy a trajectory structure
@@ -356,6 +405,7 @@ contains
       class(T_Trajectory), intent(inout) :: T1
 
       integer(kind=DefInt) :: n
+      logical :: Zsuccess
 
       T1%NumStates = 0
       T1%NumSing = 0
@@ -381,8 +431,103 @@ contains
       if (allocated(T1%ESFlags%ZDerivCurrent)) deallocate (T1%ESFlags%ZDerivCurrent)
       if (allocated(T1%ESFlags%ZSOMCurrent)) deallocate (T1%ESFlags%ZSOMCurrent)
 
+      call FMS_DestroyThermoInfo(T1%ThermoInfo)
       call FMS_DestroyElectronicStructure(T1%ElecStruc)
+
    end subroutine destroy_trajectory
+
+   subroutine FMS_DestroyThermoInfo(Th)
+      type(T_Thermo), intent(inout) :: Th
+      integer(kind=DefInt) :: i
+      if (allocated(Th%GlobalNHC%mNHC)) deallocate (Th%GlobalNHC%mNHC)
+      if (allocated(Th%GlobalNHC%pNHC)) deallocate (Th%GlobalNHC%pNHC)
+      if (allocated(Th%GlobalNHC%rNHC)) deallocate (Th%GlobalNHC%rNHC)
+      if (allocated(Th%LocalThermostat)) then
+         do i = 1, size(Th%LocalThermostat)
+            if (allocated(Th%LocalThermostat(i)%mNHC)) deallocate (Th%LocalThermostat(i)%mNHC)
+            if (allocated(Th%LocalThermostat(i)%pNHC)) deallocate (Th%LocalThermostat(i)%pNHC)
+            if (allocated(Th%LocalThermostat(i)%rNHC)) deallocate (Th%LocalThermostat(i)%rNHC)
+         end do
+         deallocate (Th%LocalThermostat)
+      end if
+   end subroutine FMS_DestroyThermoInfo
+
+   subroutine FMS_InitializeNHC(Traj, NumNHCChain, Temperature, tau_relax)
+      !>
+      !! Initialize NHC (Nosé-Hoover Chain) thermostat for a trajectory.
+      !! Allocates and initializes chain masses, positions, and momenta.
+      !!
+      !! @param Traj         Trajectory to initialize thermostat for
+      !! @param NumNHCChain  Length of NHC chain (M)
+      !! @param Temperature  Temperature in Kelvin
+      !! @param tau_relax    NHC relaxation time in atomic units
+      !<
+      use GlobalModule, only: BoltzK
+      type(T_Trajectory), intent(inout) :: Traj
+      integer(kind=DefInt), intent(in) :: NumNHCChain
+      real(kind=DefReal), intent(in) :: Temperature
+      real(kind=DefReal), intent(in) :: tau_relax
+      
+      real(kind=DefReal) :: beta, sigma
+      integer(kind=DefInt) :: i
+      
+      ! Clean up any existing NHC data
+      call FMS_DestroyThermoInfo(Traj%ThermoInfo)
+      
+      ! Initialize thermostat info
+      Traj%ThermoInfo%zActive = .true.
+      Traj%ThermoInfo%thermostat_type = 'NHC'
+      Traj%ThermoInfo%NumNHCChain = NumNHCChain
+      Traj%ThermoInfo%dt = 0.0d0
+      Traj%ThermoInfo%thermE = 0.0d0
+      
+      ! Convert temperature to atomic units: beta = 1/(k_B*T)
+      beta = 1.0d0 / (Temperature * BoltzK)
+      
+      ! Allocate NHC arrays
+      allocate(Traj%ThermoInfo%GlobalNHC%mNHC(NumNHCChain))
+      allocate(Traj%ThermoInfo%GlobalNHC%pNHC(NumNHCChain))
+      allocate(Traj%ThermoInfo%GlobalNHC%rNHC(NumNHCChain))
+      
+      ! Initialize NHC masses
+      ! m_NHC(1) = 3N * kB * T * tau^2  for chain member 1
+      ! m_NHC(i) = kB * T * tau^2       for chain members i > 1
+      Traj%ThermoInfo%GlobalNHC%mNHC(1) = real(Traj%NumDimensions, DefReal) / beta * tau_relax * tau_relax
+      do i = 2, NumNHCChain
+         Traj%ThermoInfo%GlobalNHC%mNHC(i) = 1.0d0 / beta * tau_relax * tau_relax
+      end do
+      
+      ! Initialize positions to zero
+      Traj%ThermoInfo%GlobalNHC%rNHC(:) = 0.0d0
+      
+      ! Initialize momenta from Maxwell-Boltzmann distribution
+      ! pNHC ~ sqrt(m * kB * T)
+      do i = 1, NumNHCChain
+         sigma = sqrt(Traj%ThermoInfo%GlobalNHC%mNHC(i) / beta)
+         Traj%ThermoInfo%GlobalNHC%pNHC(i) = local_normdist(sigma)
+      end do
+      
+      ! Add to thermostat energy
+      Traj%ThermoInfo%thermE = 0.0d0
+      do i = 1, NumNHCChain
+         Traj%ThermoInfo%thermE = Traj%ThermoInfo%thermE + &
+            0.5d0 * Traj%ThermoInfo%GlobalNHC%pNHC(i)**2 / Traj%ThermoInfo%GlobalNHC%mNHC(i) + &
+            Traj%ThermoInfo%GlobalNHC%rNHC(i) / beta
+      end do
+
+   contains
+
+      function local_normdist(sig) result(x)
+         real(kind=DefReal), intent(in) :: sig
+         real(kind=DefReal) :: x
+         real(kind=DefReal) :: u1, u2
+         call random_number(u1)
+         call random_number(u2)
+         if (u1 < 1.0d-12) u1 = 1.0d-12
+         x = sig * sqrt(-2.0d0 * log(u1)) * cos(2.0d0 * acos(-1.0d0) * u2)
+      end function local_normdist
+      
+   end subroutine FMS_InitializeNHC
 
    subroutine FMS_CreateElectronicStructure(ES, NumStates, NumParticles)
       use ElecStrucModule, only: esBlobSize, esnBasis, esnelecphase, eslcivec
@@ -483,7 +628,7 @@ contains
       type(T_Trajectory), intent(inout) :: T1
       type(T_Trajectory), intent(in) :: T2
       integer(kind=DefInt) :: IState, IParticle
-      integer(kind=DefInt) :: i
+      integer(kind=DefInt) :: i, n
 
       if ((T1%NumParticles /= T2%NumParticles) .or. (T1%NumStates /= T2%NumStates)) then
          call T1%destroy()
@@ -561,6 +706,35 @@ contains
 !     DH: Would probably also need this?
 !     if (allocated(T2%ElecStruc%MSPT2S))        T1%ElecStruc%MSPT2S        = T2%ElecStruc%MSPT2S
 !     if (allocated(T2%ElecStruc%OldMSPT2S))     T1%ElecStruc%OldMSPT2S     = T2%ElecStruc%OldMSPT2S
+
+!     Thermostat (T_Thermo): copy structure, NHC variables and Langevin variables
+      call FMS_DestroyThermoInfo(T1%ThermoInfo)
+      T1%ThermoInfo%zActive = T2%ThermoInfo%zActive
+      T1%ThermoInfo%thermostat_type = T2%ThermoInfo%thermostat_type
+      T1%ThermoInfo%NumNHCChain = T2%ThermoInfo%NumNHCChain
+      T1%ThermoInfo%dt = T2%ThermoInfo%dt
+      T1%ThermoInfo%thermE = T2%ThermoInfo%thermE
+      if (allocated(T2%ThermoInfo%GlobalNHC%mNHC)) then
+         allocate (T1%ThermoInfo%GlobalNHC%mNHC(size(T2%ThermoInfo%GlobalNHC%mNHC)))
+         allocate (T1%ThermoInfo%GlobalNHC%pNHC(size(T2%ThermoInfo%GlobalNHC%pNHC)))
+         allocate (T1%ThermoInfo%GlobalNHC%rNHC(size(T2%ThermoInfo%GlobalNHC%rNHC)))
+         T1%ThermoInfo%GlobalNHC%mNHC = T2%ThermoInfo%GlobalNHC%mNHC
+         T1%ThermoInfo%GlobalNHC%pNHC = T2%ThermoInfo%GlobalNHC%pNHC
+         T1%ThermoInfo%GlobalNHC%rNHC = T2%ThermoInfo%GlobalNHC%rNHC
+      end if
+      if (allocated(T2%ThermoInfo%LocalThermostat)) then
+         allocate (T1%ThermoInfo%LocalThermostat(size(T2%ThermoInfo%LocalThermostat)))
+         do n = 1, size(T2%ThermoInfo%LocalThermostat)
+            if (allocated(T2%ThermoInfo%LocalThermostat(n)%mNHC)) then
+               allocate (T1%ThermoInfo%LocalThermostat(n)%mNHC(size(T2%ThermoInfo%LocalThermostat(n)%mNHC)))
+               allocate (T1%ThermoInfo%LocalThermostat(n)%pNHC(size(T2%ThermoInfo%LocalThermostat(n)%pNHC)))
+               allocate (T1%ThermoInfo%LocalThermostat(n)%rNHC(size(T2%ThermoInfo%LocalThermostat(n)%rNHC)))
+               T1%ThermoInfo%LocalThermostat(n)%mNHC = T2%ThermoInfo%LocalThermostat(n)%mNHC
+               T1%ThermoInfo%LocalThermostat(n)%pNHC = T2%ThermoInfo%LocalThermostat(n)%pNHC
+               T1%ThermoInfo%LocalThermostat(n)%rNHC = T2%ThermoInfo%LocalThermostat(n)%rNHC
+            end if
+         end do
+      end if
 
 ! Flags
       T1%ESFlags%zESExists = T2%ESFlags%zESExists

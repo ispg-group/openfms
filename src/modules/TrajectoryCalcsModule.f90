@@ -35,6 +35,7 @@ module TrajectoryCalcsModule
    public :: Potential, FMS_PotentialT, FMS_MMPot
    public :: Kinetic, FMS_KineticT
    public :: FMS_GetForce, FMS_Forces, FMS_MMForces
+   public :: FMS_UpdatePES
    public :: FMS_KineticClass, FMS_ClassEnergy
    public :: FMS_Weight, FMS_WeightC
    public :: FMS_Dipole, FMS_TransDipole

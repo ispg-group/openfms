@@ -1,15 +1,18 @@
 ! Copyright Todd J. Martinez and Raphael D. Levine, 1994
 module PropagationModule
    use FMSModule
-   use GlobalModule, only: DefInt, DefReal, DefComp, DP5, FPZero, &
+   use GlobalModule, only: DefInt, DefReal, DefComp, DP5, FPZero, BoltzK, &
                            glzConstrain, glzCentroids, glcIntegType, glzFullyCoupled, &
-                           FMS_DieError
+                           FMS_DieError, glzThermostat, glThermostatType, &
+                           gldLangevinGamma, gldLangevinTemp, gldThermostatTemp, gliNBeads
    use TrajectoryModule
    use TrajectoryCalcsModule, only: FMS_GetForce, FMS_PhaseDot, FMS_PosDot, FMS_MomDot
    use BundleModule
    use BundleCalcsModule, only: FMS_UpdateCentroid
    use VerletModule, only: FMS_PropVV_a, FMS_PropVV_b
    use SpawnModule, only: FMS_Spawn, FMS_SpawnDCouple, spdCSThresh
+   use ThermoModule, only: LangevinThermo_O, thermo_NHC_local, thermo_NHC_global
+   use PropVVRingMod, only: PropVVRing
    implicit none
 
    private
@@ -122,6 +125,13 @@ contains
          ! only propagate once for each CBF (for Ms=0)
          if (Bundle%Trajectory(i)%Ms /= 2) cycle
 
+         ! Propagate with PIMD
+         ! Note that this disables Ehrenfest update since it's incompatible with RPMD
+         if (gliNBeads > 1) then
+            call PropVVRing(Bundle%Trajectory(i), i, TimeStep)
+            cycle
+         end if
+
          call FMS_PropVV_a(Bundle%Trajectory(i), LastTraj, TimeStep, g1_0(i), g2_0(i))
 
          ! copy the calculated trajectory information to the other BF of the
@@ -176,6 +186,7 @@ contains
       do i = 1, ntraj0
          ! only propagate once for each CBF (for Ms=0)
          if (Bundle%Trajectory(i)%Ms /= 2) cycle
+         if (gliNBeads > 1) cycle
 
          call FMS_PropVV_b(Bundle%Trajectory(i), LastTraj, TimeStep, g1_0(i), g2_0(i))
 
@@ -326,9 +337,56 @@ contains
       type(T_Trajectory), intent(inout) :: T1
       real(kind=DefReal), intent(in) :: TimeStep
       real(kind=DefReal), allocatable, save :: MomDotSave(:)
-      integer(kind=DefInt) :: iparticle, idim, jDim
+      integer(kind=DefInt) :: iparticle, idim, jDim, M
+      real(kind=DefReal) :: beta
+      real(kind=DefReal) :: g1_0, g2_0
+      real(kind=DefReal), allocatable :: p_temp(:, :), mass_temp(:)
 
       if (.not. allocated(MomDotSave)) allocate (MomDotSave(T1%NumDimensions))
+      
+      ! ===== O-STEP BEFORE VERLET =====
+      ! Apply thermostat (Langevin or NHC) BEFORE Verlet with phase update
+      if (glzThermostat) then
+         beta = 1.0d0 / (gldThermostatTemp * BoltzK)
+         if (trim(glThermostatType) == 'Langevin') then
+            ! Langevin O-step (friction + noise)
+            if (gldLangevinGamma > 0.0d0) then
+               call LangevinThermo_O(T1, gldLangevinGamma, beta, TimeStep, g1_0, g2_0)
+            end if
+         else if (trim(glThermostatType) == 'NHC') then
+            ! NHC thermostat
+            if (T1%ThermoInfo%zActive .and. T1%ThermoInfo%NumNHCChain > 0) then
+               M = T1%ThermoInfo%NumNHCChain
+               ! Allocate temporary arrays for NHC_global (ndim=3, natom=NumParticles)
+               allocate(p_temp(3, T1%NumParticles))
+               allocate(mass_temp(T1%NumParticles))
+               do iparticle = 1, T1%NumParticles
+                  mass_temp(iparticle) = T1%Particle(iparticle)%Mass
+                  do idim = 1, T1%Particle(iparticle)%NumDimensions
+                     p_temp(idim, iparticle) = T1%get_mom(iparticle, idim)
+                  end do
+               end do
+               
+               ! Call NHC propagation
+               call thermo_NHC_global(TimeStep, M, 3, T1%NumParticles, &
+                  p_temp, mass_temp, beta, &
+                  T1%ThermoInfo%GlobalNHC%rNHC, &
+                  T1%ThermoInfo%GlobalNHC%pNHC, &
+                  T1%ThermoInfo%GlobalNHC%mNHC, &
+                  T1%ThermoInfo%thermE)
+               
+               ! Copy back updated momenta
+               do iparticle = 1, T1%NumParticles
+                  do idim = 1, T1%Particle(iparticle)%NumDimensions
+                     call T1%set_mom(iparticle, idim, p_temp(idim, iparticle))
+                  end do
+               end do
+               deallocate(p_temp, mass_temp)
+            end if
+         end if
+      end if
+      
+      ! ===== VERLET STEP =====
       MomDotSave = FMS_MomDot(T1)
       jDim = 1
 
@@ -348,8 +406,49 @@ contains
                             )
 
             jDim = jDim + 1
-         end do
+         end do 
       end do
+      
+      ! ===== O-STEP AFTER VERLET =====
+      ! Apply thermostat (Langevin or NHC) AFTER Verlet with phase update
+      if (glzThermostat) then
+         if (trim(glThermostatType) == 'Langevin') then
+            ! Langevin O-step (friction + noise)
+            if (gldLangevinGamma > 0.0d0) then
+               call LangevinThermo_O(T1, gldLangevinGamma, beta, TimeStep, g1_0, g2_0)
+            end if
+         else if (trim(glThermostatType) == 'NHC') then
+            ! NHC thermostat
+            if (T1%ThermoInfo%zActive .and. T1%ThermoInfo%NumNHCChain > 0) then
+               M = T1%ThermoInfo%NumNHCChain
+               ! Allocate temporary arrays for NHC_global (ndim=3, natom=NumParticles)
+               allocate(p_temp(3, T1%NumParticles))
+               allocate(mass_temp(T1%NumParticles))
+               do iparticle = 1, T1%NumParticles
+                  mass_temp(iparticle) = T1%Particle(iparticle)%Mass
+                  do idim = 1, T1%Particle(iparticle)%NumDimensions
+                     p_temp(idim, iparticle) = T1%get_mom(iparticle, idim)
+                  end do
+               end do
+               
+               ! Call NHC propagation
+               call thermo_NHC_global(TimeStep, M, 3, T1%NumParticles, &
+                  p_temp, mass_temp, beta, &
+                  T1%ThermoInfo%GlobalNHC%rNHC, &
+                  T1%ThermoInfo%GlobalNHC%pNHC, &
+                  T1%ThermoInfo%GlobalNHC%mNHC, &
+                  T1%ThermoInfo%thermE)
+               
+               ! Copy back updated momenta
+               do iparticle = 1, T1%NumParticles
+                  do idim = 1, T1%Particle(iparticle)%NumDimensions
+                     call T1%set_mom(iparticle, idim, p_temp(idim, iparticle))
+                  end do
+               end do
+               deallocate(p_temp, mass_temp)
+            end if
+         end if
+      end if
 
       call T1%rescale_phases()
    end subroutine FMS_PropClassNew

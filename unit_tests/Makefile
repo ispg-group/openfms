@@ -5,6 +5,14 @@ INCFLAGS = -I../src/modules
 MAKEFILE = Makefile
 CONFIG = ../CONFIGFMS
 
+# Enable OpenMP for parallel execution in testdrive.
+FFLAGS += -fopenmp
+LDFLAGS += -fopenmp
+
+# Keep runtime checks but avoid false recursion errors under OpenMP.
+FFLAGS := $(filter-out --check=all,$(FFLAGS))
+FFLAGS += --check=all,no-recursion
+
 .PHONY: clean run
 
 # Pattern rules

@@ -12,7 +12,6 @@
 ##SBATCH --nodelist=gpu193
 #SBATCH --mem=200GB
 
-
 ./configure.sh
 make -j
 make unittest

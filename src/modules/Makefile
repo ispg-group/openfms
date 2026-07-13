@@ -57,12 +57,12 @@ RandomModule.o: RandomModule.f90 GlobalModule.o
 
 InitialModule.o: InitialModule.f90 GlobalModule.o FMSModule.o SpawnModule.o \
 	SamplingModule.o VerletModule.o QM_MM_Module.o \
-	TrajectoryModule.o TrajectoryCalcsModule.o BundleModule.o
+	TrajectoryModule.o TrajectoryCalcsModule.o BundleModule.o RingModule.o
 
 SamplingModule.o: SamplingModule.f90 GlobalModule.o FMSModule.o EispackModule.o \
 	RandomModule.o QM_MM_Module.o TrajectoryModule.o
 
-ThermoModule.o: ThermoModule.f90 GlobalModule.o
+ThermoModule.o: ThermoModule.f90 GlobalModule.o TrajectoryModule.o TrajectoryCalcsModule.o
 
 ElecStrucModule.o: ElecStrucModule.f90 GlobalModule.o
 
@@ -73,8 +73,7 @@ ParticleModule.o: ParticleModule.f90 GlobalModule.o
 TerachemModule.o: TerachemModule.F90 GlobalModule.o TrajectoryModule.o ElecStrucModule.o
 
 TrajectoryModule.o: TrajectoryModule.f90 ParticleModule.o QM_MM_Module.o \
-			ElecStrucModule.o GlobalModule.o
-
+                        ElecStrucModule.o GlobalModule.o
 TrajectoryCalcsModule.o: TrajectoryCalcsModule.f90 TrajectoryModule.o \
 			ParticleModule.o QM_MM_Module.o ElecStrucModule.o \
 			GlobalModule.o SMDModule.o \
@@ -82,7 +81,7 @@ TrajectoryCalcsModule.o: TrajectoryCalcsModule.f90 TrajectoryModule.o \
 
 TrajectoryIOModule.o: TrajectoryIOModule.f90 TrajectoryModule.o TrajectoryCalcsModule.o \
 			ParticleModule.o QM_MM_Module.o \
-			ElecStrucModule.o GlobalModule.o
+			ElecStrucModule.o GlobalModule.o RingModule.o
 
 OverlapModule.o: OverlapModule.f90 GlobalModule.o \
 		ParticleModule.o TrajectoryModule.o TrajectoryCalcsModule.o
@@ -125,4 +124,16 @@ VerletModule.o: VerletModule.f90 GlobalModule.o TrajectoryModule.o TrajectoryCal
 
 PropagationModule.o: PropagationModule.f90 GlobalModule.o VerletModule.o FMSModule.o EispackModule.o \
 		TrajectoryModule.o TrajectoryCalcsModule.o RattleModule.o \
-		BundleModule.o BundleCalcsModule.o SpawnModule.o OverlapModule.o
+		BundleModule.o BundleCalcsModule.o SpawnModule.o OverlapModule.o ThermoModule.o RingModule.o PropVVRing.o
+
+
+# FFTModule wraps old F77 FFTPACK routines that use implicit typing.
+# Strip -fimplicit-none and silence array-bounds/do-subscript false positives from FFTPACK.
+FFTModule.o: FFTModule.f90
+	@echo "Compiling $<"
+	@$(FC) $(filter-out -fimplicit-none,$(FFLAGS)) $(INCFLAGS) -std=legacy \
+		-Wno-maybe-uninitialized -Wno-array-bounds -Wno-do-subscript -c $<
+
+RingModule.o: RingModule.f90 ThermoModule.o FFTModule.o GlobalModule.o
+
+PropVVRing.o: PropVVRing.f90 GlobalModule.o TrajectoryModule.o TrajectoryCalcsModule.o ParticleModule.o RingModule.o
