@@ -127,6 +127,7 @@ contains
          end do
          deallocate (BundleSS)
 
+         return
       end if
 
 ! Multiplicity-Specific Stochastic Selection
