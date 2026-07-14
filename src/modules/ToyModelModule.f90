@@ -2,9 +2,6 @@
 !>
 !!    Model potentials in the adiabatic basis. Includes:
 !!
-!!      (gliModel==1) Tully 1-D avoided crossing
-!!            Tully, JCP 93, 1061 (1990).
-!!
 !!      (gliModel==2) Persico 2-D 2-state CI (in stretched coordinates)
 !!            Ferretti et al, J CP 104, 5517 (1996).
 !!
@@ -29,12 +26,6 @@ module ToyModelModule
    private
 
    real(kind=DefReal), parameter :: dx = 0.005 !finite difference step
-
-   ! Parameters for Tully 1
-   real(kind=DefReal), parameter :: A = 0.01
-   real(kind=DefReal), parameter :: B = 1.6
-   real(kind=DefReal), parameter :: C = 0.005
-   real(kind=DefReal), parameter :: D = 1.0
 
    ! Parameters for Persico
    real(kind=DefReal), parameter :: alpha = 3.d0
@@ -129,92 +120,6 @@ contains
       real(kind=DefReal) :: W1, W2, XA, YA, coupC
 
       select case (gliMethod)
-
-      case (1) ! Tully 1
-         x = T1%particle(1)%get_pos(1)
-!         T1%ElecStruc%PotEn(2) = 0.5d0*exp(-0.25d0*x)
-!         T1%ElecStruc%PotEn(1) = 0.03452d0*exp(-0.35d0*x) + 0.04d0
-         T1%ElecStruc%PotEn(2) = &
-            0.237236d0 * (1 - exp(-3.45596d0 * (x - 0.75268d0)))**2 + 0.0364684d0
-         T1%ElecStruc%PotEn(1) = &
-            0.261047d0 * (1 - exp(-3.33327d0 * (x - 0.721627d0)))**2 + 0.0182831d0
-
-         T1%esflags%zpotencurrent = .true.
-!         write(fmiOut,*) x,T1%ElecStruc%PotEn(1)
-
-         ! Force
-         T1%ElecStruc%DerivMat = 0.d0
-         if (T1%StateID == 2) then
-            T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, 1) = &
-               2.d0 * 0.237236d0 * (1 - exp(-3.45596d0 * (x - 0.75268d0))) * &
-               3.45596d0 * exp(-3.45596d0 * (x - 0.75268d0))
-         else
-            T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, 1) = &
-               2.d0 * 0.261047d0 * (1 - exp(-3.33327d0 * (x - 0.721727d0))) * &
-               3.33327d0 * exp(-3.33327d0 * (x - 0.721627d0))
-         end if
-         T1%ESFlags%ZDerivCurrent(T1%StateID, T1%StateID) = .true.
-         Coupling = 0.d0
-         T1%ESFlags%zDerivCurrent = .true.
-
-!        SOC part
-
-         T1%ElecStruc%SOMat = (0.d0, 0.d0)
-!       call tully(x,sigma)
-         T1%ElecStruc%SOMat(1, 2, 2, 2) = (0.d0, 1.d0) * 0.000322182 * 10
-         T1%ElecStruc%SOMat(2, 1, 2, 2) = (0.d0, -1.d0) * 0.000322182 * 10
-         T1%ElecStruc%SOMat(1, 2, 2, 1) = (0.5d0, -0.5d0) * 0.000322182 * 10
-         T1%ElecStruc%SOMat(2, 1, 1, 2) = (0.5d0, 0.5d0) * 0.000322182 * 10
-         T1%ElecStruc%SOMat(1, 2, 2, 3) = (0.5d0, 0.5d0) * 0.000322182 * 10
-         T1%ElecStruc%SOMat(2, 1, 3, 2) = (0.5d0, -0.5d0) * 0.000322182 * 10
-
-         T1%ESFlags%zSOMCurrent = .true.
-
-!!!     Diabatic surfaces (v22=-v11, v21=v12)
-!!         x = T1%Particle(1)%get_pos(1)
-!!         call Tully(x,H_Diab)
-!!         if(x <= 0) then
-!!            dv11dx = A*B*exp(B*x)
-!!         else
-!!            dv11dx = A*B*exp(-B*x)
-!!         endif
-!!         dv12dx = -2*D*x*v12
-!!         v11=H_Diab(1,1)
-!!         v12=H_Diab(1,2)
-!!
-!!!     Adiabatic energy
-!!         T1%ElecStruc%PotEn(2) = sqrt(v11*v11 + v12*v12)
-!!         T1%ElecStruc%PotEn(1) = -T1%ElecStruc%PotEn(2)
-!!         T1%ElecStruc%PotEn    = T1%ElecStruc%PotEn+gldEShift
-!!         T1%ESFlags%ZPotEnCurrent=.true.
-!!
-!!!     Force
-!!         T1%ElecStruc%DerivMat(T1%StateID,T1%StateID,:)=0.d0
-!!         if(T1%StateID==1) then
-!!            T1%ElecStruc%DerivMat(T1%StateID,T1%StateID,1)=-
-!!     $      (dv11dx*v11+dv12dx*v12)/sqrt(v11*v11+v12*v12)
-!!         else
-!!            T1%ElecStruc%DerivMat(T1%StateID,T1%StateID,1)=
-!!     $       (dv11dx*v11+dv12dx*v12)/sqrt(v11*v11+v12*v12)
-!!         endif
-!!         T1%ESFlags%ZDerivCurrent(T1%StateID,T1%StateID)=.true.
-!!!     Non-adiabatic coupling (numerical for now)
-!!         Coupling=0.d0
-!!         call diagABBC(H_Diab,EVec1,EVec2)
-!!         call Tully(x+dx,H_Diab)
-!!         call diagABBC(H_Diab,EvecTemp,EDisplace1)
-!!         call Tully(x-dx,H_Diab)
-!!         call diagABBC(H_Diab,EvecTemp,EDisplace2)
-!!         EVecTemp=(EDisplace2-EDisplace1)/(2.d0*dx)
-!!         Coupling(1,1)=dot_product(Evec1,EVecTemp)
-!!         if(T1%StateID == 2) then
-!!            Coupling = - Coupling
-!!         endif
-!!         T1%ElecStruc%DerivMat(1,2,1)=Coupling(1,1)
-!!         T1%ElecStruc%DerivMat(2,1,1)=-Coupling(1,1)
-!!
-!!         T1%ESFlags%zDerivCurrent(1,2)=.true.
-!!         T1%ESFlags%zDerivCurrent(2,1)=.true.
 
       case (2) ! Persico
 
@@ -424,41 +329,6 @@ contains
       end select
 
    end subroutine FMS_ToyModel
-!?>??ifdef(Debug) then
-!?>      call FMS_ElecStrucCalls(T1)
-!?>??endif
-
-!>
-!! Returns Tully 1 diabatic Hamiltonian
-!<
-   subroutine Tully(x, sigma)
-      real(kind=DefReal), intent(in) :: x
-      real(kind=DefReal), intent(out) :: sigma
-      real(kind=DefReal) :: rsigma, drsigma
-
-      rsigma = 8.0d0
-      drsigma = 2.d0
-      if (x <= (rsigma - (drsigma / 2.d0))) then
-         sigma = 1.d0
-      else if ((x > (rsigma - (drsigma / 2.d0))) .and. &
-               (x < (rsigma + (drsigma / 2.d0)))) then
-         sigma = 4.d0 * ((x - rsigma) / (drsigma))**3 - &
-                 3.d0 * ((x - rsigma) / (drsigma))
-      else
-         sigma = -1.d0
-      end if
-!!    subroutine Tully(x,H)
-!!    real (kind=DefReal), intent(IN) :: x
-!!    real (kind=DefReal), intent(OUT) :: H(2,2)
-!!    if(x <= 0) then
-!!       H(1,1)    = A*(1-exp(B*x))
-!!    else
-!!       H(1,1)    = A*(1-exp(-B*x))
-!!    endif
-!!    H(2,2)=-H(1,1)
-!!    H(1,2)=C*exp(-D*x*x)
-!!    H(2,1)=H(1,2)
-   end subroutine tully
 
 !>
 !! Returns Persico diabatic Hamiltonian
@@ -475,7 +345,6 @@ contains
 !>
 !! Returns Izmaylov diabatic Hamiltonian
 !<
-
    subroutine Izmaylov(x, y, H)
       real(kind=DefReal), intent(in) :: x, y
       real(kind=DefReal), intent(out) :: H(2, 2)
