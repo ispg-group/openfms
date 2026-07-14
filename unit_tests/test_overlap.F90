@@ -64,9 +64,9 @@ contains
    end function get_numerical_time_derivative
 
    subroutine test_overlap_S_dot(error)
-      use GlobalModule, only: gliModel, gliMethod, glIzmOmegax, glIzmOmegay, &
-                              glIzmXshift, glIzmYshift, glIzmDeltaE, glIzmCoupC
+      use GlobalModule, only: gliModel, gliMethod
       use TrajectoryCalcsModule, only: FMS_Forces
+      use ToyModelModule, only: izmaylov_params
       use ElecStrucModule
       type(error_type), allocatable, intent(out) :: error
       type(t_trajectory) :: T1, T2
@@ -81,13 +81,9 @@ contains
       num_states = 1
       gliModel = 0
       gliMethod = 3
-      glIzmOmegax = 0.009557
-      glIzmOmegay = 0.003515
-      glIzmXshift = 20.07
-      glIzmYshift = 0.0
-      glIzmDeltaE = 0.01984
-      glIzmCoupC = 0.0006127
       fmiOut = open_dev_null()
+      call izmaylov_params%initialize(W1=0.009557d0, W2=0.003515d0, XA=20.07d0, YA=0.0d0, &
+                                      deltaE=0.01984d0, coupC=0.0006127d0)
       call FMS_ESInit(num_particles, num_states)
       call T1%create(numparticles=num_particles, numstates=num_states)
       call T2%create(numparticles=num_particles, numstates=num_states)

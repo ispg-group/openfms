@@ -51,7 +51,7 @@ MODFILES = modules/globalmodule.mod modules/fmsmodule.mod modules/eispackmodule.
 	modules/spawnmodule.mod modules/elecstrucmodule.mod modules/randommodule.mod \
 	modules/initialmodule.mod modules/samplingmodule.mod modules/particlemodule.mod \
 	modules/trajectorymodule.mod modules/trajectoryiomodule.mod modules/trajectorycalcsmodule.mod \
-	modules/restartmodule.mod modules/templatemodule.mod \
+	modules/restartmodule.mod modules/templatemodule.mod modules/toymodelmodule.mod\
 	modules/qm_mm_module.mod modules/terachemmodule.mod modules/verletmodule.mod \
 	modules/quanticsmodule.mod modules/rattlemodule.mod modules/thermomodule.mod \
 	modules/smdmodule.mod modules/constraintmodule.mod modules/propagationmodule.mod \

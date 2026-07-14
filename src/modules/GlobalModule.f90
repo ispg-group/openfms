@@ -116,20 +116,6 @@ module GlobalModule
    logical :: glzRejectAllStateFlip
    logical :: glzCentroids
 !bfec
-!-----------------------------------------------
-!
-!     Global parameters controlling the Izmaylov 2-D 2-state
-!     toy model. Used in FMS_ToyModel, where their purpose is
-!     explained in detail.
-!
-   real(kind=DefReal) :: glIzmOmegax
-   real(kind=DefReal) :: glIzmOmegay
-   real(kind=DefReal) :: glIzmXshift
-   real(kind=DefReal) :: glIzmYshift
-   real(kind=DefReal) :: glIzmDeltaE
-   real(kind=DefReal) :: glIzmCoupC
-!     Global parameter for the GAIMS model in ToyModelModule
-   real(kind=DefReal) :: glGrsigma
    logical :: glzSPA1_SOC_model
 !
 !-----------------------------------------------
