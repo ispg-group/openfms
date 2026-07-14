@@ -30,9 +30,8 @@ tests/*/*diff
 tests/*/*txt
 tests/*/*xyz
 tests/*/*dcd
-tests/*/Spawn.?
 tests/*/fort.*
-tests/*/*.[1-9]
+tests/*/[a-zA-Z]*.[1-9]*
 # Don't ignore these
 !tests/*/Control.dat
 !tests/*/Geometry.dat

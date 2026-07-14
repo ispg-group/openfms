@@ -210,6 +210,8 @@ subroutine FMS_RemoveDead(B1)
                   jDead = jDead + 1
                   BTemp%DeadH(B1%NumDeadTraj + iDead, B1%NumDeadTraj + jDead) = FMS_bH(B1, iTraj, jTraj)
                   BTemp%DeadH(B1%NumDeadTraj + jDead, B1%NumDeadTraj + iDead) = FMS_bH(B1, jTraj, iTraj)
+                  BTemp%DeadH(B1%NumDeadTraj + jDead, 1:B1%NumDeadTraj) = (0.d0, 0.d0)
+                  BTemp%DeadH(1:B1%NumDeadTraj, B1%NumDeadTraj + jDead) = (0.d0, 0.d0)
                end if
             end do
          end if
