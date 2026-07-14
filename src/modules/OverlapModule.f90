@@ -1,7 +1,7 @@
 ! Copyright Todd J. Martinez and Raphael D. Levine, 1994
 module OverlapModule
    use GlobalModule
-   use ToyModelModule, only: GAIMS_params
+   use ToyModelModule, only: GAIMS_model_params
    use ParticleModule
    use TrajectoryModule
    use TrajectoryCalcsModule, only: FMS_Forces, FMS_PotentialT, FMS_KineticT, &
@@ -1047,7 +1047,7 @@ contains
       p_2 = T2%Particle(1)%get_mom(1)
       alpha_1 = T1%Particle(1)%width
       alpha_2 = T2%Particle(1)%width
-      r_sigma = GAIMS_params%r_sigma
+      r_sigma = GAIMS_model_params%r_sigma
 
       x_cent = (alpha_1 * x_1 + alpha_2 * x_2) / (alpha_1 + alpha_2) !centroid position
       ! roe from appendix A of Vanicek, J. Chem. Phys.,2013 139, 034112

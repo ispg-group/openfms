@@ -81,18 +81,18 @@ module ToyModelModule
    real(kind=DefReal), parameter :: c_0 = 0.001d0
    complex, parameter :: c_1 = (0.0005, 0.0005)
 
-   type :: t_GAIMS_params
+   type :: t_GAIMS_model_params
       !> controlls the position of SOC sign change
       real(kind=DefReal) :: r_sigma
    contains
-      procedure, public :: initialize => initialize_gaims_params
-   end type t_GAIMS_params
+      procedure, public :: initialize => initialize_gaims_model_params
+   end type t_GAIMS_model_params
 !-----------------------------------------------
 
    type(t_izmaylov_params) :: izmaylov_params
-   type(t_GAIMS_params) :: GAIMS_params
+   type(t_GAIMS_model_params) :: GAIMS_model_params
 
-   public :: FMS_ToyModel, izmaylov_params, GAIMS_params
+   public :: FMS_ToyModel, izmaylov_params, GAIMS_model_params
 
 contains
 
@@ -107,12 +107,12 @@ contains
       self%coupC = coupC
    end subroutine initialize_izmaylov_params
 
-   subroutine initialize_gaims_params(self, r_sigma)
-      class(t_GAIMS_params), intent(inout) :: self
+   subroutine initialize_gaims_model_params(self, r_sigma)
+      class(t_GAIMS_model_params), intent(inout) :: self
       real(kind=DefReal), intent(in) :: r_sigma
 
       self%r_sigma = r_sigma
-   end subroutine initialize_gaims_params
+   end subroutine initialize_gaims_model_params
 
    subroutine FMS_ToyModel(T1)
       type(T_Trajectory), intent(inout) :: T1
@@ -505,7 +505,7 @@ contains
       real(kind=DefReal), intent(out) :: sigma_G
       real(kind=DefReal) :: theta_G, gamma_G, r_sigma
 
-      r_sigma = GAIMS_params%r_sigma
+      r_sigma = GAIMS_model_params%r_sigma
       ! Step function sigma(r) controlling SOC sign change, Eq (21)
       if (x <= r_sigma - dr_sigma / 2) then
          sigma_G = 1.d0

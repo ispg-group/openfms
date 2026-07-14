@@ -6,7 +6,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    use, intrinsic :: iso_fortran_env, only: error_unit
    use GlobalModule
    use QM_MM_Module
-   use ToyModelModule, only: izmaylov_params, GAIMS_params
+   use ToyModelModule, only: izmaylov_params, GAIMS_model_params
    use SpawnModule, only: spawn_params, OMAX_DEFAULT
    use InitialModule
    use SamplingModule
@@ -557,7 +557,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
 
    call izmaylov_params%initialize(W1=IzmOmegax, W2=IzmOmegay, XA=IzmXshift, YA=IzmYshift, &
                                    deltaE=IzmDeltaE, coupC=IzmCoupC)
-   call GAIMS_params%initialize(r_sigma=Grsigma)
+   call GAIMS_model_params%initialize(r_sigma=Grsigma)
 
    glzFullyCoupled = FullyCoupled
    glzStochastic = Stochastic
