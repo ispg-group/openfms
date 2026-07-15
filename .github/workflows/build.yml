@@ -24,7 +24,9 @@ jobs:
         toolchain:
           - {compiler: gcc, version: latest}
           - {compiler: intel, version: latest}
-          - {compiler: nvidia-hpc, version: '26.5'}
+          # Nvidia compiler results are flaky, probably due to
+          # https://forums.developer.nvidia.com/t/nvfortran-error-illegal-instruction-core-dumped/370976
+          # - {compiler: nvidia-hpc, version: '26.5'}
           - {compiler: aocc, version: '5.1.0'}
         include:
           - os: ubuntu-22.04
@@ -53,8 +55,9 @@ jobs:
     - name: Configure
       run: ./configure.sh
       env:
-        # -fcheck=all messes up code coverage. It is only enabled in debug build below
-        FFLAGS: ${{ matrix.toolchain.compiler == 'gcc' && '' || '' }}
+        # --check=all messes up code coverage. It is only enabled in debug build below
+        FFLAGS: ${{ matrix.toolchain.compiler == 'gcc' && '--check=no-all' || '' }}
+
     - name: Build
       run: make -j
 

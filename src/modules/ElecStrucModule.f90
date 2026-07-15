@@ -103,6 +103,7 @@ contains
 
       integer(kind=DefInt), intent(in) :: NumParticles
       integer(kind=DefInt), intent(inout) :: NumStates
+      character(len=50) :: errmsg
 
 !
 !     Set defaults
@@ -135,11 +136,7 @@ contains
          select case (gliMethod)
 
          case (1)
-            write (fmiOut, *) 'gliMethod=1: Tully model 1'
-            if (NumStates /= 2) then
-               write (fmiOut, *) 'Number of states set to 2.'
-               NumStates = 2
-            end if
+            call FMS_DieError('Tully model 1 currently not implemented')
 
          case (2)
             write (fmiOut, *) 'gliMethod=2: Persico Model 2D 2-state CI'
@@ -169,9 +166,8 @@ contains
             end if
 
          case default
-            write (fmiOut, *) 'Invalid gliMethod = ', gliMethod
-            write (fmiOut, *) 'iMethod must be 1, 2 or 3'
-            call FMS_DieError('gliMethod not valid')
+            write (errmsg, '(a, i0)') 'Invalid iMethod value: ', gliMethod
+            call FMS_DieError(errmsg)
          end select
 !     end of fmszero initialization
 
