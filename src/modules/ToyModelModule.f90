@@ -114,8 +114,6 @@ contains
       real(kind=DefReal) :: v11, v12, v22
       real(kind=DefReal) :: dv11dx, dv12dx, dv22dx
       real(kind=DefReal) :: dv11dy, dv12dy, dv22dy
-      real(kind=DefReal) :: MASSY, MASSX
-      real(kind=DefReal) :: W1, W2, XA, YA, coupC
 
       select case (gliMethod)
 
@@ -202,84 +200,7 @@ contains
 
       case (3) ! Izmaylov
 
-         W1 = izmaylov_params%W1
-         W2 = izmaylov_params%W2
-         XA = izmaylov_params%XA
-         YA = izmaylov_params%YA
-         coupC = izmaylov_params%coupC
-         MASSX = T1%Particle(1)%Mass
-         MASSY = T1%Particle(2)%Mass
-
-         ! Adiabatic energy
-         x = T1%Particle(1)%get_pos(1)
-         y = T1%Particle(2)%get_pos(1)
-
-         call izmaylov_ham(x, y, H_Diab)
-         v11 = H_diab(1, 1)
-         v12 = H_diab(1, 2)
-         v22 = H_diab(2, 2)
-         T1%ElecStruc%PotEn(1) = 0.5d0 * (v11 + v22 - &
-                                          sqrt(v11 * v11 - 2.d0 * v22 * v11 + v22 * v22 + 4.d0 * v12 * v12))
-         T1%ElecStruc%PotEn(2) = 0.5d0 * (v11 + v22 + &
-                                          sqrt(v11 * v11 - 2.d0 * v22 * v11 + v22 * v22 + 4.d0 * v12 * v12))
-         T1%ESFlags%ZPotEnCurrent = .true.
-
-         ! Force
-         T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, :) = 0.d0
-
-         dv11dx = W1 * W1 * (x + 0.5d0 * XA)
-         dv11dy = W2 * W2 * (y + 0.5d0 * YA)
-
-         dv12dx = 0.d0
-         dv12dy = coupC
-
-         dv22dx = W1 * W1 * (x - 0.5d0 * XA)
-         dv22dy = W2 * W2 * (y - 0.5d0 * YA)
-
-         if (T1%StateID == 1) then
-            T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, 1) = 0.5d0 * ( &
-                                                               dv11dx + dv22dx - &
-                                                               (v22 * dv22dx - v11 * dv22dx - v22 * dv11dx &
-                                                                + v11 * dv11dx + 4.d0 * dv12dx * v12) &
-                                                               / sqrt(v22 * v22 - 2.d0 * v22 * v11 + v11 * v11 + 4.d0 * v12 * v12))
-
-            T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, 4) = 0.5d0 * ( &
-                                                               dv11dy + dv22dy - &
-                                                               (v22 * dv22dy - v11 * dv22dy - v22 * dv11dy &
-                                                                + v11 * dv11dy + 4.d0 * dv12dy * v12) &
-                                                               / sqrt(v22 * v22 - 2.d0 * v22 * v11 + v11 * v11 + 4.d0 * v12 * v12))
-         else
-            T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, 1) = 0.5d0 * ( &
-                                                               dv11dx + dv22dx + &
-                                                               (v22 * dv22dx - v11 * dv22dx - v22 * dv11dx &
-                                                                + v11 * dv11dx + 4.d0 * dv12dx * v12) &
-                                                               / sqrt(v22 * v22 - 2.d0 * v22 * v11 + v11 * v11 + 4.d0 * v12 * v12))
-
-            T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, 4) = 0.5d0 * ( &
-                                                               dv11dy + dv22dy + &
-                                                               (v22 * dv22dy - v11 * dv22dy - v22 * dv11dy &
-                                                                + v11 * dv11dy + 4.d0 * dv12dy * v12) &
-                                                               / sqrt(v22 * v22 - 2.d0 * v22 * v11 + v11 * v11 + 4.d0 * v12 * v12))
-         end if
-         T1%ESFlags%zDerivCurrent(T1%StateID, T1%StateID) = .true.
-
-         ! Analytical non-adiabatic coupling
-         Coupling = 0.d0
-         call diagABBC(H_Diab, EVec1, EVec2)
-
-         Coupling(1, 1) = ((v11 - v22) * dv12dx - v12 * (dv11dx - dv22dx)) / &
-                          ((v11 - v22)**2 + 4.d0 * v12 * v12)
-         Coupling(1, 4) = ((v11 - v22) * dv12dy - v12 * (dv11dy - dv22dy)) / &
-                          ((v11 - v22)**2 + 4.d0 * v12 * v12)
-         if (T1%StateID == 2) then
-            Coupling = -Coupling
-         end if
-
-         T1%ElecStruc%DerivMat(1, 2, :) = Coupling(1, :)
-         T1%ElecStruc%DerivMat(2, 1, :) = -Coupling(1, :)
-
-         T1%ESFlags%zDerivCurrent(1, 2) = .true.
-         T1%ESFlags%zDerivCurrent(2, 1) = .true.
+         call izmaylov_model(T1)
 
       case (4) ! GAIMS_model
 
@@ -337,6 +258,100 @@ contains
 
       T%ESFlags%zSOMCurrent = .true.
    end subroutine GAIMS_model
+
+   subroutine izmaylov_model(T)
+      type(T_Trajectory), intent(inout) :: T
+
+      real(kind=DefReal) :: Coupling(T%NumStates - 1, T%NumDimensions)
+      real(kind=DefReal), dimension(2) :: Evec1, Evec2
+      real(kind=DefReal) :: x, y, H_Diab(2, 2)
+      real(kind=DefReal) :: v11, v12, v22
+      real(kind=DefReal) :: dv11dx, dv12dx, dv22dx
+      real(kind=DefReal) :: dv11dy, dv12dy, dv22dy
+      real(kind=DefReal) :: massx, massy
+      real(kind=DefReal) :: W1, W2, XA, YA, coupC
+      integer(kind=DefInt) :: state_id
+
+      W1 = izmaylov_params%W1
+      W2 = izmaylov_params%W2
+      XA = izmaylov_params%XA
+      YA = izmaylov_params%YA
+      coupC = izmaylov_params%coupC
+      MASSX = T%Particle(1)%Mass
+      MASSY = T%Particle(2)%Mass
+      state_id = T%StateID
+
+      ! Adiabatic energy
+      x = T%Particle(1)%get_pos(1)
+      y = T%Particle(2)%get_pos(1)
+
+      call izmaylov_ham(x, y, H_Diab)
+      v11 = H_diab(1, 1)
+      v12 = H_diab(1, 2)
+      v22 = H_diab(2, 2)
+      T%ElecStruc%PotEn(1) = 0.5d0 * (v11 + v22 - &
+                                      sqrt(v11 * v11 - 2.d0 * v22 * v11 + v22 * v22 + 4.d0 * v12 * v12))
+      T%ElecStruc%PotEn(2) = 0.5d0 * (v11 + v22 + &
+                                      sqrt(v11 * v11 - 2.d0 * v22 * v11 + v22 * v22 + 4.d0 * v12 * v12))
+      T%ESFlags%ZPotEnCurrent = .true.
+
+      ! Force
+      T%ElecStruc%DerivMat(state_id, state_id, :) = 0.d0
+
+      dv11dx = W1 * W1 * (x + 0.5d0 * XA)
+      dv11dy = W2 * W2 * (y + 0.5d0 * YA)
+
+      dv12dx = 0.d0
+      dv12dy = coupC
+
+      dv22dx = W1 * W1 * (x - 0.5d0 * XA)
+      dv22dy = W2 * W2 * (y - 0.5d0 * YA)
+
+      if (state_id == 1) then
+         T%ElecStruc%DerivMat(state_id, state_id, 1) = 0.5d0 * ( &
+                                                       dv11dx + dv22dx - &
+                                                       (v22 * dv22dx - v11 * dv22dx - v22 * dv11dx &
+                                                        + v11 * dv11dx + 4.d0 * dv12dx * v12) &
+                                                       / sqrt(v22 * v22 - 2.d0 * v22 * v11 + v11 * v11 + 4.d0 * v12 * v12))
+
+         T%ElecStruc%DerivMat(state_id, state_id, 4) = 0.5d0 * ( &
+                                                       dv11dy + dv22dy - &
+                                                       (v22 * dv22dy - v11 * dv22dy - v22 * dv11dy &
+                                                        + v11 * dv11dy + 4.d0 * dv12dy * v12) &
+                                                       / sqrt(v22 * v22 - 2.d0 * v22 * v11 + v11 * v11 + 4.d0 * v12 * v12))
+      else
+         T%ElecStruc%DerivMat(state_id, state_id, 1) = 0.5d0 * ( &
+                                                       dv11dx + dv22dx + &
+                                                       (v22 * dv22dx - v11 * dv22dx - v22 * dv11dx &
+                                                        + v11 * dv11dx + 4.d0 * dv12dx * v12) &
+                                                       / sqrt(v22 * v22 - 2.d0 * v22 * v11 + v11 * v11 + 4.d0 * v12 * v12))
+
+         T%ElecStruc%DerivMat(state_id, state_id, 4) = 0.5d0 * ( &
+                                                       dv11dy + dv22dy + &
+                                                       (v22 * dv22dy - v11 * dv22dy - v22 * dv11dy &
+                                                        + v11 * dv11dy + 4.d0 * dv12dy * v12) &
+                                                       / sqrt(v22 * v22 - 2.d0 * v22 * v11 + v11 * v11 + 4.d0 * v12 * v12))
+      end if
+      T%ESFlags%zDerivCurrent(state_id, state_id) = .true.
+
+      ! Analytical non-adiabatic coupling
+      Coupling = 0.d0
+      call diagABBC(H_Diab, EVec1, EVec2)
+
+      Coupling(1, 1) = ((v11 - v22) * dv12dx - v12 * (dv11dx - dv22dx)) / &
+                       ((v11 - v22)**2 + 4.d0 * v12 * v12)
+      Coupling(1, 4) = ((v11 - v22) * dv12dy - v12 * (dv11dy - dv22dy)) / &
+                       ((v11 - v22)**2 + 4.d0 * v12 * v12)
+      if (state_id == 2) then
+         Coupling = -Coupling
+      end if
+
+      T%ElecStruc%DerivMat(1, 2, :) = Coupling(1, :)
+      T%ElecStruc%DerivMat(2, 1, :) = -Coupling(1, :)
+
+      T%ESFlags%zDerivCurrent(1, 2) = .true.
+      T%ESFlags%zDerivCurrent(2, 1) = .true.
+   end subroutine izmaylov_model
 
 !>
 !! Returns Persico diabatic Hamiltonian
