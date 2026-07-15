@@ -54,7 +54,7 @@ jobs:
       run: ./configure.sh
       env:
         # -fcheck=all messes up code coverage. It is only enabled in debug build below
-        FFLAGS: ${{ matrix.toolchain.compiler == 'gcc' && '--check=no-bounds' || '' }}
+        FFLAGS: ${{ matrix.toolchain.compiler == 'gcc' && '' || '' }}
     - name: Build
       run: make -j
 
