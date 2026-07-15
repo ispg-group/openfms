@@ -135,11 +135,7 @@ contains
          select case (gliMethod)
 
          case (1)
-            write (fmiOut, *) 'gliMethod=1: Tully model 1'
-            if (NumStates /= 2) then
-               write (fmiOut, *) 'Number of states set to 2.'
-               NumStates = 2
-            end if
+            call FMS_DieError('Tully model 1 currently not implemented')
 
          case (2)
             write (fmiOut, *) 'gliMethod=2: Persico Model 2D 2-state CI'
