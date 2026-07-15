@@ -67,12 +67,12 @@ jobs:
     - name: Codecov upload
       uses: codecov/codecov-action@v5
       # For some reason gcov does not seem to work on MacOS
-      if: startsWith(matrix.os, 'ubuntu')
+      if: startsWith(matrix.os, 'ubuntu') && matrix.toolchain.compiler == 'gcc'
       with:
         name: GCC-${{ matrix.gcc_v}} (${{ matrix.os }})
         slug: ispg-group/openfms
         token: ${{ secrets.CODECOV_TOKEN }}
-        fail_ci_if_error: false
+        fail_ci_if_error: true
 
 
   # Run tests with leak, address and undefined behaviour sanitizers (ASan, UBSan et al)
