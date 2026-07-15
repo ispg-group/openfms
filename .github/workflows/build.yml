@@ -52,6 +52,9 @@ jobs:
 
     - name: Configure
       run: ./configure.sh
+      env:
+        # -fcheck=all messes up code coverage. It is only enabled in debug build below
+        FFLAGS: -fno-check
     - name: Build
       run: make -j
 
@@ -73,7 +76,6 @@ jobs:
 
 
   # Run tests with leak, address and undefined behaviour sanitizers (ASan, UBSan et al)
-  # Bounds checks and others are enabled as well (but those should be in default build as well)
   debug_build:
     name: Debug build (GCC-${{ matrix.gcc_v}}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
