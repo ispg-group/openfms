@@ -58,7 +58,7 @@ elif [[ $FCTYPE = gnu ]]; then
     # but need to fix some tests first that currently trigger them :-(
     # We could also trap "underflow" but that seems a bit dangerous,
     # as it could crash simulations that would otherwise be fine?
-    DEFAULT_FFLAGS="-Og -g -ffpe-trap=zero,overflow -fimplicit-none $warning_flags"
+    DEFAULT_FFLAGS="-O0 -g --check=all -ffpe-trap=zero,overflow -fimplicit-none $warning_flags"
 fi
 # Existing FFLAGS are appended and thus should thake precedence
 FFLAGS="${DEFAULT_FFLAGS} ${FFLAGS-}"
