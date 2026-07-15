@@ -110,13 +110,11 @@ contains
 
       real(kind=DefReal) :: Coupling(T1%NumStates - 1, T1%NumDimensions)
       real(kind=DefReal) :: x, y, H_Diab(2, 2)
-      real(kind=DefReal), dimension(2) :: Evec1, Evec2, EDisplace1, &
-                                          EDisplace2, EvecTemp
-      real(kind=DefReal) :: v11, v12, v21, v22
+      real(kind=DefReal), dimension(2) :: Evec1, Evec2, EDisplace1, EDisplace2, EvecTemp
+      real(kind=DefReal) :: v11, v12, v22
       real(kind=DefReal) :: dv11dx, dv12dx, dv22dx
       real(kind=DefReal) :: dv11dy, dv12dy, dv22dy
       real(kind=DefReal) :: MASSY, MASSX
-      real(kind=DefReal) :: sigma_G
       real(kind=DefReal) :: W1, W2, XA, YA, coupC
 
       select case (gliMethod)
@@ -126,7 +124,7 @@ contains
          ! Adiabatic energy
          x = T1%Particle(1)%get_pos(1)
          y = T1%Particle(2)%get_pos(1)
-         call Persico(x, y, H_Diab)
+         call persico_ham(x, y, H_diab)
          v11 = H_diab(1, 1)
          v12 = H_diab(1, 2)
          v22 = H_diab(2, 2)
@@ -179,16 +177,16 @@ contains
          Coupling = 0.d0
          call diagABBC(H_Diab, EVec1, EVec2)
 
-         call Persico(x + dx, y, H_Diab)
+         call persico_ham(x + dx, y, H_Diab)
          call diagABBC(H_Diab, EvecTemp, EDisplace1)
-         call Persico(x - dx, y, H_Diab)
+         call persico_ham(x - dx, y, H_Diab)
          call diagABBC(H_Diab, EvecTemp, EDisplace2)
          EVecTemp = (EDisplace2 - EDisplace1) / (2.d0 * dx)
          Coupling(1, 1) = dot_product(Evec1, EVecTemp)
 
-         call Persico(x, y + dx, H_Diab)
+         call persico_ham(x, y + dx, H_Diab)
          call diagABBC(H_Diab, EvecTemp, EDisplace1)
-         call Persico(x, y - dx, H_Diab)
+         call persico_ham(x, y - dx, H_Diab)
          call diagABBC(H_Diab, EvecTemp, EDisplace2)
          EVecTemp = (EDisplace2 - EDisplace1) / (2.d0 * dx)
          Coupling(1, 4) = dot_product(Evec1, EVecTemp)
@@ -216,7 +214,7 @@ contains
          x = T1%Particle(1)%get_pos(1)
          y = T1%Particle(2)%get_pos(1)
 
-         call Izmaylov(x, y, H_Diab)
+         call izmaylov_ham(x, y, H_Diab)
          v11 = H_diab(1, 1)
          v12 = H_diab(1, 2)
          v22 = H_diab(2, 2)
@@ -285,42 +283,7 @@ contains
 
       case (4) ! GAIMS_model
 
-         ! Adiabatic energy
-         x = T1%Particle(1)%get_pos(1)
-
-         call GAIMS_model_ham(x, H_Diab, sigma_G)
-         v11 = H_diab(1, 1)
-         v22 = H_diab(2, 2)
-         v12 = H_diab(1, 2)
-         v21 = H_diab(2, 1)
-         T1%ElecStruc%PotEn(1) = v11
-         T1%ElecStruc%PotEn(2) = v22
-         T1%ESFlags%ZPotEnCurrent = .true.
-
-         ! Force
-         T1%ElecStruc%DerivMat = 0.d0
-
-         if (T1%StateID == 2) then
-            T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, 1) = &
-               -alpha_2 * a_2 * exp(-alpha_2 * x)
-         else
-            T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, 1) = &
-               -alpha_1 * a_1 * exp(-alpha_1 * x)
-         end if
-         T1%ESFlags%ZDerivCurrent(T1%StateID, T1%StateID) = .true.
-         Coupling = 0.d0
-         T1%ESFlags%zDerivCurrent = .true.
-
-         ! SOC,  Eq (11) in https://doi.org/10.1063/1.4707737
-         T1%ElecStruc%SOMat = (0.d0, 0.d0)
-         T1%ElecStruc%SOMat(1, 2, 2, 1) = conjg(c_1 * sigma_G) ! z*  : S,T-1
-         T1%ElecStruc%SOMat(1, 2, 2, 2) = c1i * c_0 * sigma_G ! ib  : S,T0
-         T1%ElecStruc%SOMat(1, 2, 2, 3) = c_1 * sigma_G ! z   : S,T1
-         T1%ElecStruc%SOMat(2, 1, 1, 2) = c_1 * sigma_G ! z   : T-1,S
-         T1%ElecStruc%SOMat(2, 1, 2, 2) = -c1i * c_0 * sigma_G ! -ib : T0,S
-         T1%ElecStruc%SOMat(2, 1, 3, 2) = conjg(c_1 * sigma_G) ! z*  : T1,S
-
-         T1%ESFlags%zSOMCurrent = .true.
+         call GAIMS_model(T1)
 
       case default
          write (fmiOut, *) 'iMethod', gliMethod
@@ -330,22 +293,67 @@ contains
 
    end subroutine FMS_ToyModel
 
+   subroutine GAIMS_model(T)
+      type(T_Trajectory), intent(inout) :: T
+      real(kind=DefReal) :: x, H_Diab(2, 2)
+      real(kind=DefReal) :: v11, v12, v21, v22
+      real(kind=DefReal) :: sigma_G
+      integer(kind=DefInt) :: state_id
+
+      x = T%Particle(1)%get_pos(1)
+      state_id = T%StateID
+
+      call GAIMS_model_ham(x, H_diab, sigma_G)
+      v11 = H_diab(1, 1)
+      v22 = H_diab(2, 2)
+      v12 = H_diab(1, 2)
+      v21 = H_diab(2, 1)
+
+      ! Adiabatic energy
+      T%ElecStruc%PotEn(1) = v11
+      T%ElecStruc%PotEn(2) = v22
+      T%ESFlags%ZPotEnCurrent = .true.
+
+      ! Force
+      T%ElecStruc%DerivMat = 0.d0
+
+      if (state_id == 2) then
+         T%ElecStruc%DerivMat(state_id, state_id, 1) = -alpha_2 * a_2 * exp(-alpha_2 * x)
+      else
+         T%ElecStruc%DerivMat(state_id, state_id, 1) = -alpha_1 * a_1 * exp(-alpha_1 * x)
+      end if
+      T%ESFlags%ZDerivCurrent(state_id, state_id) = .true.
+
+      T%ESFlags%zDerivCurrent = .true.
+
+      ! SOC,  Eq (11) in https://doi.org/10.1063/1.4707737
+      T%ElecStruc%SOMat = (0.d0, 0.d0)
+      T%ElecStruc%SOMat(1, 2, 2, 1) = conjg(c_1 * sigma_G) ! z*  : S,T-1
+      T%ElecStruc%SOMat(1, 2, 2, 2) = c1i * c_0 * sigma_G ! ib  : S,T0
+      T%ElecStruc%SOMat(1, 2, 2, 3) = c_1 * sigma_G ! z   : S,T1
+      T%ElecStruc%SOMat(2, 1, 1, 2) = c_1 * sigma_G ! z   : T-1,S
+      T%ElecStruc%SOMat(2, 1, 2, 2) = -c1i * c_0 * sigma_G ! -ib : T0,S
+      T%ElecStruc%SOMat(2, 1, 3, 2) = conjg(c_1 * sigma_G) ! z*  : T1,S
+
+      T%ESFlags%zSOMCurrent = .true.
+   end subroutine GAIMS_model
+
 !>
 !! Returns Persico diabatic Hamiltonian
 !<
-   subroutine Persico(x, y, H)
+   subroutine persico_ham(x, y, H)
       real(kind=DefReal), intent(in) :: x, y
       real(kind=DefReal), intent(out) :: H(2, 2)
       H(1, 1) = 0.5d0 * KX * (x - X1)**2 + 0.5d0 * KY * y * y
       H(2, 2) = 0.5d0 * KX * (x - X2)**2 + 0.5d0 * KY * y * y + Delta
       H(1, 2) = gamma * y * exp(-alpha * (x - X3)**2) * exp(-beta * y * y)
       H(2, 1) = H(1, 2)
-   end subroutine persico
+   end subroutine persico_ham
 
 !>
 !! Returns Izmaylov diabatic Hamiltonian
 !<
-   subroutine Izmaylov(x, y, H)
+   subroutine izmaylov_ham(x, y, H)
       real(kind=DefReal), intent(in) :: x, y
       real(kind=DefReal), intent(out) :: H(2, 2)
       real(kind=DefReal) :: W1, W2, XA, YA, deltaE, coupC
@@ -362,12 +370,11 @@ contains
                 (y - 0.5d0 * YA)**2 - 0.5d0 * deltaE
       H(1, 2) = coupC * y
       H(2, 1) = H(1, 2)
-   end subroutine izmaylov
+   end subroutine izmaylov_ham
 
 !>
 !! Returns GAIMS_model diabatic Hamiltonian
 !<
-
    subroutine GAIMS_model_ham(x, H, sigma_G)
       real(kind=DefReal), intent(in) :: x
       real(kind=DefReal), intent(out) :: H(2, 2)
