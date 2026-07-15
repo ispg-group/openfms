@@ -54,11 +54,13 @@ jobs:
       run: ./configure.sh
       env:
         # -fcheck=all messes up code coverage. It is only enabled in debug build below
-        FFLAGS: -fno-check
+        FFLAGS: -fcheck=no-bounds,no-array-temps
     - name: Build
       run: make -j
 
     - name: Unit tests
+      # nvfortran sometimes fails with "Illegal instruction (core dumped)"
+      if: matrix.toolchain.compiler != 'nvidia-hpc'
       run: make unittest
 
     - name: End-to-end tests
