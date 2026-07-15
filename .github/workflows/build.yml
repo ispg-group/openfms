@@ -54,7 +54,7 @@ jobs:
       run: ./configure.sh
       env:
         # -fcheck=all messes up code coverage. It is only enabled in debug build below
-        FFLAGS: -fcheck=no-bounds,no-array-temps
+        FFLAGS: ${{ matrix.toolchain.compiler == 'gcc' && '--check=no-all' || '' }}
     - name: Build
       run: make -j
 
@@ -74,7 +74,7 @@ jobs:
         name: GCC-${{ matrix.gcc_v}} (${{ matrix.os }})
         slug: ispg-group/openfms
         token: ${{ secrets.CODECOV_TOKEN }}
-        fail_ci_if_error: false
+        fail_ci_if_error: true
 
 
   # Run tests with leak, address and undefined behaviour sanitizers (ASan, UBSan et al)
