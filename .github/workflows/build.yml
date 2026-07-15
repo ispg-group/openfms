@@ -14,8 +14,11 @@ jobs:
     name: ${{ matrix.toolchain.compiler }}-${{ matrix.toolchain.version }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     env:
-      # Only collect test coverage with gfortran
-      FFLAGS: ${{ matrix.toolchain.compiler == 'gcc' && '--coverage -fprofile-abs-path' || '' }}
+      # Collect test coverage with gfortran
+      # NOTE1: --check=all seems to interfere with code coverage so we disable it
+      # It is, however, enabled in the debug build job.
+      # NOTE2: -Og seems to be better for coverage than -O0
+      FFLAGS: ${{ matrix.toolchain.compiler == 'gcc' && '--coverage -fprofile-abs-path --check=no-all -Og' || '' }}
       LDFLAGS: ${{ matrix.toolchain.compiler == 'gcc' && '--coverage' || '' }}
     strategy:
       fail-fast: false
@@ -54,9 +57,6 @@ jobs:
 
     - name: Configure
       run: ./configure.sh
-      env:
-        # --check=all messes up code coverage. It is only enabled in debug build below
-        FFLAGS: ${{ matrix.toolchain.compiler == 'gcc' && '--check=no-all' || '' }}
 
     - name: Build
       run: make -j
