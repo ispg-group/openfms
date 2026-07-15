@@ -14,8 +14,11 @@ jobs:
     name: ${{ matrix.toolchain.compiler }}-${{ matrix.toolchain.version }} (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     env:
-      # Only collect test coverage with gfortran
-      FFLAGS: ${{ matrix.toolchain.compiler == 'gcc' && '--coverage -fprofile-abs-path' || '' }}
+      # Collect test coverage with gfortran
+      # NOTE1: --check=all seems to interfere with code coverage so we disable it
+      # It is, however, enabled in the debug build job.
+      # NOTE2: -Og seems to be better for coverage than -O0
+      FFLAGS: ${{ matrix.toolchain.compiler == 'gcc' && '--coverage -fprofile-abs-path --check=no-all -Og' || '' }}
       LDFLAGS: ${{ matrix.toolchain.compiler == 'gcc' && '--coverage' || '' }}
     strategy:
       fail-fast: false
@@ -59,6 +62,8 @@ jobs:
       run: make -j
 
     - name: Unit tests
+      # nvfortran sometimes fails with "Illegal instruction (core dumped)"
+      if: matrix.toolchain.compiler != 'nvidia-hpc'
       run: make unittest
 
     - name: End-to-end tests
@@ -76,7 +81,6 @@ jobs:
 
 
   # Run tests with leak, address and undefined behaviour sanitizers (ASan, UBSan et al)
-  # Bounds checks and others are enabled as well (but those should be in default build as well)
   debug_build:
     name: Debug build (GCC-${{ matrix.gcc_v}}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
