@@ -25,8 +25,6 @@ module ToyModelModule
    implicit none
    private
 
-   real(kind=DefReal), parameter :: dx = 0.005 !finite difference step
-
    ! Parameters for Persico
    real(kind=DefReal), parameter :: alpha = 3.d0
    real(kind=DefReal), parameter :: beta = 1.5d0
@@ -105,111 +103,27 @@ contains
       self%r_sigma = r_sigma
    end subroutine initialize_gaims_model_params
 
-   subroutine FMS_ToyModel(T1)
-      type(T_Trajectory), intent(inout) :: T1
-
-      real(kind=DefReal) :: Coupling(T1%NumStates - 1, T1%NumDimensions)
-      real(kind=DefReal) :: x, y, H_Diab(2, 2)
-      real(kind=DefReal), dimension(2) :: Evec1, Evec2, EDisplace1, EDisplace2, EvecTemp
-      real(kind=DefReal) :: v11, v12, v22
-      real(kind=DefReal) :: dv11dx, dv12dx, dv22dx
-      real(kind=DefReal) :: dv11dy, dv12dy, dv22dy
+   subroutine FMS_ToyModel(T)
+      type(T_Trajectory), intent(inout) :: T
+      character(len=50) :: errmsg
 
       select case (gliMethod)
 
-      case (2) ! Persico
+      case (2)
 
-         ! Adiabatic energy
-         x = T1%Particle(1)%get_pos(1)
-         y = T1%Particle(2)%get_pos(1)
-         call persico_ham(x, y, H_diab)
-         v11 = H_diab(1, 1)
-         v12 = H_diab(1, 2)
-         v22 = H_diab(2, 2)
-         T1%ElecStruc%PotEn(1) = 0.5d0 * (v11 + v22 - &
-                                          sqrt(v11 * v11 - 2.d0 * v22 * v11 + v22 * v22 + 4.d0 * v12 * v12))
-         T1%ElecStruc%PotEn(2) = 0.5d0 * (v11 + v22 + &
-                                          sqrt(v11 * v11 - 2.d0 * v22 * v11 + v22 * v22 + 4.d0 * v12 * v12))
-         T1%ESFlags%ZPotEnCurrent = .true.
+         call persico_model(T)
 
-         ! Force
-         T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, :) = 0.d0
+      case (3)
 
-         dv11dx = KX * (x - X1)
-         dv11dy = KY * y
+         call izmaylov_model(T)
 
-         dv12dx = -2 * alpha * (x - X3) * v12
-         dv12dy = gamma * exp(-alpha * (x - X3)**2 - beta * y * y) - 2 * beta * y * v12
+      case (4)
 
-         dv22dx = KX * (x - X2)
-         dv22dy = KY * Y
-
-         if (T1%StateID == 1) then
-            T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, 1) = 0.5d0 * ( &
-                                                               dv11dx + dv22dx - &
-                                                               (v22 * dv22dx - v11 * dv22dx - v22 * dv11dx &
-                                                                + v11 * dv11dx + 4.d0 * dv12dx * v12) &
-                                                               / sqrt(v22 * v22 - 2.d0 * v22 * v11 + v11 * v11 + 4.d0 * v12 * v12))
-
-            T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, 4) = 0.5d0 * ( &
-                                                               dv11dy + dv22dy - &
-                                                               (v22 * dv22dy - v11 * dv22dy - v22 * dv11dy &
-                                                                + v11 * dv11dy + 4.d0 * dv12dy * v12) &
-                                                               / sqrt(v22 * v22 - 2.d0 * v22 * v11 + v11 * v11 + 4.d0 * v12 * v12))
-         else
-            T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, 1) = 0.5d0 * ( &
-                                                               dv11dx + dv22dx + &
-                                                               (v22 * dv22dx - v11 * dv22dx - v22 * dv11dx &
-                                                                + v11 * dv11dx + 4.d0 * dv12dx * v12) &
-                                                               / sqrt(v22 * v22 - 2.d0 * v22 * v11 + v11 * v11 + 4.d0 * v12 * v12))
-
-            T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, 4) = 0.5d0 * ( &
-                                                               dv11dy + dv22dy + &
-                                                               (v22 * dv22dy - v11 * dv22dy - v22 * dv11dy &
-                                                                + v11 * dv11dy + 4.d0 * dv12dy * v12) &
-                                                               / sqrt(v22 * v22 - 2.d0 * v22 * v11 + v11 * v11 + 4.d0 * v12 * v12))
-         end if
-         T1%ESFlags%zDerivCurrent(T1%StateID, T1%StateID) = .true.
-
-         ! Non-adiabatic coupling (numerical)
-         Coupling = 0.d0
-         call diagABBC(H_Diab, EVec1, EVec2)
-
-         call persico_ham(x + dx, y, H_Diab)
-         call diagABBC(H_Diab, EvecTemp, EDisplace1)
-         call persico_ham(x - dx, y, H_Diab)
-         call diagABBC(H_Diab, EvecTemp, EDisplace2)
-         EVecTemp = (EDisplace2 - EDisplace1) / (2.d0 * dx)
-         Coupling(1, 1) = dot_product(Evec1, EVecTemp)
-
-         call persico_ham(x, y + dx, H_Diab)
-         call diagABBC(H_Diab, EvecTemp, EDisplace1)
-         call persico_ham(x, y - dx, H_Diab)
-         call diagABBC(H_Diab, EvecTemp, EDisplace2)
-         EVecTemp = (EDisplace2 - EDisplace1) / (2.d0 * dx)
-         Coupling(1, 4) = dot_product(Evec1, EVecTemp)
-
-         if (T1%StateID == 2) then
-            Coupling = -Coupling
-         end if
-         T1%ElecStruc%DerivMat(1, 2, :) = Coupling(1, :)
-         T1%ElecStruc%DerivMat(2, 1, :) = -Coupling(1, :)
-
-         T1%ESFlags%zDerivCurrent(1, 2) = .true.
-         T1%ESFlags%zDerivCurrent(2, 1) = .true.
-
-      case (3) ! Izmaylov
-
-         call izmaylov_model(T1)
-
-      case (4) ! GAIMS_model
-
-         call GAIMS_model(T1)
+         call GAIMS_model(T)
 
       case default
-         write (fmiOut, *) 'iMethod', gliMethod
-         call FMS_DieError( &
-            'Error in ToyModel.f; iMethod not recognized.')
+         write (errmsg, '(a, i0)') 'Invalid iMethod value: ', gliMethod
+         call FMS_DieError(errmsg)
       end select
 
    end subroutine FMS_ToyModel
@@ -258,6 +172,102 @@ contains
 
       T%ESFlags%zSOMCurrent = .true.
    end subroutine GAIMS_model
+
+   subroutine persico_model(T)
+      type(T_Trajectory), intent(inout) :: T
+
+      real(kind=DefReal) :: Coupling(T%NumStates - 1, T%NumDimensions)
+      real(kind=DefReal) :: x, y, H_Diab(2, 2)
+      real(kind=DefReal), dimension(2) :: Evec1, Evec2, EDisplace1, EDisplace2, EvecTemp
+      real(kind=DefReal) :: v11, v12, v22
+      real(kind=DefReal) :: dv11dx, dv12dx, dv22dx
+      real(kind=DefReal) :: dv11dy, dv12dy, dv22dy
+      integer(kind=DefInt) :: state_id
+
+      real(kind=DefReal), parameter :: dx = 0.005 ! finite difference step
+
+      state_id = T%StateID
+
+      ! Adiabatic energy
+      x = T%Particle(1)%get_pos(1)
+      y = T%Particle(2)%get_pos(1)
+      call persico_ham(x, y, H_diab)
+      v11 = H_diab(1, 1)
+      v12 = H_diab(1, 2)
+      v22 = H_diab(2, 2)
+      T%ElecStruc%PotEn(1) = 0.5d0 * (v11 + v22 - &
+                                      sqrt(v11 * v11 - 2.d0 * v22 * v11 + v22 * v22 + 4.d0 * v12 * v12))
+      T%ElecStruc%PotEn(2) = 0.5d0 * (v11 + v22 + &
+                                      sqrt(v11 * v11 - 2.d0 * v22 * v11 + v22 * v22 + 4.d0 * v12 * v12))
+      T%ESFlags%ZPotEnCurrent = .true.
+
+      ! Force
+      T%ElecStruc%DerivMat(state_id, state_id, :) = 0.d0
+
+      dv11dx = KX * (x - X1)
+      dv11dy = KY * y
+
+      dv12dx = -2 * alpha * (x - X3) * v12
+      dv12dy = gamma * exp(-alpha * (x - X3)**2 - beta * y * y) - 2 * beta * y * v12
+
+      dv22dx = KX * (x - X2)
+      dv22dy = KY * Y
+
+      if (state_id == 1) then
+         T%ElecStruc%DerivMat(state_id, state_id, 1) = 0.5d0 * ( &
+                                                       dv11dx + dv22dx - &
+                                                       (v22 * dv22dx - v11 * dv22dx - v22 * dv11dx &
+                                                        + v11 * dv11dx + 4.d0 * dv12dx * v12) &
+                                                       / sqrt(v22 * v22 - 2.d0 * v22 * v11 + v11 * v11 + 4.d0 * v12 * v12))
+
+         T%ElecStruc%DerivMat(state_id, state_id, 4) = 0.5d0 * ( &
+                                                       dv11dy + dv22dy - &
+                                                       (v22 * dv22dy - v11 * dv22dy - v22 * dv11dy &
+                                                        + v11 * dv11dy + 4.d0 * dv12dy * v12) &
+                                                       / sqrt(v22 * v22 - 2.d0 * v22 * v11 + v11 * v11 + 4.d0 * v12 * v12))
+      else
+         T%ElecStruc%DerivMat(state_id, state_id, 1) = 0.5d0 * ( &
+                                                       dv11dx + dv22dx + &
+                                                       (v22 * dv22dx - v11 * dv22dx - v22 * dv11dx &
+                                                        + v11 * dv11dx + 4.d0 * dv12dx * v12) &
+                                                       / sqrt(v22 * v22 - 2.d0 * v22 * v11 + v11 * v11 + 4.d0 * v12 * v12))
+
+         T%ElecStruc%DerivMat(state_id, state_id, 4) = 0.5d0 * ( &
+                                                       dv11dy + dv22dy + &
+                                                       (v22 * dv22dy - v11 * dv22dy - v22 * dv11dy &
+                                                        + v11 * dv11dy + 4.d0 * dv12dy * v12) &
+                                                       / sqrt(v22 * v22 - 2.d0 * v22 * v11 + v11 * v11 + 4.d0 * v12 * v12))
+      end if
+      T%ESFlags%zDerivCurrent(state_id, state_id) = .true.
+
+      ! Non-adiabatic coupling (numerical)
+      Coupling = 0.d0
+      call diagABBC(H_Diab, EVec1, EVec2)
+
+      call persico_ham(x + dx, y, H_Diab)
+      call diagABBC(H_Diab, EvecTemp, EDisplace1)
+      call persico_ham(x - dx, y, H_Diab)
+      call diagABBC(H_Diab, EvecTemp, EDisplace2)
+      EVecTemp = (EDisplace2 - EDisplace1) / (2.d0 * dx)
+      Coupling(1, 1) = dot_product(Evec1, EVecTemp)
+
+      call persico_ham(x, y + dx, H_Diab)
+      call diagABBC(H_Diab, EvecTemp, EDisplace1)
+      call persico_ham(x, y - dx, H_Diab)
+      call diagABBC(H_Diab, EvecTemp, EDisplace2)
+      EVecTemp = (EDisplace2 - EDisplace1) / (2.d0 * dx)
+      Coupling(1, 4) = dot_product(Evec1, EVecTemp)
+
+      if (state_id == 2) then
+         Coupling = -Coupling
+      end if
+      T%ElecStruc%DerivMat(1, 2, :) = Coupling(1, :)
+      T%ElecStruc%DerivMat(2, 1, :) = -Coupling(1, :)
+
+      T%ESFlags%zDerivCurrent(1, 2) = .true.
+      T%ESFlags%zDerivCurrent(2, 1) = .true.
+
+   end subroutine persico_model
 
    subroutine izmaylov_model(T)
       type(T_Trajectory), intent(inout) :: T
