@@ -25,17 +25,6 @@ module ToyModelModule
    implicit none
    private
 
-   ! Parameters for Persico
-   real(kind=DefReal), parameter :: alpha = 3.d0
-   real(kind=DefReal), parameter :: beta = 1.5d0
-   real(kind=DefReal), parameter :: gamma = 0.08
-   real(kind=DefReal), parameter :: delta = 0.01
-   real(kind=DefReal), parameter :: KX = 0.02
-   real(kind=DefReal), parameter :: KY = 0.10
-   real(kind=DefReal), parameter :: X1 = 4.d0
-   real(kind=DefReal), parameter :: X2 = 3.d0
-   real(kind=DefReal), parameter :: X3 = 3.d0
-
 !-----------------------------------------------
 !
 !  Parameters for Izmaylov:
@@ -71,7 +60,7 @@ module ToyModelModule
    complex, parameter :: c_1 = (0.0005, 0.0005)
 
    type :: t_GAIMS_model_params
-      !> controlls the position of SOC sign change
+      !> controls the position of SOC sign change
       real(kind=DefReal) :: r_sigma
    contains
       procedure, public :: initialize => initialize_gaims_model_params
@@ -184,6 +173,17 @@ contains
       real(kind=DefReal) :: dv11dy, dv12dy, dv22dy
       integer(kind=DefInt) :: state_id
 
+      ! Parameters for Persico (TODO: These are hardcoded and cannot be specified in Control.dat)
+      real(kind=DefReal), parameter :: alpha = 3.d0
+      real(kind=DefReal), parameter :: beta = 1.5d0
+      real(kind=DefReal), parameter :: gamma = 0.08
+      real(kind=DefReal), parameter :: delta = 0.01
+      real(kind=DefReal), parameter :: KX = 0.02
+      real(kind=DefReal), parameter :: KY = 0.10
+      real(kind=DefReal), parameter :: X1 = 4.d0
+      real(kind=DefReal), parameter :: X2 = 3.d0
+      real(kind=DefReal), parameter :: X3 = 3.d0
+
       real(kind=DefReal), parameter :: dx = 0.005 ! finite difference step
 
       state_id = T%StateID
@@ -191,7 +191,9 @@ contains
       ! Adiabatic energy
       x = T%Particle(1)%get_pos(1)
       y = T%Particle(2)%get_pos(1)
+
       call persico_ham(x, y, H_diab)
+
       v11 = H_diab(1, 1)
       v12 = H_diab(1, 2)
       v22 = H_diab(2, 2)
@@ -266,6 +268,20 @@ contains
 
       T%ESFlags%zDerivCurrent(1, 2) = .true.
       T%ESFlags%zDerivCurrent(2, 1) = .true.
+
+   contains
+      !>
+      !! Returns Persico diabatic Hamiltonian
+      !<
+      subroutine persico_ham(x, y, H)
+         real(kind=DefReal), intent(in) :: x, y
+         real(kind=DefReal), intent(out) :: H(2, 2)
+
+         H(1, 1) = 0.5d0 * KX * (x - X1)**2 + 0.5d0 * KY * y * y
+         H(2, 2) = 0.5d0 * KX * (x - X2)**2 + 0.5d0 * KY * y * y + Delta
+         H(1, 2) = gamma * y * exp(-alpha * (x - X3)**2) * exp(-beta * y * y)
+         H(2, 1) = H(1, 2)
+      end subroutine persico_ham
 
    end subroutine persico_model
 
@@ -364,24 +380,13 @@ contains
    end subroutine izmaylov_model
 
 !>
-!! Returns Persico diabatic Hamiltonian
-!<
-   subroutine persico_ham(x, y, H)
-      real(kind=DefReal), intent(in) :: x, y
-      real(kind=DefReal), intent(out) :: H(2, 2)
-      H(1, 1) = 0.5d0 * KX * (x - X1)**2 + 0.5d0 * KY * y * y
-      H(2, 2) = 0.5d0 * KX * (x - X2)**2 + 0.5d0 * KY * y * y + Delta
-      H(1, 2) = gamma * y * exp(-alpha * (x - X3)**2) * exp(-beta * y * y)
-      H(2, 1) = H(1, 2)
-   end subroutine persico_ham
-
-!>
 !! Returns Izmaylov diabatic Hamiltonian
 !<
    subroutine izmaylov_ham(x, y, H)
       real(kind=DefReal), intent(in) :: x, y
       real(kind=DefReal), intent(out) :: H(2, 2)
       real(kind=DefReal) :: W1, W2, XA, YA, deltaE, coupC
+
       W1 = izmaylov_params%W1
       W2 = izmaylov_params%W2
       XA = izmaylov_params%XA

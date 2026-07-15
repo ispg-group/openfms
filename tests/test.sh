@@ -212,7 +212,7 @@ do
         # Uncomment these for debugging on GitHub
         # echo "=== FMS STDOUT & STDERR ==="
         # cat $FMSOUT
-        echo -e "$\033[0;31mFAILED\033[0m"
+        echo -e "\033[0;31mFAILED\033[0m"
       fi
    fi
 
