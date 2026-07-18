@@ -55,14 +55,12 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    real(kind=DefReal) :: InitGapWidth
    logical :: SelectState
    real(kind=DefReal) :: MaxEDiff
-   real(kind=DefReal) :: NoisyGuessFac
    real(kind=DefReal) :: OMax
    real(kind=DefReal) :: Omin_parent, OMax_intra, OMax_inter
    real(kind=DefReal) :: NumGradStep
    real(kind=DefReal) :: PopToSpawn
    real(kind=DefReal) :: RegThresh
    real(kind=DefReal) :: DecoherenceTime
-   real(kind=DefReal) :: MaxCoup
 !bfec
    real(kind=DefReal) :: StochasticThresh
    ! Switch on AIMSWISS?
@@ -141,9 +139,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
 
    integer*4 :: IRndSeed
 
-   logical :: Adaptive
    logical :: AnalysisMode
-   logical :: AssumeHermitian
    logical :: Brown
    logical :: BrownCon
    logical :: StochasticOlap
@@ -166,7 +162,6 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    integer(kind=DefInt) :: AvHStates(MaxArray)
    logical :: MinSearch
    logical :: MirrorBasis
-   logical :: NoisyGuess
    logical :: NormInitial
    logical :: OSAmp
    logical :: SharpEnergy
@@ -231,7 +226,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    integer(kind=DefInt) :: nCubeOrbIndex(MaxArray)
    integer(kind=DefInt) :: NCubeStep
 
-   namelist /control/ Adaptive, AnalysisMode, AssumeHermitian, Brown &
+   namelist /control/ AnalysisMode, Brown &
       , BrownCon, CFThresh, CSThresh, DGamma, EnergyAdjust, Equi &
       , EquilTStep, EquiRes, ExShift, FirstGauss &
       , FModeSharp, ForceKill, FullyCoupled, Stochastic &
@@ -241,7 +236,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
       , InitialCond, InitState, InitGap, InitGapWidth, SelectState, IntegType &
       , IRestart, IRestartTraj, RestartTime, RestartStep, zRedoRestartES &
       , IRndSeed, ISaddle &
-      , IterInv, MaxCoup, MaxEDiff, MaxTraj, MirrorBasis, MirrorState &
+      , IterInv, MaxEDiff, MaxTraj, MirrorBasis, MirrorState &
       , Model, MoldenStep, MultiSpawn, NAddQuanta, NCycles, OSAmp &
       , NormInitial, NSteps, NStepToPrint, NTemp, numas &
       , NumIseed, NumParticles, NumMM, NumInitBasis &
@@ -258,8 +253,8 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
       , zPCOlap, zSOME, zSOCeff &
       , EquiCon, GenSolvent, nRelaxSteps, nFixSteps, ConfineD, ConfineK &
       , SMD, VelPull, ForceConst, PullRate, Force, SMDNAtoms, IAtoms &
-      , NDummy, IDummy, ElongCut, autodirect, NoisyGuess &
-      , NoisyGuessFac, NormThresh, NormCons, NormStepCons &
+      , NDummy, IDummy, ElongCut, autodirect &
+      , NormThresh, NormCons, NormStepCons &
       , EnergyCons, EnergyStepCons, CoupTimeStep, Timesteprejection &
       , DieOnMinStep, RejectAllStateFlip, tStepThresh, WriteEveryStep &
       , MinTimeStep, OLapThresh, nEquiStepPrint, NumGradStep, CentNGrad &
@@ -307,9 +302,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    nCubeOrbs = 0
    nCubeOrbIndex = 0
    nCubeStep = 0
-   Adaptive = .false.
    AnalysisMode = .false.
-   AssumeHermitian = .true.
    Brown = .false.
    BrownCon = .false.
    CFThresh = 0.005
@@ -360,7 +353,6 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    end do
    ISaddle = 0
    IterInv = .false.
-   MaxCoup = 1.d6
    MaxEDiff = 0.03d0
    MaxTraj = 100
    MinSearch = .false.
@@ -370,8 +362,6 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    MoldenStep = 200
    MultiSpawn = 1
    NCycles = 0
-   NoisyGuessFac = 0.05
-   NoisyGuess = .false.
    NormInitial = .false.
    OSAmp = .false.
    NSteps = 0
@@ -541,10 +531,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    gldTripletShift = TripletShift
    glcIntegType = IntegType
    gldRegThresh = RegThresh
-   glzAssumeHermitian = AssumeHermitian
-   glzAdaptive = Adaptive
    gliSaddle = ISaddle
-   glMaxCoup = MaxCoup
    glzIterInv = IterInv
 
    glRestartTime = RestartTime
@@ -577,8 +564,6 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    glzConstrain = constrain
    glzAnalysisMode = AnalysisMode
    gldSimulationTime = SimulationTime
-   gldNoisyGuess = NoisyGuess
-   gldNoisyGuessFac = NoisyGuessFac
    gldNormThresh = NormThresh
    gldNormCons = NormCons
    gldNormStepCons = NormStepCons
