@@ -98,11 +98,9 @@ module GlobalModule
    real(kind=DefReal) :: GlDEShift !< Global potential energy shift
    real(kind=DefReal) :: GlDTripletShift !< Global (additional) triplet energy shift
    real(kind=DefReal) :: GlDRegThresh !< Regularization Threshold.
-   logical :: GlZAssumeHermitian !< if TRUE the code does not check for Hermiticity of H or S.
-   logical :: GlZAdaptive !< If false, overrides adaptive integrators
+   ! TODO: Maybe put this to BundleModule params
    integer(kind=DefInt) :: GlISaddle !< Type of saddle point approximation to use in integral evaluation
    logical :: glzMinSearch
-   real(kind=DefReal) :: GlMaxCoup !Max couplings
    logical :: glzIterInv
    integer(DefInt) :: NumInitBasis
    real(kind=DefReal) :: gldCurrentTStep
@@ -128,8 +126,6 @@ module GlobalModule
    logical :: glzConstrain !< Use constraints for propagation?
    logical :: glzAnalysisMode
    real(kind=DefReal) :: gldSimulationTime
-   logical :: gldNoisyGuess !< Add noise to the initial guess?
-   real(kind=DefReal) :: gldNoisyGuessFac !< Factor by which noise is multiplied before being added to orbital guess
    real(kind=DefReal) :: gldNormThresh !< Threshold for norm convergence for VV propagation
    real(kind=DefReal) :: gldNGradStep !< Step size for numerical gradient
    logical :: glzCentNGrad !< Central numerical gradient? (if false, just forward)
@@ -197,35 +193,6 @@ module GlobalModule
    integer(kind=DefInt) :: fmIAngle(3, MaxGeometry), fmNAngles
    integer(kind=DefInt) :: fmIDihedral(4, MaxGeometry), fmNDihedrals
    integer(kind=DefInt) :: fmIPyram(4, MaxGeometry), fmNPyrams
-
-!>
-!!    Holds open unit files
-!<
-   type File_Units
-      integer(kind=DefInt) :: ICUnit
-      integer(kind=DefInt) :: Unit_E
-      integer(kind=DefInt) :: Unit_N
-      integer(kind=DefInt) :: Unit_Spawn
-      integer(kind=DefInt) :: Unit_Traj
-      integer(kind=DefInt) :: Unit_Restart
-   end type File_Units
-!>
-!!    Holds data for a grid to plot the wavefunction
-!<
-   type GridData
-      real(DefReal) :: InX !< initial value of X
-      real(DefReal) :: InY !< initial value of Y
-      real(DefReal) :: InZ !< initial value of Z
-      real(DefReal) :: FnX !< final value of X
-      real(DefReal) :: FnY !< final value of Y
-      real(DefReal) :: FnZ !< final value of Z
-      integer(kind=DefInt) :: NXpoints !< Number of grid points in the X direction
-      integer(kind=DefInt) :: NYpoints !< Number of grid points in the Y direction
-      integer(kind=DefInt) :: NZpoints !< Number of grid points in the Z direction
-      real(DefReal) :: DelX !< increment in the X direction
-      real(DefReal) :: DelY !< increment in the X direction
-      real(DefReal) :: DelZ !< increment in the X direction
-   end type GridData
 
 !---------------------------------------------------------------------------
 !     ERROR THRESHOLDS
