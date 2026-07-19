@@ -1,0 +1,65 @@
+ ############### START BUNDLE #################
+        500.00                           / Current time
+     1                                   / Number of Live Trajectories
+     0                                   / Number of Dead Trajectories
+     2                                   / Number of States
+     2                                   / Number of Singlet States
+     2                                   / Number of Particles
+     1                                   / Number of Contracted Basis Functions
+ ############ Common Particle info ###########
+     1                                   / Particle ID
+ XX / Element
+ 0.2222222000E+02                         / Width
+ 0.1999999936E+05                         / Mass
+ 0.0000000000E+00                         / Charge
+ 0.1000000000E+01                         / Atomic number
+     2                                   / Particle ID
+ YY / Element
+ 0.1288361000E+02                         / Width
+ 0.6666999799E+04                         / Mass
+ 0.0000000000E+00                         / Charge
+ 0.1000000000E+01                         / Atomic number
+############### Live trajectory    1 ############
+     1                                   / Traj ID
+     1                                   / CBF ID
+     2                                   / State ID
+     2                                   / State Ms
+     0                                   / Parent ID
+      -1      -1                         / Centroid ID
+    500.0000                             / Dead time
+ F                                       / Centroid
+ F                                       / Triplet
+ # Last spawn
+     156.0000       0.0000
+ # Spawn time
+       0.0000       0.0000
+ # Positions
+  2.154691735348322E+000  0.000000000000000E+000  0.000000000000000E+000
+  1.161810093508502E-001  0.000000000000000E+000  0.000000000000000E+000
+ # Momenta
+  2.167928102302023E+001  0.000000000000000E+000  0.000000000000000E+000
+  5.201829822020908E-001  0.000000000000000E+000  0.000000000000000E+000
+ # Energies
+  1.775319454054467E-002  3.479369356740530E-002
+ # Dipoles Current
+ F
+ # Transition Dipoles Current
+ F
+ # Force 
+  3.614869530621477E-002 -0.000000000000000E+000 -0.000000000000000E+000
+ -1.272315540479094E-002 -0.000000000000000E+000 -0.000000000000000E+000
+ # Coupling status array
+ T F
+ # Coupling history            2           1
+  6.440273173853507E-001  5.659898769797227E-001  4.971636667819994E-001
+ # coupling            2           1
+ -3.888638938531887E-001  0.000000000000000E+000  0.000000000000000E+000
+ -5.133771105103024E-001  0.000000000000000E+000  0.000000000000000E+000
+  4.390527299432126E+00                       / Phase
+        (1.0000000000000000,-2.47198095326695011E-016)  / Amplitude
+ # Orbitals           0           0
+
+ # CI vectors           0           0
+
+ # Overlap matrix
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
