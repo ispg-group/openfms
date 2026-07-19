@@ -1,7 +1,6 @@
-Basic AIMS test on a model potential including a single spawning event
+Basic AIMS test for a Persico model potential including a single spawning event
 
 &control
-! Input for Izmaylov model
 !------ Initialization -------!
  InitState=2
  InitialCond='NoSample'
@@ -9,7 +8,7 @@ Basic AIMS test on a model potential including a single spawning event
  iRndSeed=57034456
 !------ Simulation Properties -------!
  Model='TOY'		!to identify the potential used
- iMethod=2        ! Indicates Izmaylov model
+ iMethod=2        ! Persico model
  NumParticles=2
  NumStates=2		!number of electronic states
  zAllText=.true.     ! Output all text-based files
