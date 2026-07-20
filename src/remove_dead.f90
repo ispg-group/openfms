@@ -1,21 +1,16 @@
 !     Copyright Todd J. Martinez and Raphael D. Levine, 1994
+
 !>
-!!    Mark any trajectories to be removed as 'dead', then remove them
-!!    and rescale the bundle
+!! Mark any trajectories to be removed as 'dead', then remove them
+!! and rescale the bundle
 !!
-!!    Trajectories are marked for deletion if they are on IgnoreState,
-!!    or have population less than PopToSpawn. If either of these is
-!!    true, then a CountDown timer is started for that trajectory. If,
-!!    after 5 fs, one of those conditions is still true, the trajectory
-!!    is removed from the Bundle%Trajectory array and appended to the
-!!    Bundle%DeadTraj array. The bundle matrices are rescaled
-!!    accordingly.
-!!
-!!    @ingroup propagation
+!! Trajectories are marked for deletion if they are on IgnoreState,
+!! or have population less than PopToSpawn.
+!! Dead trajectories are removed from the Bundle%Trajectory array
+!! and appended to the Bundle%DeadTraj array.
+!! The bundle matrices are rescaled accordingly.
 !<
-! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 subroutine FMS_RemoveDead(B1)
-   ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    use GlobalModule, only: defInt, defReal, fmiOut, FPZero, &
                            glIgnoreState, glzCentroids, gliForceKill
    use BundleModule
@@ -25,7 +20,6 @@ subroutine FMS_RemoveDead(B1)
    type(T_TrajectoryBundle), intent(inout) :: B1
    type(T_TrajectoryBundle) :: BTemp
 
-   integer, parameter :: MaxIter = 50
    integer(kind=DefInt) :: iTraj, nDead, iLive, iDead, jTraj
    integer(kind=DefInt) :: iCent, jCent, jDead, jLive
    integer(kind=DefInt) :: iCBF, jCBF, nCBF, n2CBF
@@ -33,10 +27,7 @@ subroutine FMS_RemoveDead(B1)
    integer(DefInt), dimension(B1%NumTraj, B1%NumTraj) :: Coupled, Coupled_prev
 
    real(DefReal) :: Population(B1%NumTraj)
-
-!     GAIMS added
    real(kind=DefReal) :: pop
-!     GAIMS added end
 
    integer(DefInt) :: ntraj, i, j, TrajID, StateID, nstate, n
 
@@ -46,8 +37,7 @@ subroutine FMS_RemoveDead(B1)
    ntraj = B1%NumTraj
    nstate = B1%NumStates
 
-! . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-!     First, decompose the hamiltonian into a block diagonal representation
+   ! First, decompose the hamiltonian into a block diagonal representation
    ! work out the coupling matrix
    Coupled = 0
    do i = 2, ntraj
@@ -59,12 +49,11 @@ subroutine FMS_RemoveDead(B1)
       end do
    end do
 
-! . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-!     This matrix has the properties that it is non-zero is
-!        Coup^1   : directy connected
-!        Coup^2   : connected by 1 or less common trajectory
-!        Coup^3   : connected by 2 or less common trajectories
-!     We will iterate the matrix multiplication to convergence
+   ! This matrix has the properties that it is non-zero is
+   !    Coup^1   : directy connected
+   !    Coup^2   : connected by 1 or less common trajectory
+   !    Coup^3   : connected by 2 or less common trajectories
+   ! We will iterate the matrix multiplication to convergence
    do
       Coupled_prev = Coupled
 
@@ -73,8 +62,7 @@ subroutine FMS_RemoveDead(B1)
       if (all(Coupled == Coupled_prev)) exit
    end do
 
-! . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-!     Replace the diagonal with zero
+   ! Replace the diagonal with zero
    do i = 1, ntraj
       Coupled(i, i) = 0
    end do
@@ -92,12 +80,12 @@ subroutine FMS_RemoveDead(B1)
          OverSpawnThresh = OverSpawnThresh .or. spawn_couple(B1%Trajectory(i), n) > spawn_params%CFThresh
       end do
 
-! . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-!        Update DeadTime for those who will not be killed
+      ! Update DeadTime for those who will not be killed
       NotCoupled = all(Coupled(:, i) == 0)
       OnIgnoreState = (StateID == glIgnoreState)
       PopBelowThresh = (Population(i) < spawn_params%PopToSpawn)
-!        GAIMS changed
+
+      ! GAIMS changed
       pop = 0.d0
       do n = 1, ntraj
          if (B1%Trajectory(n)%CBF == B1%Trajectory(i)%CBF) then
@@ -105,13 +93,14 @@ subroutine FMS_RemoveDead(B1)
          end if
       end do
       PopBelowThresh = (pop < spawn_params%PopToSpawn)
-!        GAIMS changed end
+
       MarkForDeath = ((OnIgnoreState .and. NotCoupled .and. .not. OverSpawnThresh) &
                       .or. (PopBelowThresh .and. NotCoupled))
       ForceDead = any(gliForceKill(:) == TrajID)
       if (ForceDead) then
          B1%Trajectory(i)%DeadTime = -9999.0d0
       end if
+
       MarkForDeath = (MarkForDeath .or. ForceDead)
 
       if (.not. MarkForDeath) then
@@ -120,7 +109,7 @@ subroutine FMS_RemoveDead(B1)
          write (fmiOut, '(a,i0,a)') 'Traj ', TrajID, ' was marked for death'
       end if
 
-!        Workout who is getting killed
+      ! Workout who is getting killed
       if (B1%Trajectory(i)%is_dead()) then
          ndead = ndead + 1
          if (ForceDead) then
@@ -133,7 +122,7 @@ subroutine FMS_RemoveDead(B1)
       end if
    end do
 
-!     Remove dead trajectories
+   ! Remove dead trajectories
    if (ndead > 0) then
       call BTemp%create(numtraj=B1%NumTraj - nDead, &
                         numdeadtraj=B1%NumDeadTraj + nDead, &
@@ -142,7 +131,7 @@ subroutine FMS_RemoveDead(B1)
                         ncbfs=B1%NCBFs)
       BTemp%CurrentTime = B1%CurrentTime
 
-!        Copy old dead trajectories to new bundle
+      ! Copy old dead trajectories to new bundle
       do iTraj = 1, B1%NumDeadTraj
          call BTemp%DeadTraj(iTraj)%copy_from(B1%DeadTraj(iTraj))
          do jTraj = 1, B1%NumDeadTraj
@@ -157,12 +146,13 @@ subroutine FMS_RemoveDead(B1)
 
       do iTraj = 1, B1%NumTraj
          if (.not. B1%Trajectory(iTraj)%is_dead()) then
-!              Alive: copy trajectory to new bundle
+            ! Alive: copy trajectory to new bundle
             iLive = iLive + 1
             call BTemp%Trajectory(iLive)%copy_from(B1%Trajectory(iTraj))
-!              Get the CBF identifier. Here we use the fact that
-!              the 3 triplet trajecories are always stored in
-!              successive order starting with Ms=2
+
+            ! Get the CBF identifier. Here we use the fact that
+            ! the 3 triplet trajecories are always stored in
+            ! successive order starting with Ms=2
             if (BTemp%Trajectory(iLive)%Ms == 2) then
                nCBF = nCBF + 1
             end if
@@ -172,8 +162,8 @@ subroutine FMS_RemoveDead(B1)
                write (fmiOut, '(4X,I4," S=0 Ms=",I0," CBF ",I0)') iTraj, 0, nCBF
             end if
             BTemp%Trajectory(iLive)%CBF = nCBF
-!              Copy centroids over too
-![bfec
+
+            ! Copy centroids over too
             if (glzCentroids) then
                jLive = 0
                if (BTemp%Trajectory(iLive)%Ms == 2) then
@@ -194,16 +184,14 @@ subroutine FMS_RemoveDead(B1)
             end if
 
          else
-!              Dead: add the trajectory to the graveyard
+            ! Dead: add the trajectory to the graveyard
             iDead = iDead + 1
-            ! TODO: Use FMS_AssignTrajectory explicitly
-            ! call FMS_AssignTrajectory(BTemp%DeadTraj(B1%NumDeadTraj + iDead), B1%Trajectory(iTraj))
             call BTemp%DeadTraj(B1%NumDeadTraj + iDead)%copy_from(B1%Trajectory(iTraj))
 
-!              Set dead time of recently killed trajectory to be current time
-!              to make it easier for user to restart killed trajectories!
+            ! Set dead time of recently killed trajectory to be current time
+            ! to make it easier for user to restart killed trajectories!
             BTemp%DeadTraj(B1%NumDeadTraj + iDead)%DeadTime = BTemp%CurrentTime
-!              Copy new hamiltonian elements into dead hamiltonian
+            ! Copy new hamiltonian elements into dead hamiltonian
             jDead = 0
             do jTraj = 1, iTraj
                if (B1%Trajectory(jTraj)%is_dead()) then

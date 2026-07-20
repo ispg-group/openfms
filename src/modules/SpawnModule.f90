@@ -16,7 +16,7 @@ module SpawnModule
    use VerletModule, only: FMS_PropVV
    implicit none
 
-   !> OMax: This is a legacy threshold value that functioned
+   !> OMax is a legacy threshold value that functioned
    !> as OMax_intra, OMax_inter and Omin_parent.
    !> To preserve the semantics of existing input files,
    !> OMax_intra, OMax_inter and OMin_parent are assigned the OMax value
@@ -31,20 +31,20 @@ module SpawnModule
       real(kind=DefReal) :: CFThresh
       !> min pop to bother with a spawn
       real(kind=DefReal) :: PopToSpawn
-      !> OMax_inter: Maximum overlap between parent trajectory
+      !> OMax_inter is a maximum overlap between parent trajectory
       !> and any existing trajectory on the target state.
       !> If this overlap is bigger than OMax_intra, we don't enter
       !> the spawning procedure.
       !> NOTE: This parameter is critical to prevent spawning
       !> right after a spawning event.
       real(kind=DefReal) :: OMax_inter
-      !> OMax_intra: Maximum overlap that we allow between the child TBF
+      !> OMax_intra is a maximum overlap that we allow between the child TBF
       !> and any other pre-existing TBFs on the same electronic state.
       !> If the overlap is larger than this threshold, we abort the spawning procedure
       !> so that we don't produce essentially equivalent TBFs.
       !> NOTE: The overlap check happens after child backpropagation.
       real(kind=DefReal) :: OMax_intra
-      !> OMin_parent: minimum overlap between child and parent
+      !> OMin_parent is a minimum overlap between child and parent
       !> If the overlap between the parent and the child TBFs at t_spawn
       !> is below this threshold, we abort the spawn.
       !> NOTE: The overlap between parent and child at spawning time
