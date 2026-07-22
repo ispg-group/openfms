@@ -190,6 +190,13 @@ contains
                   COUP_CI = .true.
                end if
 
+               !>jj
+               ! currently, we cannot handle both field and nonadiabatic couplings
+               if (COUP_CI .and. COUP_FIELD) then
+                  write (fmiOut, *) 'ERROR! Field and nonadiabatic couplings are present simultaneously. ', &
+                     'XFAIMS algorithm not ready yet!'
+               end if
+
             else
                coup = spawn_couple(B1%Trajectory(i), cs)
                B1%Trajectory(i)%CoupHist(:, cs) = eoshift(B1%Trajectory(i)%CoupHist(:, cs), -1, coup)

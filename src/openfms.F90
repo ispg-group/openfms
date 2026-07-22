@@ -270,6 +270,7 @@ contains
       use BundleModule
       use TrajectoryCalcsModule, only: FMS_Weight
       use SelectionModule, only: print_stochastic_selection_params
+      use XFAIMSModule, only: print_xfaims_params
       use SpawnModule, only: print_spawning_parameters
       use RestartModule, only: iniRestart
 
@@ -283,7 +284,7 @@ contains
       case (TEMPLATE)
          write (fmiOut, *) '     System call template interface     '
       case default
-         write (fmiOut, *) '         Unknown potential model ', gliModel
+         write (fmiOut, *) '     Unknown potential model ', gliModel
       end select
       write (fmiOut, *) ' Number Electronic States: ', Bundle%NumStates
       write (fmiOut, *) ' Potential Model:          ', gliModel
@@ -292,6 +293,12 @@ contains
       write (fmiOut, *)
 
       call print_spawning_parameters(fmiOut)
+
+      ! XFAIMS calculation
+      if (glzxfaims) write (fmiOut, *) 'Launching XFAIMS calculation.'
+      if (glzxfaims) then
+         call print_xfaims_params()
+      end if
 
       if (glzStochastic) then
          call print_stochastic_selection_params()
