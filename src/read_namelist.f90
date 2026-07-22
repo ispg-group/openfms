@@ -670,7 +670,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    inzGenSolvent = GenSolvent
    inNRelaxSteps = nRelaxSteps
    inNFixSteps = nFixSteps
-! xf added
+! XFAIMS parameters
    sp_spwn_i = tspwnixf
    sp_spwn_f = tspwnfxf
    f0_xf = f0_xfr
@@ -685,7 +685,48 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    glzxfaims = XFAIMS
    gldCoupFieldTimeStep = CoupFieldTimeStep
    gldIgnoreStateAferField = IgnoreStateAferField
-! xf added end
+! end of XFAIMS parameters
+
+! Check XFASIM paremeters
+   if (glzxfaims) then
+      if (sigma_xf <= 0.0d0) then
+         write (error_unit, *) 'ERROR in Control.dat: '//NL// &
+            '    sigma_xfr must be greater than zero'
+         zFatal = .true.
+      end if
+
+      if (freq_xf <= 0.0d0) then
+         write (error_unit, *) 'ERROR in Control.dat: '//NL// &
+            '    freq_xfr must be greater than zero'
+         zFatal = .true.
+      end if
+
+      if (f0_xf <= 0.0d0) then
+         write (error_unit, *) 'ERROR in Control.dat: '//NL// &
+            '    f0_xfr must be greater than zero'
+         zFatal = .true.
+      end if
+
+      if (gldCoupFieldTimeStep <= 0.0d0) then
+         write (error_unit, *) 'ERROR in Control.dat: '//NL// &
+            '    CoupFieldTimeStep must be greater than zero'
+         zFatal = .true.
+      end if
+
+      if (sp_spwn_i < 0.0d0) then
+         write (error_unit, *) 'ERROR in Control.dat: '//NL// &
+            '    tspwnixf must be greater than or equal to zero'
+         zFatal = .true.
+      end if
+
+      if (sp_spwn_f <= sp_spwn_i) then
+         write (error_unit, *) 'ERROR in Control.dat: '//NL// &
+            '    tspwnfxf must be greater than tspwnixf'
+         zFatal = .true.
+      end if
+   end if
+! end Check XFASIM paremeters
+
 ! GAIMS added
    !If NumSinglets and NumTriplets not specified, assume all states are singlet
    if (NumTriplets == 0 .and. NumSinglets == -1) NumSinglets = NumStates
