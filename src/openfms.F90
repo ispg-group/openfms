@@ -21,6 +21,7 @@ program OpenFMS
    use ElecStrucModule, only: FMS_ESInit
    use RestartModule, only: inIRestart, RestartTime, getRestart
    use PropagationModule, only: FMS_SetTimeStep
+   use XFAIMSModule, only: activate_xfaims
    implicit none
 
    type(T_TrajectoryBundle) :: Bundle
@@ -130,6 +131,8 @@ program OpenFMS
          write (fmiOut, *) 'No more live trajectories.'
          exit
       end if
+
+      call activate_xfaims(Bundle%CurrentTime)
 
 !        Determine dt for this step
       call FMS_SetTimeStep(Bundle, dt)
@@ -295,7 +298,6 @@ contains
       call print_spawning_parameters(fmiOut)
 
       ! XFAIMS calculation
-      if (glzxfaims) write (fmiOut, *) 'Launching XFAIMS calculation.'
       if (glzxfaims) then
          call print_xfaims_params()
       end if

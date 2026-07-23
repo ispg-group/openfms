@@ -176,25 +176,29 @@ contains
 !    contain previous timestep couplings
 
 ! xf changed
-            COUP_FIELD = .false.
-            COUP_CI = .false.
             if (glzxfaims) then
-               if (B1%CurrentTime > sp_spwn_i .and. B1%CurrentTime < sp_spwn_f) then
+               COUP_FIELD = .false.
+               COUP_CI = .false.
+
+               ! check if we are in the field coupling region
+               if (glzxfactive) then
                   coup = spawn_couple_field(B1%Trajectory(i), cs)
                   B1%Trajectory(i)%CoupHist(:, cs) = eoshift(B1%Trajectory(i)%CoupHist(:, cs), -1, coup)
                   COUP_FIELD = .true.
                end if
+
+               ! check if we are in the nonadiabatic coupling region
                if (spawn_couple(B1%Trajectory(i), cs) > spawn_params%CSThresh) then
                   coup = spawn_couple(B1%Trajectory(i), cs)
                   B1%Trajectory(i)%CoupHist(:, cs) = eoshift(B1%Trajectory(i)%CoupHist(:, cs), -1, coup)
                   COUP_CI = .true.
                end if
 
-               !>jj
                ! currently, we cannot handle both field and nonadiabatic couplings
                if (COUP_CI .and. COUP_FIELD) then
                   write (fmiOut, *) 'ERROR! Field and nonadiabatic couplings are present simultaneously. ', &
                      'XFAIMS algorithm not ready yet!'
+                  !jj - probably kill the code here or turn off one of the couplings (maybe the field one)
                end if
 
             else

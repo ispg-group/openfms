@@ -685,7 +685,7 @@ contains
       use GlobalModule, only: DefReal, DefInt, &
                               gldTimeStep, gldCoupTimeStep, gldCoupFieldTimeStep, &
                               gldIgnoreStateAferField, gldTStepThresh, glIgnoreState, &
-                              glzXFAIMS, sp_spwn_i, sp_spwn_f
+                              glzXFAIMS, sp_spwn_f, glzXFActive
       use BundleCalcsModule, only: FMS_bH
       type(T_TrajectoryBundle), intent(in) :: B1
       real(kind=DefReal), intent(out) :: dt
@@ -728,9 +728,9 @@ contains
          dt = gldTimeStep
       end if
 
-      ! xf added
+      ! xfaims
       if (glzxfaims) then
-         if (B1%CurrentTime > sp_spwn_i .and. B1%CurrentTime < sp_spwn_f) then
+         if (glzxfactive) then
             dt = gldCoupFieldTimeStep
          end if
          if (B1%CurrentTime > sp_spwn_f) then
@@ -739,7 +739,6 @@ contains
             end if
          end if
       end if
-      ! xf added end
 
    end subroutine FMS_SetTimeStep
 
