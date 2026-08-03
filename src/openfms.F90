@@ -122,6 +122,9 @@ program OpenFMS
       call FMS_Output(Bundle, FirstTime=.false.)
    end if
 
+   write (fmiOut, '(a)') '--------------------'
+   write (fmiOut, '(a)') 'STARTING PROPAGATION'
+   write (fmiOut, '(a)') '--------------------'
    write (fmiOut, '(a,F0.3,a)') 'Propagate until t = ', SimulationTime, ' a.u.'
    flush (fmiOut)
 
