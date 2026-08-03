@@ -12,6 +12,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    use SamplingModule
    use SMDModule
    use RestartModule
+   use XFAIMSModule, only: xfaims_params
 !TM
 ! note: this can be eventually moved to another directory,
 !       passing the NumParticles and Dummy-related variables.
@@ -671,55 +672,55 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    inNRelaxSteps = nRelaxSteps
    inNFixSteps = nFixSteps
 ! XFAIMS parameters
-   sp_spwn_i = tspwnixf
-   sp_spwn_f = tspwnfxf
-   f0_xf = f0_xfr
-   polx_xf = polx_xfr
-   poly_xf = poly_xfr
-   polz_xf = polz_xfr
-   freq_xf = freq_xfr
-   t0_xf = t0_xfr
-   sigma_xf = sigma_xfr
-   CEP_xf = CEP_xfr
-   onespawnonly_xf = onespawnonly_xfr
    glzxfaims = XFAIMS
-   gldCoupFieldTimeStep = CoupFieldTimeStep
-   gldIgnoreStateAferField = IgnoreStateAferField
+   xfaims_params%sp_spwn_i = tspwnixf
+   xfaims_params%sp_spwn_f = tspwnfxf
+   xfaims_params%f0 = f0_xfr
+   xfaims_params%polx = polx_xfr
+   xfaims_params%poly = poly_xfr
+   xfaims_params%polz = polz_xfr
+   xfaims_params%freq = freq_xfr
+   xfaims_params%t0 = t0_xfr
+   xfaims_params%sigma = sigma_xfr
+   xfaims_params%CEP = CEP_xfr
+   xfaims_params%onespawnonly = onespawnonly_xfr
+   xfaims_params%CoupFieldTimeStep = CoupFieldTimeStep
+   xfaims_params%IgnoreStateAferField = IgnoreStateAferField
 ! end of XFAIMS parameters
 
 ! Check XFASIM paremeters
    if (glzxfaims) then
-      if (sigma_xf <= 0.0d0) then
+      if (xfaims_params%sigma <= 0.0d0) then
          write (error_unit, *) 'ERROR in Control.dat: '//NL// &
             '    sigma_xfr must be greater than zero'
          zFatal = .true.
       end if
 
-      if (freq_xf <= 0.0d0) then
+      if (xfaims_params%freq <= 0.0d0) then
          write (error_unit, *) 'ERROR in Control.dat: '//NL// &
             '    freq_xfr must be greater than zero'
          zFatal = .true.
       end if
 
-      if (f0_xf <= 0.0d0) then
+      if (xfaims_params%f0 <= 0.0d0) then
          write (error_unit, *) 'ERROR in Control.dat: '//NL// &
             '    f0_xfr must be greater than zero'
          zFatal = .true.
       end if
 
-      if (gldCoupFieldTimeStep <= 0.0d0) then
+      if (xfaims_params%CoupFieldTimeStep <= 0.0d0) then
          write (error_unit, *) 'ERROR in Control.dat: '//NL// &
             '    CoupFieldTimeStep must be greater than zero'
          zFatal = .true.
       end if
 
-      if (sp_spwn_i < 0.0d0) then
+      if (xfaims_params%sp_spwn_i < 0.0d0) then
          write (error_unit, *) 'ERROR in Control.dat: '//NL// &
             '    tspwnixf must be greater than or equal to zero'
          zFatal = .true.
       end if
 
-      if (sp_spwn_f <= sp_spwn_i) then
+      if (xfaims_params%sp_spwn_f <= xfaims_params%sp_spwn_i) then
          write (error_unit, *) 'ERROR in Control.dat: '//NL// &
             '    tspwnfxf must be greater than tspwnixf'
          zFatal = .true.

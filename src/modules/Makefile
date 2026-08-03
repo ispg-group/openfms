@@ -89,7 +89,7 @@ TrajectoryIOModule.o: TrajectoryIOModule.f90 TrajectoryModule.o TrajectoryCalcsM
 			ElecStrucModule.o GlobalModule.o
 
 OverlapModule.o: OverlapModule.f90 GlobalModule.o \
-		ParticleModule.o TrajectoryModule.o TrajectoryCalcsModule.o
+		ParticleModule.o TrajectoryModule.o TrajectoryCalcsModule.o XFAIMSModule.o
 
 BundleModule.o: BundleModule.f90 TrajectoryModule.o TrajectoryCalcsModule.o GlobalModule.o
 

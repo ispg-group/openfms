@@ -14,6 +14,7 @@ module SpawnModule
    use BundleCalcsModule, only: FMS_UpdateMulliken
    use OverlapModule, only: overlap
    use VerletModule, only: FMS_PropVV
+   use XFAIMSModule, only: xfaims_params
    implicit none
 
    !> OMax is a legacy threshold value that functioned
@@ -387,7 +388,7 @@ contains
 !xf added
       if (glzxfaims) then
          if (COUP_FIELD) then
-            if (T1%get_time() < sp_spwn_i .or. T1%get_time() > sp_spwn_f) spwn = .false.
+            if (T1%get_time() < xfaims_params%sp_spwn_i .or. T1%get_time() > xfaims_params%sp_spwn_f) spwn = .false.
          end if
          if (COUP_CI) then
             if (spawn_couple(T1, is) < spawn_params%CSThresh) spwn = .false.
@@ -1168,13 +1169,14 @@ contains
 ! "coup" is the electric field in this case.
       t = T1%get_time()
 
-      if (onespawnonly_xf) then
-         Dcouple = abs(exp(-(t - t0_xf)**2 / (2 * sigma_xf * sigma_xf)))
+      if (xfaims_params%onespawnonly) then
+         Dcouple = abs(exp(-(t - xfaims_params%t0)**2 / (2 * xfaims_params%sigma * xfaims_params%sigma)))
       else
          Dcouple = &
-            exp(-(t - t0_xf)**2 / (2 * sigma_xf * sigma_xf)) * ( &
-            cos(freq_xf * t + CEP_xf) - &
-            sin(freq_xf * t + CEP_xf) * (t - t0_xf) / (sigma_xf * sigma_xf * freq_xf))
+            exp(-(t - xfaims_params%t0)**2 / (2 * xfaims_params%sigma**2)) * ( &
+            cos(xfaims_params%freq * t + xfaims_params%CEP) - &
+            sin(xfaims_params%freq * t + xfaims_params%CEP) * (t - xfaims_params%t0) &
+            / (xfaims_params%sigma**2 * xfaims_params%freq))
       end if
 
    end function spawn_couple_field

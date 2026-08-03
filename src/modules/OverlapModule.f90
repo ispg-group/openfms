@@ -4,6 +4,7 @@ module OverlapModule
    use ToyModelModule, only: GAIMS_model_params
    use ParticleModule
    use TrajectoryModule
+   use XFAIMSModule, only: xfaims_params
    use TrajectoryCalcsModule, only: FMS_Forces, FMS_PotentialT, FMS_KineticT, &
                                     FMS_Coupling, FMS_SOCoupling, FMS_Dipole, FMS_PhaseDot, FMS_TransDipoleIJxf, &
                                     FMS_SetIgnoreError
@@ -942,13 +943,14 @@ contains
       real(kind=DefReal) :: ft_xf(3), t, pulse
 
       t = T1%get_time()
-      pulse = exp(-(t - t0_xf)**2 / (2 * sigma_xf * sigma_xf)) * ( &
-              cos(freq_xf * t + CEP_xf) - &
-              sin(freq_xf * t + CEP_xf) * (t - t0_xf) / (sigma_xf * sigma_xf * freq_xf))
+      pulse = exp(-(t - xfaims_params%t0)**2 / (2 * xfaims_params%sigma**2)) * ( &
+              cos(xfaims_params%freq * t + xfaims_params%CEP) - &
+              sin(xfaims_params%freq * t + xfaims_params%CEP) * (t - xfaims_params%t0) / &
+              (xfaims_params%sigma**2 * xfaims_params%freq))
 
-      ft_xf(1) = f0_xf * polx_xf * pulse
-      ft_xf(2) = f0_xf * poly_xf * pulse
-      ft_xf(3) = f0_xf * polz_xf * pulse
+      ft_xf(1) = xfaims_params%f0 * xfaims_params%polx * pulse
+      ft_xf(2) = xfaims_params%f0 * xfaims_params%poly * pulse
+      ft_xf(3) = xfaims_params%f0 * xfaims_params%polz * pulse
 
    end function field_xf
 
