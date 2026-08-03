@@ -98,14 +98,23 @@ contains
 
    subroutine print_spawning_parameters(unit)
       integer, intent(in) :: unit
-      write (unit, '(a30)') 'SPAWNING PARAMETERS'
-      write (unit, '(a14,i7  ,a)') 'maxTraj:    ', spawn_params%MaxTraj, ' (Max number of Trajectories)'
-      write (unit, '(a14,f7.4,a)') 'OMin_parent:', spawn_params%OMin_parent, ' (Min parent-child overlap to spawn)'
-      write (unit, '(a14,f7.4,a)') 'OMax_inter: ', spawn_params%OMax_inter, ' (Max overlap between parent and existing TBFs)'
-      write (unit, '(a14,f7.4,a)') 'OMax_intra: ', spawn_params%Omax_intra, ' (Max overlap between child and existing TBFs)'
-      write (unit, '(a14,f7.4,a)') 'CSThresh:   ', spawn_params%CSThresh, ' (Coupling threshold to enter spawning region)'
-      write (unit, '(a14,f7.4,a)') 'CFThresh:   ', spawn_params%CFThresh, ' (Coupling threshold to exit spawning region)'
-      write (unit, '(a14,f7.4,a)') 'PopToSpawn: ', spawn_params%PopToSpawn, ' (Min population to Spawn)'
+      character(len=*), parameter :: divider = &
+                                     ' -----------------------------------------------------------'
+
+      write (fmiOut, *)
+      write (fmiOut, '(a)') divider
+      write (fmiOut, '(a)') ' SPAWNING parameters'
+      write (fmiOut, '(a)') divider
+
+      write (unit, '(a14,i7  ,a)') 'maxTraj:     ', spawn_params%MaxTraj, ' (Max number of Trajectories)'
+      write (unit, '(a14,f7.4,a)') 'OMin_parent: ', spawn_params%OMin_parent, ' (Min parent-child overlap to spawn)'
+      write (unit, '(a14,f7.4,a)') 'OMax_inter:  ', spawn_params%OMax_inter, ' (Max overlap between parent and existing TBFs)'
+      write (unit, '(a14,f7.4,a)') 'OMax_intra:  ', spawn_params%Omax_intra, ' (Max overlap between child and existing TBFs)'
+      write (unit, '(a14,f7.4,a)') 'CSThresh:    ', spawn_params%CSThresh, ' (Coupling threshold to enter spawning region)'
+      write (unit, '(a14,f7.4,a)') 'CFThresh:    ', spawn_params%CFThresh, ' (Coupling threshold to exit spawning region)'
+      write (unit, '(a14,f7.4,a)') 'PopToSpawn:  ', spawn_params%PopToSpawn, ' (Min population to Spawn)'
+
+      write (fmiOut, '(a)') divider
    end subroutine print_spawning_parameters
 
 !!    @brief Driver for spawning algorithm
