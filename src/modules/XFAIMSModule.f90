@@ -34,28 +34,25 @@ contains
       implicit none
 
       character(len=*), parameter :: divider = &
-                                     ' -------------------------------------------------------'
+                                     ' -----------------------------------------------------------'
 
       write (fmiOut, *)
       write (fmiOut, '(a)') divider
       write (fmiOut, '(a)') ' XFAIMS parameters'
       write (fmiOut, '(a)') divider
 
-      write (fmiOut, '(1x,a,t34,es16.8,a)') 'Field amplitude f0_xfr:', xfaims_params%f0, ' a.u.'
-      write (fmiOut, '(1x,a,t34,es16.8,a)') 'Field frequency freq_xfr:', xfaims_params%freq, ' a.u.'
-      write (fmiOut, '(1x,a,t34,es16.8,a)') 'Pulse width sigma_xfr:', xfaims_params%sigma, ' a.u.'
-      write (fmiOut, '(1x,a,t34,es16.8)') 'Carrier-envelope phase:', xfaims_params%CEP
-      write (fmiOut, '(1x,a,t34,f16.4,a)') 'Pulse center t0_xfr:', xfaims_params%t0, ' a.u.'
+      write (fmiOut, '(1x,a,t40,es16.8,a)') 'Field amplitude [xf_f0]:', xfaims_params%f0, ' a.u.'
+      write (fmiOut, '(1x,a,t40,es16.8,a)') 'Field frequency [xf_freq]:', xfaims_params%freq, ' a.u.'
+      write (fmiOut, '(1x,a,t40,es16.8,a)') 'Pulse envelope width [xf_sigma]:', xfaims_params%sigma, ' a.u.'
+      write (fmiOut, '(1x,a,t40,es16.8)') 'Carrier-envelope phase [xf_cep]:', xfaims_params%CEP
+      write (fmiOut, '(1x,a,t40,f16.4,a)') 'Pulse center [xf_t0]:', xfaims_params%t0, ' a.u.'
 
-      write (fmiOut, '(1x,a,t34,f16.8)') 'Polarization x:', xfaims_params%polx
-      write (fmiOut, '(1x,a,t34,f16.8)') 'Polarization y:', xfaims_params%poly
-      write (fmiOut, '(1x,a,t34,f16.8)') 'Polarization z:', xfaims_params%polz
+      write (fmiOut, '(1x,a,t40,f16.8)') 'Polarization x [xf_polx]:', xfaims_params%polx
+      write (fmiOut, '(1x,a,t40,f16.8)') 'Polarization y [xf_poly]:', xfaims_params%poly
+      write (fmiOut, '(1x,a,t40,f16.8)') 'Polarization z [xf_polz]:', xfaims_params%polz
 
-      write (fmiOut, '(1x,a,t34,f16.4,a)') &
-         'Field coupling timestep:', xfaims_params%CoupFieldTimeStep, ' a.u.'
-
-      write (fmiOut, '(1x,a,t34,f16.4,a)') &
-         'Spawning interval start:', xfaims_params%sp_spwn_i, ' a.u.'
+      write (fmiOut, '(1x,a,t40,f16.4,a)') &
+         'Spawning interval start [xf_tspwni]:', xfaims_params%sp_spwn_i, ' a.u.'
 
       ! XFAIMS is only activated at multiples of the global timestep in openfms.F90.
       if (modulo(xfaims_params%sp_spwn_i, gldTimeStep) /= 0.0) then
@@ -63,8 +60,8 @@ contains
             'WARNING: XFAIMS will be initiated at the closest following multiple of TimeStep.'
       end if
 
-      write (fmiOut, '(1x,a,t34,f16.4,a)') &
-         'Spawning interval end:', xfaims_params%sp_spwn_f, ' a.u.'
+      write (fmiOut, '(1x,a,t40,f16.4,a)') &
+         'Spawning interval end [xf_tspwnf]:', xfaims_params%sp_spwn_f, ' a.u.'
 
       ! XFAIMS is only deactivated at multiples of the global timestep in openfms.F90.
       if (modulo(xfaims_params%sp_spwn_f, gldTimeStep) /= 0.0) then
@@ -72,10 +69,13 @@ contains
             'WARNING: XFAIMS will be terminated at the closest following multiple of TimeStep.'
       end if
 
-      write (fmiOut, '(1x,a,t34,l16)') &
+      write (fmiOut, '(1x,a,t40,f16.4,a)') &
+         'Field coupling timestep:', xfaims_params%CoupFieldTimeStep, ' a.u.'
+
+      write (fmiOut, '(1x,a,t40,l16)') &
          'Only one field spawning:', xfaims_params%onespawnonly
 
-      write (fmiOut, '(1x,a,t34,l16)') &
+      write (fmiOut, '(1x,a,t40,l16)') &
          'Ignore state after field:', xfaims_params%IgnoreStateAferField
 
       write (fmiOut, '(a)') divider
