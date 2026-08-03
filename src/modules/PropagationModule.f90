@@ -682,10 +682,9 @@ contains
    !!    @ingroup propagation
    !<
    subroutine FMS_SetTimeStep(B1, dt)
-      use GlobalModule, only: DefReal, DefInt, &
-                              gldTimeStep, gldCoupTimeStep, gldCoupFieldTimeStep, &
-                              gldIgnoreStateAferField, gldTStepThresh, glIgnoreState, &
-                              glzXFAIMS, sp_spwn_i, sp_spwn_f
+      use GlobalModule, only: DefReal, DefInt, gldTimeStep, gldCoupTimeStep, &
+                              gldTStepThresh, glIgnoreState, glzXFAIMS, glzXFActive
+      use XFAIMSModule, only: xfaims_params
       use BundleCalcsModule, only: FMS_bH
       type(T_TrajectoryBundle), intent(in) :: B1
       real(kind=DefReal), intent(out) :: dt
@@ -728,18 +727,17 @@ contains
          dt = gldTimeStep
       end if
 
-      ! xf added
+      ! xfaims
       if (glzxfaims) then
-         if (B1%CurrentTime > sp_spwn_i .and. B1%CurrentTime < sp_spwn_f) then
-            dt = gldCoupFieldTimeStep
+         if (glzxfactive) then
+            dt = xfaims_params%CoupFieldTimeStep
          end if
-         if (B1%CurrentTime > sp_spwn_f) then
-            if (gldIgnoreStateAferField) then
+         if (B1%CurrentTime > xfaims_params%sp_spwn_f) then
+            if (xfaims_params%IgnoreStateAferField) then
                glIgnoreState = 1
             end if
          end if
       end if
-      ! xf added end
 
    end subroutine FMS_SetTimeStep
 

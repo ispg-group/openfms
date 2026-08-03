@@ -143,20 +143,10 @@ module GlobalModule
 
 !bfec
    integer(kind=DefInt) :: glirestTC !< Restart variable for Terachem
-! xf added
-   logical :: glzxfaims
-   logical :: gldIgnoreStateAferField
-   real(kind=DefReal) :: f0_xf
-   real(kind=DefReal) :: polx_xf
-   real(kind=DefReal) :: poly_xf
-   real(kind=DefReal) :: polz_xf
-   real(kind=DefReal) :: freq_xf
-   real(kind=DefReal) :: t0_xf
-   real(kind=DefReal) :: sigma_xf
-   real(kind=DefReal) :: CEP_xf
-   logical :: onespawnonly_xf
-   real(kind=DefReal) :: sp_spwn_i, sp_spwn_f, gldCoupFieldTimeStep
-! end xf added
+   ! XFAIMS added
+   logical :: glzxfaims !< Determines if XFAIMS is used
+   logical :: glzXFActive = .false. !< If .true. field spawning and timesteps are activated. Only controled by the code, not user.
+   ! XFAIMS added end
 ! GAIMS added
    integer(kind=DefInt) :: NSing
    integer(kind=DefInt) :: NTrip

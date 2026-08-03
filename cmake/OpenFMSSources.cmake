@@ -30,6 +30,7 @@ set(OPENFMS_CORE_SOURCES
   src/modules/MinSearchModule.f90
   src/modules/PropagationModule.f90
   src/modules/InitialModule.f90
+  src/modules/XFAIMSModule.f90
   src/dynamics.f90
   src/initialcond.f90
   src/minsearch.f90

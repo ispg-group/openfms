@@ -21,6 +21,7 @@ program OpenFMS
    use ElecStrucModule, only: FMS_ESInit
    use RestartModule, only: inIRestart, RestartTime, getRestart
    use PropagationModule, only: FMS_SetTimeStep
+   use XFAIMSModule, only: activate_xfaims
    implicit none
 
    type(T_TrajectoryBundle) :: Bundle
@@ -121,6 +122,9 @@ program OpenFMS
       call FMS_Output(Bundle, FirstTime=.false.)
    end if
 
+   write (fmiOut, '(a)') '--------------------'
+   write (fmiOut, '(a)') 'STARTING PROPAGATION'
+   write (fmiOut, '(a)') '--------------------'
    write (fmiOut, '(a,F0.3,a)') 'Propagate until t = ', SimulationTime, ' a.u.'
    flush (fmiOut)
 
@@ -130,6 +134,8 @@ program OpenFMS
          write (fmiOut, *) 'No more live trajectories.'
          exit
       end if
+
+      call activate_xfaims(Bundle%CurrentTime)
 
 !        Determine dt for this step
       call FMS_SetTimeStep(Bundle, dt)
@@ -270,6 +276,7 @@ contains
       use BundleModule
       use TrajectoryCalcsModule, only: FMS_Weight
       use SelectionModule, only: print_stochastic_selection_params
+      use XFAIMSModule, only: print_xfaims_params
       use SpawnModule, only: print_spawning_parameters
       use RestartModule, only: iniRestart
 
@@ -283,7 +290,7 @@ contains
       case (TEMPLATE)
          write (fmiOut, *) '     System call template interface     '
       case default
-         write (fmiOut, *) '         Unknown potential model ', gliModel
+         write (fmiOut, *) '     Unknown potential model ', gliModel
       end select
       write (fmiOut, *) ' Number Electronic States: ', Bundle%NumStates
       write (fmiOut, *) ' Potential Model:          ', gliModel
@@ -292,6 +299,11 @@ contains
       write (fmiOut, *)
 
       call print_spawning_parameters(fmiOut)
+
+      ! XFAIMS calculation
+      if (glzxfaims) then
+         call print_xfaims_params()
+      end if
 
       if (glzStochastic) then
          call print_stochastic_selection_params()

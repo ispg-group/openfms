@@ -89,7 +89,7 @@ TrajectoryIOModule.o: TrajectoryIOModule.f90 TrajectoryModule.o TrajectoryCalcsM
 			ElecStrucModule.o GlobalModule.o
 
 OverlapModule.o: OverlapModule.f90 GlobalModule.o \
-		ParticleModule.o TrajectoryModule.o TrajectoryCalcsModule.o
+		ParticleModule.o TrajectoryModule.o TrajectoryCalcsModule.o XFAIMSModule.o
 
 BundleModule.o: BundleModule.f90 TrajectoryModule.o TrajectoryCalcsModule.o GlobalModule.o
 
@@ -102,6 +102,8 @@ BundleIOModule.o: BundleIOModule.f90 BundleCalcsModule.o BundleModule.o \
 
 SelectionModule.o: SelectionModule.f90 GlobalModule.o RandomModule.o OverlapModule.o	 \
                    TrajectoryModule.o BundleModule.o BundleCalcsModule.o
+
+XFAIMSModule.o: XFAIMSModule.f90 GlobalModule.o TrajectoryModule.o
 
 SpawnModule.o: SpawnModule.f90 GlobalModule.o SelectionModule.o FMSModule.o \
                TrajectoryModule.o TrajectoryCalcsModule.o TrajectoryIOModule.o \

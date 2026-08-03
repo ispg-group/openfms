@@ -12,6 +12,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    use SamplingModule
    use SMDModule
    use RestartModule
+   use XFAIMSModule, only: xfaims_params
 !TM
 ! note: this can be eventually moved to another directory,
 !       passing the NumParticles and Dummy-related variables.
@@ -68,19 +69,20 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    logical :: StochasticStateSpecific
 
 ! xf added
-   real(kind=DefReal) :: CoupFieldTimeStep
-   real(kind=DefReal) :: tspwnixf
-   real(kind=DefReal) :: tspwnfxf
-   real(kind=DefReal) :: f0_xfr
-   real(kind=DefReal) :: polx_xfr
-   real(kind=DefReal) :: poly_xfr
-   real(kind=DefReal) :: polz_xfr
-   real(kind=DefReal) :: freq_xfr
-   real(kind=DefReal) :: t0_xfr
-   real(kind=DefReal) :: sigma_xfr
-   real(kind=DefReal) :: CEP_xfr
-   logical :: IgnoreStateAferField
-   logical :: onespawnonly_xfr, XFAIMS
+! all XFAIMS related keywords in the input will start with "xf_" to avoid confusion with other keywords
+   real(kind=DefReal) :: xf_CoupFieldTimeStep
+   real(kind=DefReal) :: xf_tspwni
+   real(kind=DefReal) :: xf_tspwnf
+   real(kind=DefReal) :: xf_f0
+   real(kind=DefReal) :: xf_polx
+   real(kind=DefReal) :: xf_poly
+   real(kind=DefReal) :: xf_polz
+   real(kind=DefReal) :: xf_freq
+   real(kind=DefReal) :: xf_t0
+   real(kind=DefReal) :: xf_sigma
+   real(kind=DefReal) :: xf_CEP
+   logical :: xf_IgnoreStateAferField
+   logical :: xf_onespawnonly, XFAIMS
 ! xf added end
 
 ! GAIMS added
@@ -261,10 +263,10 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
       , IgnoreState, QuenchToler, zAmpFile, zMMFile, DecoherenceTime &
       , AvH, AvHNStates, AvHStates &
       ! xf added
-      , freq_xfr, t0_xfr, CEP_xfr, sigma_xfr, onespawnonly_xfr &
-      , f0_xfr, polx_xfr, poly_xfr, polz_xfr &
-      , XFAIMS, CoupFieldTimeStep, IgnoreStateAferField &
-      , tspwnixf, tspwnfxf &
+      , xf_freq, xf_t0, xf_CEP, xf_sigma, xf_onespawnonly &
+      , xf_f0, xf_polx, xf_poly, xf_polz &
+      , XFAIMS, xf_CoupFieldTimeStep, xf_IgnoreStateAferField &
+      , xf_tspwni, xf_tspwnf &
       ! xf added end
       ! GAIMS added
       , NumSinglets, NumTriplets, SOCThresh, ShiftTrip, SPA1_SOC_model &
@@ -442,20 +444,20 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    DummyCoeff = 0.0
 
 ! xf added
-   CoupFieldTimeStep = 1.0d0
-   tspwnixf = 0.0d0
-   tspwnfxf = 0.0d0
-   f0_xfr = 0.0d0
-   polx_xfr = 0.0d0
-   poly_xfr = 0.0d0
-   polz_xfr = 0.0d0
-   freq_xfr = 0.0d0
-   t0_xfr = 0.0d0
-   sigma_xfr = 0.0d0
-   CEP_xfr = 0.0d0
-   onespawnonly_xfr = .false.
+   xf_CoupFieldTimeStep = 1.0d0
+   xf_tspwni = 0.0d0
+   xf_tspwnf = 0.0d0
+   xf_f0 = 0.0d0
+   xf_polx = 0.0d0
+   xf_poly = 0.0d0
+   xf_polz = 0.0d0
+   xf_freq = 0.0d0
+   xf_t0 = 0.0d0
+   xf_sigma = 0.0d0
+   xf_CEP = 0.0d0
+   xf_onespawnonly = .false.
+   xf_IgnoreStateAferField = .false.
    XFAIMS = .false.
-   IgnoreStateAferField = .false.
 ! xf added end
 
 ! GAIMS added
@@ -670,22 +672,63 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    inzGenSolvent = GenSolvent
    inNRelaxSteps = nRelaxSteps
    inNFixSteps = nFixSteps
-! xf added
-   sp_spwn_i = tspwnixf
-   sp_spwn_f = tspwnfxf
-   f0_xf = f0_xfr
-   polx_xf = polx_xfr
-   poly_xf = poly_xfr
-   polz_xf = polz_xfr
-   freq_xf = freq_xfr
-   t0_xf = t0_xfr
-   sigma_xf = sigma_xfr
-   CEP_xf = CEP_xfr
-   onespawnonly_xf = onespawnonly_xfr
+! XFAIMS parameters
    glzxfaims = XFAIMS
-   gldCoupFieldTimeStep = CoupFieldTimeStep
-   gldIgnoreStateAferField = IgnoreStateAferField
-! xf added end
+   xfaims_params%sp_spwn_i = xf_tspwni
+   xfaims_params%sp_spwn_f = xf_tspwnf
+   xfaims_params%f0 = xf_f0
+   xfaims_params%polx = xf_polx
+   xfaims_params%poly = xf_poly
+   xfaims_params%polz = xf_polz
+   xfaims_params%freq = xf_freq
+   xfaims_params%t0 = xf_t0
+   xfaims_params%sigma = xf_sigma
+   xfaims_params%CEP = xf_CEP
+   xfaims_params%onespawnonly = xf_onespawnonly
+   xfaims_params%CoupFieldTimeStep = xf_CoupFieldTimeStep
+   xfaims_params%IgnoreStateAferField = xf_IgnoreStateAferField
+! end of XFAIMS parameters
+
+! Check XFASIM paremeters
+   if (glzxfaims) then
+      if (xfaims_params%sigma <= 0.0d0) then
+         write (error_unit, *) 'ERROR in Control.dat: '//NL// &
+            '    xf_sigma must be greater than zero'
+         zFatal = .true.
+      end if
+
+      if (xfaims_params%freq <= 0.0d0) then
+         write (error_unit, *) 'ERROR in Control.dat: '//NL// &
+            '    xf_freq must be greater than zero'
+         zFatal = .true.
+      end if
+
+      if (xfaims_params%f0 <= 0.0d0) then
+         write (error_unit, *) 'ERROR in Control.dat: '//NL// &
+            '    xf_f0 must be greater than zero'
+         zFatal = .true.
+      end if
+
+      if (xfaims_params%CoupFieldTimeStep <= 0.0d0) then
+         write (error_unit, *) 'ERROR in Control.dat: '//NL// &
+            '    xf_CoupFieldTimeStep must be greater than zero'
+         zFatal = .true.
+      end if
+
+      if (xfaims_params%sp_spwn_i < 0.0d0) then
+         write (error_unit, *) 'ERROR in Control.dat: '//NL// &
+            '    xf_tspwni must be greater than or equal to zero'
+         zFatal = .true.
+      end if
+
+      if (xfaims_params%sp_spwn_f <= xfaims_params%sp_spwn_i) then
+         write (error_unit, *) 'ERROR in Control.dat: '//NL// &
+            '    xf_tspwnf must be greater than xf_tspwni'
+         zFatal = .true.
+      end if
+   end if
+! end Check XFASIM paremeters
+
 ! GAIMS added
    !If NumSinglets and NumTriplets not specified, assume all states are singlet
    if (NumTriplets == 0 .and. NumSinglets == -1) NumSinglets = NumStates
