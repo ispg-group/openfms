@@ -10,7 +10,7 @@ module PropagationModule
    use BundleModule
    use BundleCalcsModule, only: FMS_UpdateCentroid
    use VerletModule, only: FMS_PropVV_a, FMS_PropVV_b
-   use SpawnModule, only: FMS_Spawn, FMS_SpawnDCouple, spdCSThresh
+   use SpawnModule, only: FMS_Spawn, FMS_SpawnDCouple, spawn_params
    use ThermoModule, only: LangevinThermo_O, thermo_NHC_local, thermo_NHC_global
    use PropVVRingMod, only: PropVVRing
    implicit none
