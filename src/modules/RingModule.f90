@@ -23,6 +23,7 @@ real (8) :: time !< Current time
 character(len=8) :: method !< Which method to use (RPMD, PA-CMD)
 character(len=10) :: thermostat !< Which thermostat to use
 real (8) :: tau0 !< Thermostat relaxation time of centroid mode
+real (8) :: gamma_sq !< PA-CMD adiabaticity γ²; negative → Manolopoulos Ω
 logical :: nm !< Are we in normal modes or not
 logical :: zcom !< Do we include center of mass as degrees of freedom
 end type T_Ring
@@ -67,6 +68,7 @@ ring1%rNHC       = ring2%rNHC
 ring1%pNHC       = ring2%pNHC
 ring1%mNHC       = ring2%mNHC
 ring1%tau0       = ring2%tau0
+ring1%gamma_sq   = ring2%gamma_sq
 ring1%nm         = ring2%nm
 ring1%zcom       = ring2%zcom
 
@@ -116,6 +118,7 @@ ring%thermE=0.0d0
 ring%time=0.0d0
 ring%method=''
 ring%thermostat=''
+ring%gamma_sq=0.005d0
 ring%nm=.false.
 ring%zcom=.false.
 
@@ -192,6 +195,7 @@ write(iunit,5)ring%method,' /Method'
 write(iunit,5)ring%thermostat,' /Thermostat'
 write(iunit,1)ring%nNHC,' /Number of Nose-Hoover Chain variables'
 write(iunit,2)ring%tau0,' /Centroid thermostat relaxation constant (a.u.)'
+write(iunit,2)ring%gamma_sq,' /PA-CMD adiabaticity gamma^2 (negative = Manolopoulos)'
 write(iunit,2)ring%thermE,' /Thermostat energy (a.u.)'
 write(iunit,4)ring%zcom,' /Treat COM as degrees of freedom?'
 write(iunit,*)'Masses:'
@@ -236,6 +240,7 @@ read(iunit,*)ring%method
 read(iunit,*)ring%thermostat
 read(iunit,*)ring%nNHC
 read(iunit,*)ring%tau0 ! NHC fictitious mass
+read(iunit,*)ring%gamma_sq
 read(iunit,*)ring%thermE
 read(iunit,*)ring%zcom
 read(iunit,*)
@@ -254,7 +259,7 @@ read(iunit,*)
 read(iunit,*)ring%mNHC
 
 !Fill in remaining variables
-call ring_setconsts(ring,ring%m(:,1),ring%beta,ring%method,ring%thermostat,ring%tau0,ring%zcom)
+call ring_setconsts(ring,ring%m(:,1),ring%beta,ring%method,ring%thermostat,ring%tau0,ring%zcom,gamma_sq_in=ring%gamma_sq)
 
 ZSuccess=.true.
 return
@@ -266,7 +271,7 @@ implicit none
 type (T_Ring) ring
 real(8) ETot
 real(8), dimension(ring%n) :: V_vec
-real(8) V_ext_tot,V_ring,E_ring_tot
+real(8) V_ext_tot
 integer ibead
 
 interface
@@ -464,6 +469,9 @@ else
   do ibead=1,ring%n
     do iatom=1,ring%natom
       do idm=1,ring%ndim
+        ! TL: but your ring%m_inv is the inverse of the normal mode mass, not the bead mass. 
+        ! So this is not correct. It should be ring%m_inv(iatom,ibead) = 1.0d0/m(iatom) for all beads. 
+        ! But I will leave it as is for now.
         ring_T=ring_T+ring%m_inv(iatom,ibead)*ring%p(idm,iatom,ibead)*ring%p(idm,iatom,ibead)
       enddo
     enddo
@@ -490,7 +498,6 @@ orignm=ring%nm
 if (.not.orignm) then
   call nmtran_forward(ring) !ensure we are in normal mode rep
 endif
-
 
 ring_T0=0.0d0
 do iatom=1,ring%natom
@@ -532,7 +539,7 @@ if (ring%nm) then
   do k=1,ring%n
     omegafac=0.5d0*ring%omega(k)*ring%omega(k)
     do iatom=1,ring%natom
-      m_omegafac=ring%m(iatom,k)*omegafac
+      m_omegafac=ring%m(iatom,k)*omegafac 
       do idm=1,ring%ndim
         ring_V=ring_V+m_omegafac*ring%r(idm,iatom,k)*ring%r(idm,iatom,k)
       enddo
@@ -648,7 +655,7 @@ end select
 
 end subroutine ring_init
 
-subroutine ring_setconsts(ring,m,beta,method,thermostat,tau0,zcom,omega_in,widths_in)
+subroutine ring_setconsts(ring,m,beta,method,thermostat,tau0,zcom,omega_in,widths_in,gamma_sq_in)
 implicit none
 type (T_Ring) ring
 real(8) :: m(ring%natom)
@@ -658,12 +665,22 @@ character(len=10) thermostat
 logical zcom
 real(8),intent(in),optional :: omega_in !Desired frequency of ring modes for GAUSSAV
 real(8),intent(in),optional :: widths_in(ring%natom) !Desired widths for GAUSSAV
+real(8),intent(in),optional :: gamma_sq_in !< PA-CMD γ²; negative → Manolopoulos Ω; default 0.005
 integer ibead,k
-real(8) omega,sigma,two_omega_n,dn_inv,gamma
-
+real(8) omega,sigma,two_omega_n,dn_inv
+real(8) :: gamma_sq_local
+logical :: use_manolopoulos
 real(8) :: widths(ring%natom)
 
 dn_inv=1.0d0/dble(ring%n)
+! Resolve adiabaticity: negative gamma_sq_in selects Manolopoulos
+if (present(gamma_sq_in)) then
+  gamma_sq_local = gamma_sq_in
+else
+  gamma_sq_local = 0.005d0
+end if
+use_manolopoulos = (gamma_sq_local < 0.0d0)
+ring%gamma_sq = gamma_sq_local
 !Set constants
 ring%beta=beta
 ring%beta_n=ring%beta*dn_inv
@@ -692,27 +709,38 @@ case('PA-CMD')
   ring%m(:,1)=m(:)
   ring%m_inv(:,1)=1.0d0/m(:)
 
-  !All other modes have a constant frequency, so scale masses
+  !All other modes have a constant frequency, so scale masses:
+  !  m_k = gamma^2 * m * lambda_k,  lambda_k = 4*sin^2(k*pi/n)
+  !  All non-centroid modes then share the common frequency Omega.
   if (ring%n.gt.1) then
-    ! Manopolous choice of adiabaticity parameter
-    !omega=dble(ring%n)**(dble(ring%n)/dble(ring%n-1))/beta
-    ! Voth choice of adiabaticity parameter
-    ! choose adiabaticity parameter
-    gamma=dsqrt(1.0d0/dble(ring%n))
-    ! primitive omega_P = n / beta
-    omega=(dble(ring%n)/beta)/gamma
-    write(0,*)'omega: ',omega
-  endif
-  
-  do k=2,ring%n
-    sigma=ring%omega(k)/omega
-    ring%m(:,k)=m(:)*sigma*sigma
-!    write(6,*)'k, omega, sigma, m:',k,ring%omega(k),sigma,ring%m(:,k)
-    ring%m_inv(:,k)=1.0d0/ring%m(:,k)
-    ring%omega(k)=omega !Set new frequency
-  enddo
+    if (use_manolopoulos) then
+      ! Manolopoulos choice: Omega = n^(n/(n-1)) / beta
+      omega = dble(ring%n)**(dble(ring%n)/dble(ring%n-1)) / beta
 
-  write(0,*)'max ring mode frequency: ',ring%omega(ring%n/2 + 1)
+      do k=2,ring%n
+        sigma=ring%omega(k)/omega
+        ring%m(:,k)=m(:)*sigma*sigma
+        ring%m_inv(:,k)=1.0d0/ring%m(:,k)
+        ring%omega(k)=omega             ! store Omega for thermostat mass computation
+        !write(*,*) '  sigma = ',sigma,'  omega_k = ',ring%omega(k), '  PA-CMD: Manolopoulos Omega = ',omega
+        !write(*,*) '  m_k = ',ring%m(:,k)
+      enddo
+    else
+      ! Voth default (gamma^2 = 0.005):
+      !   Omega = omega_P / gamma,  omega_P = n/beta  →  Omega = n / (beta * sqrt(gamma^2))
+      omega = dsqrt(dble(ring%n)) / (beta * dsqrt(gamma_sq_local))
+
+      do k=2,ring%n
+        sigma=beta*beta*ring%omega(k)*ring%omega(k)/(dble(ring%n)*dble(ring%n))
+        ring%m(:,k)=gamma_sq_local*m(:)*sigma   ! m_k = m*(omega_k/Omega)^2 = gamma^2*m*lambda_k
+        ring%m_inv(:,k)=1.0d0/ring%m(:,k)
+        !ring%omega(k)=omega             ! store Omega for thermostat mass computation
+      enddo
+    end if
+    !write(0,*)'PA-CMD: Omega = ',omega,'  gamma = ',dsqrt(abs(gamma_sq_local))
+  end if
+
+  !write(0,*)'max ring mode frequency: ',ring%omega(ring%n/2 + 1)
 
 case('GAUSSAVE','GAUSSAVF')
   if (.not.present(omega_in)) then
@@ -735,7 +763,7 @@ case('GAUSSAVE','GAUSSAVF')
   !Scale widths according to number of beads, since centroid is frozen:
   widths(:)=widths_in(:)*sqrt(dble(ring%n)/dble(ring%n-1))
 
-  do k=2,ring%n
+  do k=1,ring%n
     ring%m(:,k)=1.0d0/(ring%beta_n*(omega_in*widths(:))**2)
 !    ring%m(:,k)=1.0d0/(dsqrt(dble(ring%n))*ring%beta_n*(omega_in*widths_in(:))**2)
     ring%m_inv(:,k)=1.0d0/ring%m(:,k)
@@ -754,11 +782,14 @@ select case(thermostat)
 case('NHC-L', 'NHC-G')
 !For each mode, all chains have same mass
 !Set centroid NHC masses
-  ring%mNHC(:,1)=4.0d0*tau0*tau0/ring%beta_n
+  ring%mNHC(:,1)=tau0*tau0/ring%beta
+  ring%mNHC(1,1)=ring%natom*tau0*tau0/ring%beta
+  !ring%mNHC(:,1)=4.0d0*tau0*tau0/ring%beta_n
 
 !Set NHC masses for other modes
 do k=2,ring%n
   ring%mNHC(:,k)=1.0d0/(ring%beta_n*ring%omega(k)*ring%omega(k))
+  ring%mNHC(1,k)=ring%natom/(ring%beta_n*ring%omega(k)*ring%omega(k))
 end do
 
 end select
@@ -775,7 +806,7 @@ logical,optional ::skipr0, skipp0
 logical skipr0here,skipp0here
 
 real(8) omega,sigma
-integer kstart,k,ibead,iatom,idm
+integer kstart,k,iatom,idm
 
 if (present(skipr0)) then
   skipr0here = skipr0
@@ -833,7 +864,6 @@ interface
   end function Force_func
 end interface
 
-integer ibead,iatom,idm
 if (present(skip0)) then
   skip0here=skip0
 else
@@ -893,7 +923,7 @@ use ThermoModule
 implicit none
 type(T_Ring) ring
 real(8) dt,thermE
-integer i,iatom,idm,k,kstart
+integer iatom,idm,k,kstart
 !real(8) p(ring%ndim,ring%natom), m(ring%natom)
 real(8) tau
 logical nm_orig,skip0
@@ -1000,7 +1030,7 @@ implicit none
 type (T_Ring) :: ring
 real(8) dt
 logical :: skip0
-integer ibead,iatom,idm,kstart,kend
+integer kstart,kend
 
 
 if (skip0.and..not.ring%nm) then
@@ -1086,7 +1116,7 @@ implicit none
 type(T_Ring) :: ring
 real(8) :: x(ring%n)
 
-integer iatom,idm,ibead
+integer iatom,idm
 
 if (ring%nm) then
   write(6,*)'ERROR in nmtran_forward. Already transformed'
@@ -1128,7 +1158,7 @@ use FFTModule
 type(T_Ring) :: ring
 real(8) :: x(ring%n)
 
-integer iatom,ibead,idm
+integer iatom,idm
 
 if (.not.ring%nm) then
   write(6,*)'ERROR in nmtran_backward. Already transformed'

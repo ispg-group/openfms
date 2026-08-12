@@ -7,7 +7,7 @@ program tester
    use test_trajectory, only: collect_trajectory_suite
    use test_bundle, only: collect_bundle_suite
    use test_thermo, only: collect_thermo_suite
-   use test_ringbrief, only: collect_ring_suite
+   use test_ring, only: collect_ring_suite
    use GlobalModule, only: set_error_handler
 #ifndef __GNUC__
 ! Needed for isatty intrinsic
@@ -15,7 +15,6 @@ program tester
 #endif
    implicit none
    integer :: num_failed_tests, is
-   logical :: run_parallel
    type(testsuite_type), allocatable :: testsuites(:)
    character(len=*), parameter :: fmt = '("#", *(1x, a))'
    character(len=255) :: force_color
@@ -29,7 +28,8 @@ program tester
       call init_color_output(.true.)
    end if
 
-   testsuites = [ &
+   allocate(testsuites(5))
+   testsuites(:) = [ &
                 new_testsuite("ParticleModule", collect_particle_suite), &
                 new_testsuite("TrajectoryModule", collect_trajectory_suite), &
                 new_testsuite("BundleModule", collect_bundle_suite), &
@@ -43,9 +43,7 @@ program tester
 
    do is = 1, size(testsuites)
       write (error_unit, fmt) "Testing:", testsuites(is)%name
-      ! Only RingModule tests are safe/useful to run concurrently right now.
-      run_parallel = (trim(testsuites(is)%name) == "RingModule")
-      call run_testsuite(testsuites(is)%collect, error_unit, num_failed_tests, parallel=run_parallel)
+      call run_testsuite(testsuites(is)%collect, error_unit, num_failed_tests, parallel=.false.)
       ! Make sure FMS_DieError was not called unexpectedly.
       call check_dieerror_not_called()
       write (error_unit, *)

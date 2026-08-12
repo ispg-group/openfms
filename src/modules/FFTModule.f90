@@ -245,7 +245,7 @@ end subroutine fft_nm2hc
 
       SUBROUTINE CFFTB1 (N,C,CH,WA,WFAC) 
       IMPLICIT DOUBLE PRECISION (A-H,O-Z) 
-      integer ifac(15)
+      integer ifac(16)
       DIMENSION       CH(*)      ,C(*)       ,WA(*)      ,WFAC(8)
       IFAC=transfer(WFAC,IFAC)
       NF = IFAC(2)
@@ -310,7 +310,7 @@ end subroutine fft_nm2hc
       END SUBROUTINE CFFTB1                                          
       SUBROUTINE CFFTF1 (N,C,CH,WA,WFAC) 
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-      INTEGER ifac(15) 
+      integer ifac(16) 
       DIMENSION       CH(*)      ,C(*)       ,WA(*)      ,WFAC(8)
       IFAC=transfer(WFAC,IFAC) 
       NF = IFAC(2) 
@@ -375,7 +375,7 @@ end subroutine fft_nm2hc
       END SUBROUTINE CFFTF1                                          
       SUBROUTINE CFFTI1 (N,WA,WFAC) 
       IMPLICIT DOUBLE PRECISION (A-H,O-Z) 
-      INTEGER IFAC(15)
+      integer ifac(16)
       DIMENSION       WA(*)      ,WFAC(8),NTRYH(4) 
       DATA NTRYH(1),NTRYH(2),NTRYH(3),NTRYH(4)/3,4,2,5/ 
       IFAC=transfer(WFAC,IFAC)
@@ -737,7 +737,7 @@ end subroutine fft_nm2hc
       END SUBROUTINE DZFFTI                                          
       SUBROUTINE EZFFT1 (N,WA,WFAC) 
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-      integer IFAC(15) 
+      integer ifac(16) 
       DIMENSION       WA(*)      ,WFAC(8),NTRYH(4) 
       DATA NTRYH(1),NTRYH(2),NTRYH(3),NTRYH(4)/4,2,3,5/
       double precision,parameter :: TPI=twopi
@@ -2144,7 +2144,7 @@ end subroutine fft_nm2hc
       END SUBROUTINE RADFG                                           
       SUBROUTINE RFFTB1 (N,C,CH,WA,WFAC) 
       IMPLICIT DOUBLE PRECISION (A-H,O-Z) 
-      integer ifac(15)
+      integer ifac(16)
       DIMENSION       CH(*)      ,C(*)       ,WA(*)      ,WFAC(8) 
       IFAC=transfer(WFAC,IFAC)
       NF = IFAC(2)
@@ -2207,7 +2207,7 @@ end subroutine fft_nm2hc
       END SUBROUTINE RFFTB1                                           
       SUBROUTINE RFFTF1 (N,C,CH,WA,WFAC) 
       IMPLICIT DOUBLE PRECISION (A-H,O-Z) 
-      integer IFAC(15)
+      integer ifac(16)
       DIMENSION       CH(*)      ,C(*)       ,WA(*)      ,WFAC(8) 
       IFAC=transfer(WFAC,IFAC)
       NF = IFAC(2)
@@ -2270,7 +2270,7 @@ end subroutine fft_nm2hc
       END SUBROUTINE RFFTF1                                           
       SUBROUTINE RFFTI1 (N,WA,WFAC) 
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-      integer  IFAC(15)
+      integer  IFAC(16)
       DIMENSION       WA(*)      ,WFAC(8)    ,NTRYH(4) 
       DATA NTRYH(1),NTRYH(2),NTRYH(3),NTRYH(4)/4,2,3,5/ 
       IFAC=transfer(WFAC,IFAC)
