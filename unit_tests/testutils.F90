@@ -12,7 +12,7 @@ module testutils
    ! The flag and the error message are checked by the 'check_dieerror_called' subroutine.
    logical, private :: dieerror_called = .false.
    character(len=:), private, allocatable :: dieerror_msg
-   character(len=*), parameter :: newline = new_line("a")
+   character(len=*), parameter :: newline = new_line('a')
 
 contains
 
@@ -33,13 +33,13 @@ contains
       type(error_type), allocatable, intent(out) :: error
       character(len=*), intent(in) :: expected_msg
 
-      call check(error, dieerror_called, "DieError not called", "expected error: "//expected_msg)
+      call check(error, dieerror_called, 'DieError not called', 'expected error: '//expected_msg)
       if (allocated(error)) then
          call reset_unit_test_error()
          return
       end if
 
-      call check(error, expected_msg, dieerror_msg, more="Unexpected error message in FMS_DieError()")
+      call check(error, expected_msg, dieerror_msg, more='Unexpected error message in FMS_DieError()')
 
       call reset_unit_test_error()
    end subroutine check_dieerror_called
@@ -50,11 +50,11 @@ contains
 !> we stop immediately and don't run any more tests.
    subroutine check_dieerror_not_called()
       if (dieerror_called) then
-         write (error_unit, '(2x, a)') "Uncaught DieError call"
+         write (error_unit, '(2x, a)') 'Uncaught DieError call'
          if (allocated(dieerror_msg)) then
-            write (error_unit, '(7x, a)') "error message: "//dieerror_msg
+            write (error_unit, '(7x, a)') 'error message: '//dieerror_msg
          else
-            write (error_unit, '(7x, a)') "no error message allocated (weird!)"
+            write (error_unit, '(7x, a)') 'no error message allocated (weird!)'
          end if
          error stop 1
       end if

@@ -9,13 +9,13 @@
 ! Interface to Quantics operator library
 !--------------------------------------------------------------------------------------------------
 module QuanticsModule
-   use GlobalModule, only: FMS_DieError
+   use GlobalModule, only: FMS_DieError, fmiOut
 #ifdef Quantics
    use rddvrmod, only: nspfdof, spfdof, dop, ndof, long, maxdim, nddstate
    use operdef, only: alloc_operdef, hopsdim, ldddb
    use rdopermod, only: operinfo, rdoper
    use iorst, only: rstinfo
-   use dirdyn, only: ndoftsh, dercpdim, ndofddpes, ndofdd, &
+   use dirdyn, only: ndoftsh, & ! dercpdim, ndofddpes, ndofdd, &
                      dbnrec, nactdim, natmtsh, ldbsave, &
                      lupdhes, lnactdb, lddrddb, ddtrajnum, num_gp
    use dirdyn, only: alloc_dirdyn, alloc_dddb, atnam
@@ -29,11 +29,13 @@ module QuanticsModule
    use dbcootrans, only: ltshtrans, lddtrans ! , tshtransb
    !use op2lib, only: subvxxdo1
    !use xvlib, only: mvtxdd1, mvxxdd1
+#endif
 
    implicit none
    private
    public :: run_quantics
 
+#ifdef Quantics
    real(dop), allocatable :: qcoo(:), qcoo1(:), xgp(:)
    real(dop), allocatable :: pesdia(:, :)
    real(dop), allocatable :: derdia(:, :, :)
@@ -42,9 +44,11 @@ module QuanticsModule
    integer(long), allocatable :: point(:)
    real(dop), allocatable :: hops(:)
    integer :: gdof
+#endif
 
 contains
 
+#ifdef Quantics
    subroutine run_quantics(step, xyz0, cstate, en, gra, nadvec)
       use rddvrmod, only: ilog, ldd, basis, ldbsmall, rpbaspar
       integer, intent(in) :: step
@@ -210,7 +214,7 @@ contains
          allocate (zgp(1))
          allocate (nsgp(1))
          allocate (rsbaspar(sbaspar, maxdim, 1))
-         call alloc_dirdyn()
+         call alloc_dirdyn(fmiOut)
       end if
 
 !-----------------------------------------------------------------------
@@ -252,7 +256,7 @@ contains
       if (ldddb) then
          call preparedb(1)
          call getdbnrec(dbnrec)
-         call alloc_dddb()
+         call alloc_dddb(fmiOut)
       end if
 
 !-----------------------------------------------------------------------
@@ -404,11 +408,6 @@ contains
 
 !#######################################################################
 #else
-
-   implicit none
-   private
-   public :: run_quantics
-contains
 
    subroutine run_quantics(step, xyz0, cstate, en, gra, nadvec)
       integer, intent(in) :: step

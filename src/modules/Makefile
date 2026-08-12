@@ -51,7 +51,11 @@ endif
 # Warning: Fortran 2018 deleted feature: DO termination statement which is not END DO or CONTINUE with label 120 at (1)
 EispackModule.o: EispackModule.f
 	@echo "Compiling $<"
-	@$(FC) $(FFLAGS) $(INCFLAGS) -std=legacy -Wno-maybe-uninitialized -c $<
+ifeq ($(FCTYPE),gnu)
+	@$(FC) $(FFLAGS) $(INCFLAGS) -std=legacy -c $<
+else
+	@$(FC) $(FFLAGS) $(INCFLAGS) -c $<
+endif
 
 RandomModule.o: RandomModule.f90 GlobalModule.o
 
@@ -60,7 +64,7 @@ InitialModule.o: InitialModule.f90 GlobalModule.o FMSModule.o SpawnModule.o \
 	TrajectoryModule.o TrajectoryCalcsModule.o BundleModule.o RingModule.o
 
 SamplingModule.o: SamplingModule.f90 GlobalModule.o FMSModule.o EispackModule.o \
-	RandomModule.o QM_MM_Module.o TrajectoryModule.o
+	RandomModule.o QM_MM_Module.o TrajectoryModule.o BundleCalcsModule.o OverlapModule.o
 
 ThermoModule.o: ThermoModule.f90 GlobalModule.o TrajectoryModule.o TrajectoryCalcsModule.o
 

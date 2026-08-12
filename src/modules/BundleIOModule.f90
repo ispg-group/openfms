@@ -28,7 +28,7 @@ contains
    ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    subroutine FMS_WriteFBranching(B1)
       ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      type(T_TrajectoryBundle) :: B1
+      type(T_TrajectoryBundle), intent(in) :: B1
       integer(kind=DefInt) :: nstate, i
       real(kind=DefReal) :: Prob(B1%NumStates)
 
@@ -41,12 +41,12 @@ contains
 !     write header the first time through
       if (iunit == 0) then
          ! 1. Make the file name
-         file_name = trim(FMSWorkingDir)//"N.dat"
+         file_name = trim(FMSWorkingDir)//'N.dat'
 
          ! 2. See if it exists
          inquire (file=file_name, exist=file_exists)
          if (file_exists) then
-            open (newunit=iunit, file=trim(file_name), position="append")
+            open (newunit=iunit, file=trim(file_name), position='append')
          else
             open (newunit=iunit, file=trim(file_name))
             write (fmt_str, *) '(a12,', nstate, '(" State ",i3,2x ),a10)'
@@ -57,6 +57,7 @@ contains
       call FMS_Branching(B1, Prob)
 
       write (IUnit, '(1x,f11.2,50(1x,f11.9))') B1%CurrentTime, (Prob(i), i=1, nstate), FMS_Norm(B1)
+      flush (IUnit)
 
    end subroutine FMS_WriteFBranching
 
@@ -67,7 +68,7 @@ contains
    ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    subroutine FMS_WriteFEnergy(B1)
       ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      type(T_TrajectoryBundle) :: B1
+      type(T_TrajectoryBundle), intent(in) :: B1
 
       real(kind=DefReal) :: PotQM, KinQM, PotCl, KinCl
 
@@ -78,12 +79,12 @@ contains
 !     write header the first time through
       if (iunit == 0) then
          ! 1. Make the file name
-         file_name = trim(FMSWorkingDir)//"E.dat"
+         file_name = trim(FMSWorkingDir)//'E.dat'
 
          ! 2. See if it exists
          inquire (file=file_name, exist=file_exists)
          if (file_exists) then
-            open (newunit=iunit, file=trim(file_name), position="append")
+            open (newunit=iunit, file=trim(file_name), position='append')
          else
             open (newunit=iunit, file=trim(file_name))
             write (iunit, '(a10,6(a15))') '#Time', 'EPotentialQM', 'EKineticQM', 'ETotalQM', &
@@ -168,12 +169,12 @@ contains
 !     write header the first time through
       if (iunit == 0) then
          ! 1. Make the file name
-         file_name = trim(FMSWorkingDir)//"CFxn.dat"
+         file_name = trim(FMSWorkingDir)//'CFxn.dat'
 
          ! 2. See if it exists
          inquire (file=file_name, exist=file_exists)
          if (file_exists) then
-            open (newunit=iunit, file=trim(file_name), position="append")
+            open (newunit=iunit, file=trim(file_name), position='append')
          else
             open (newunit=iunit, file=trim(file_name))
             write (iunit, '(6(a10))') '#Time', 'Amp^2', 'CorrReal', 'CorrImag'
@@ -221,7 +222,7 @@ contains
       character(len=256) :: file_name
 
       ! 1. get the file name and unit number
-      file_name = trim(FMSWorkingDir)//"pcolap."//filename
+      file_name = trim(FMSWorkingDir)//'pcolap.'//filename
 
       ! 2. work out if we are opening a new file
       open_new_file = .false.
@@ -236,12 +237,12 @@ contains
       if (open_new_file) then
          open (newunit=IUnit, file=trim(file_name))
          if (NTrip /= 0) then
-            write (IUnit, '(a15,2(2x,i1), a15,2(2x,i1))') "# Child ID, Ms", T1%TrajID, T1%Ms, &
-               "Parent ID, Ms", T2%TrajID, T2%Ms
+            write (IUnit, '(a15,2(2x,i1), a15,2(2x,i1))') '# Child ID, Ms', T1%TrajID, T1%Ms, &
+               'Parent ID, Ms', T2%TrajID, T2%Ms
          else
-            write (IUnit, '(a10,i1,a9,i1)') "# Child ID", T1%TrajID, "Parent ID", T2%TrajID
+            write (IUnit, '(a10,i1,a9,i1)') '# Child ID', T1%TrajID, 'Parent ID', T2%TrajID
          end if
-         write (IUnit, '(4(4x,a10))') "# Time", "abs(S)", "Re(S)", "Im(S)"
+         write (IUnit, '(4(4x,a10))') '# Time', 'abs(S)', 'Re(S)', 'Im(S)'
       else
          open (newunit=iunit, file=trim(file_name), position='append')
       end if
@@ -267,20 +268,22 @@ contains
       integer :: IUnit
       character(len=256) :: file_name
 
-      file_name = trim(FMSWorkingDir)//"SOME."//filename
+      file_name = trim(FMSWorkingDir)//'SOME.'//filename
 
       ! 2. work out if we are opening a new file
       file_exists = .true.
-      if (present(firsttime) .and. firsttime) then
-         inquire (file=file_name, exist=file_exists)
+      if (present(firsttime)) then
+         if (firsttime) then
+            inquire (file=file_name, exist=file_exists)
+         end if
       end if
 
       ! 3. open the file
       if (.not. file_exists) then
          open (newunit=IUnit, file=trim(file_name))
-         write (IUnit, '(a15,2(2x,i1), a15,2(2x,i1))') "# Child ID, Ms", T1%TrajID, T1%Ms, &
-            "Parent ID, Ms", T2%TrajID, T2%Ms
-         write (IUnit, '(4(4x,a10))') "# Time", "Centroid pos.", "SOME (Re, Im)", "SOMENorm"
+         write (IUnit, '(a15,2(2x,i1), a15,2(2x,i1))') '# Child ID, Ms', T1%TrajID, T1%Ms, &
+            'Parent ID, Ms', T2%TrajID, T2%Ms
+         write (IUnit, '(4(4x,a10))') '# Time', 'Centroid pos.', 'SOME (Re, Im)', 'SOMENorm'
       else
          open (newunit=iunit, file=trim(file_name), position='append')
       end if
@@ -304,15 +307,16 @@ contains
       ! - - - - - - - -
       use SpawnModule, only: spawn_couple
       type(T_Trajectory), intent(in) :: T1, T2
+      integer(DefInt), intent(in) :: js
       character(len=*), intent(in) :: filename
-      logical, optional :: firsttime
+      logical, intent(in), optional :: firsttime
       logical :: file_exists, open_new_file
 
-      integer :: IUnit, js
+      integer :: IUnit
       character(len=256) :: file_name
 
       ! 1. get the file name and unit number
-      file_name = trim(FMSWorkingDir)//"SOCeff."//filename
+      file_name = trim(FMSWorkingDir)//'SOCeff.'//filename
 
       ! 2. work out if we are opening a new file
       open_new_file = .false.
@@ -326,8 +330,8 @@ contains
       ! 3. open the file
       if (open_new_file) then
          open (newunit=IUnit, file=trim(file_name))
-         write (IUnit, '(a15,2(2x,i1), a15,2(2x,i1))') "# Child ID, Ms", T1%TrajID, T1%Ms, &
-            "Parent ID, Ms", T2%TrajID, T2%Ms
+         write (IUnit, '(a15,2(2x,i1), a15,2(2x,i1))') '# Child ID, Ms', T1%TrajID, T1%Ms, &
+            'Parent ID, Ms', T2%TrajID, T2%Ms
       else
          open (newunit=iunit, file=trim(file_name), position='append')
       end if
@@ -344,8 +348,9 @@ contains
 !!    NOTE: Currently not used anywhere
 !<
    subroutine FMS_ReadFBundle(B1, IUnitH, iUnitS, iUnitSDot)
-      type(T_TrajectoryBundle) :: B1
-      integer(kind=DefInt) :: IUnitH, iUnitS, iUnitSDot, iTraj
+      type(T_TrajectoryBundle), intent(inout) :: B1
+      integer(kind=DefInt), intent(in) :: IUnitH, iUnitS, iUnitSDot
+      integer(kind=DefInt) :: iTraj
       real(kind=DefReal) :: TimeTemp
 
 !     Read in bundle matrices
@@ -377,10 +382,8 @@ contains
 !!    For reading complex matrix files
 !<
       subroutine FMS_ReadCMat(A, Unit)
-         complex(kind=DefComp) :: A(:, :)
-         integer(kind=DefInt) :: Unit
-         intent(inout) A
-         intent(in) Unit
+         complex(kind=DefComp), intent(inout) :: A(:, :)
+         integer(kind=DefInt), intent(in) :: Unit
          integer(kind=DefInt) :: i, j
 
          do i = 1, size(A, dim=1)
@@ -398,7 +401,7 @@ contains
    subroutine FMS_Output(B1, FirstTime)
       use SMDModule, only: SMD_Print
       type(t_trajectoryBundle), intent(in) :: B1
-      logical, optional :: FirstTime
+      logical, optional, intent(in) :: FirstTime
 
       integer(kind=DefInt) :: ITraj, JTraj, CBFi, CBFj
       integer(kind=DefInt), save :: NPreviousTraj, nPrintStep

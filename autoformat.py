@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-
-
+# NOTE: prek will automatically install these dependencies
+# https://prek.j178.dev/languages/#dependency-management-with-uv
+#
 # /// script
 # requires-python = ">=3.6"
 # dependencies = [
 #     "configargparse",
 # ]
 # ///
+#
 #############################################################################
 #    This file is part of fprettify.
 #    Copyright (C) 2016-2019 Patrick Seewald, CP2K developers group
@@ -35,9 +37,11 @@
 """
 
 import sys
+
 from fprettify import run
+
 try:
-    import configargparse
+    import configargparse  # noqa: F401
 except ImportError:
     print("ERROR: Could not find configargparse package")
     print("Please install the package, e.g. 'pip install --user configargparse'")

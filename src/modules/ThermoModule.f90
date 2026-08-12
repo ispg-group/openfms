@@ -41,9 +41,9 @@ contains
       tau = thermtime / dt
 
       select case (therm)
-      case ("bussi_g")
+      case ('bussi_g')
          call thermo_bussi_global(ndim, natom, p, mass, beta_s, tau, thermE, zcom_s)
-      case ("bussi_l")
+      case ('bussi_l')
          call thermo_bussi_local(ndim, natom, p, mass, beta_s, tau, thermE, zcom_s)
       !case ("langevin")
          !call LangevinThermo_O(ndim, natom, p, mass, beta_s, thermtime, dt, thermE, zcom_s)
@@ -227,7 +227,7 @@ contains
       integer, intent(in) :: ia
 
       gamdev = 0.0d0
-      call FMS_DieError("ERROR: gamdev not implemented")
+      call FMS_DieError('ERROR: gamdev not implemented')
    end function gamdev
 
 ! Gaussian random number generator using Box-Muller transform
@@ -265,7 +265,7 @@ contains
       integer(4), optional :: iseed
       double precision :: rnd
 
-      call FMS_DieError("ERROR: thermo_ran not implemented")
+      call FMS_DieError('ERROR: thermo_ran not implemented')
       if (present(iseed)) then
          ! TODO: Use FMS_ranb
          !rnd=ran1(iseed)

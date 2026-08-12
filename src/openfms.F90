@@ -27,6 +27,7 @@ program OpenFMS
    integer(kind=DefInt) :: NumTraj, l
    integer(kind=DefInt) :: numparticles, numstates
    real(kind=DefReal) :: simulationtime, dt
+   character(len=:), allocatable :: tc_port_name
    real(8) :: RndNum
 
 !-----------------------------------------------------------------------
@@ -40,6 +41,7 @@ program OpenFMS
       FMSWorkingDir(l + 1:) = '/'
    end if
 
+   call get_cmdline(tc_port_name)
    ! Start the timer
    call cpu_time(timei)
 
@@ -76,7 +78,7 @@ program OpenFMS
 
    ! Here we make the first call to TeraChem et al!
    ! Must be separate from FMS_ESInit to prevent circular module dependency
-   call initialize_interface(NumParticles, NumStates)
+   call initialize_interface(NumParticles, NumStates, tc_port_name)
 
    ! Allocate memory structures, read initial geometry
    call initialize_bundle(Bundle, NumTraj, NumParticles, NumStates, inInitState)
@@ -88,7 +90,7 @@ program OpenFMS
    ! Construct initial system state
    if (inIRestart == 0) then
       call FMS_InitialCond(Bundle)
-      call FMS_DeleteFile("Checkpoint.txt")
+      call FMS_DeleteFile('Checkpoint.txt')
    else
       call GetRestart(Bundle, RestartTime)
       call FMS_UpdateBundle(Bundle)
@@ -206,23 +208,27 @@ contains
 !<
    subroutine print_header()
       character(len=256) :: host
-      character(len=*), parameter :: divider = '--------------------------------------------'
+      character(len=*), parameter :: divider = &
+                                     '--------------------------------------------------------------------------------'
+      character(len=*), parameter :: title = 'OpenFMS'
+      character(len=*), parameter :: subtitle = 'FMS for the Masses...'
+      character(len=*), parameter :: credit = 'Courtesy TJM and MBN'
 
       call hostnm(host)
 
-      write (fmiOut, *) divider
-      write (fmiOut, *) '                    OpenFMS'
+      write (fmiOut, '(a)') divider
+      write (fmiOut, '(a)') repeat(' ', (len(divider) - len(title)) / 2)//title
       write (fmiOut, *)
-      write (fmiOut, *) '              FMS for the Masses...'
-      write (fmiOut, *) '              Courtesy TJM and MBN'
+      write (fmiOut, '(a)') repeat(' ', (len(divider) - len(subtitle)) / 2)//subtitle
+      write (fmiOut, '(a)') repeat(' ', (len(divider) - len(credit)) / 2)//credit
       write (fmiOut, *)
 
-      ! Defined in print_version.F90
-      call print_version(fmiOut)
+      ! Defined in generated build_info.F90
+      call print_build_info(fmiOut)
 
-      write (fmiOut, *) 'host: '//trim(adjustl(host))
+      write (fmiOut, '(1x, a, t25, a)') 'host:', trim(adjustl(host))
       write (fmiOut, *)
-      write (fmiOut, *) divider
+      write (fmiOut, '(a)') divider
       write (fmiOut, *)
 
 !     NOTE(danielhollas): We do not print out the following list
@@ -321,17 +327,18 @@ contains
       flush (fmiOut)
    end subroutine print_simulation_info
 
-   subroutine initialize_interface(NumParticles, NumStates)
+   subroutine initialize_interface(NumParticles, NumStates, tc_port_name)
       use GlobalModule, only: gliModel, TEMPLATE, TC
       use TemplateModule, only: FMS_TemplateInit
       use TerachemModule, only: InitTerachem
       integer, intent(in) :: NumParticles, NumStates
+      character(len=:), allocatable, intent(inout) :: tc_port_name
 
       select case (gliModel)
       case (TEMPLATE)
          call FMS_TemplateInit()
       case (TC)
-         call InitTerachem(NumParticles, NumStates)
+         call InitTerachem(NumParticles, NumStates, tc_port_name)
       case default
          continue
       end select
@@ -432,5 +439,62 @@ contains
       deallocate (T1)
 
    end subroutine initialize_bundle
+
+   subroutine get_cmdline(tc_port_name)
+      use, intrinsic :: iso_fortran_env, only: output_unit
+#ifdef TeraChem
+      use mpi, only: MPI_MAX_PORT_NAME
+      integer :: len
+#endif
+      character(len=:), allocatable, intent(out) :: tc_port_name
+      character(len=256) :: arg
+      integer :: i
+
+      i = 0
+      do while (i < command_argument_count())
+
+         i = i + 1
+         call get_command_argument(i, arg)
+
+         select case (arg)
+         case ('-h', '--help')
+            call print_help()
+            stop 0
+         case ('-v', '--version')
+            call print_version(output_unit)
+            stop 0
+         case ('--tc-port-name')
+#ifdef TeraChem
+            i = i + 1
+            ! NOTE: Manual allocation shouldn't be needed for newer compilers
+            ! https://www.scivision.dev/fortran-character-allocatable/
+            allocate (character(MPI_MAX_PORT_NAME) :: tc_port_name)
+
+            call get_command_argument(i, tc_port_name, length=len)
+            if (len > MPI_MAX_PORT_NAME) then
+               call FMS_DieError('--tc-port-name argument was too long')
+            end if
+            if (trim(tc_port_name) == '') then
+               call FMS_DieError('Empty --tc-port-name argument. Provide port name of the TeraChem server')
+            end if
+#else
+            call FMS_DieError('OpenFMS not compiled with TC interface, --tc-port-name not available')
+#endif
+         case default
+            call print_help()
+            call FMS_DieError('Invalid command line argument "'//trim(arg)//'"')
+         end select
+
+      end do
+   end subroutine get_cmdline
+
+   subroutine print_help()
+      print '(a)', 'OpenFMS: Ab initio Multiple spawning for the masses'
+      print '(a)', ''
+      print '(a)', 'cmdline options:'
+      print '(a)', ''
+      print '(a)', '  -h, --help       print help and exit'
+      print '(a)', '  -v, --version    print version'
+   end subroutine print_help
 
 end program OpenFMS

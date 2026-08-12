@@ -18,7 +18,7 @@ syntax: glob
 *.Po
 *.ps
 *.pdf
-
+.DS_Store
 bin/
 
 *CONFIG*
@@ -30,14 +30,17 @@ tests/*/*diff
 tests/*/*txt
 tests/*/*xyz
 tests/*/*dcd
-tests/*/Spawn.?
 tests/*/fort.*
-tests/*/*.[1-9]
+tests/*/[a-zA-Z]*.[1-9]*
 # Don't ignore these
 !tests/*/Control.dat
 !tests/*/Geometry.dat
 
 # auto-generated stuff from FMS
 src/moddepend
+src/build_info.F90
 # from fprettify
 __pycache__/
+
+# FORD dev docs 
+developer_docs

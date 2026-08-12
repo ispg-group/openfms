@@ -24,7 +24,6 @@ which was copied over from AIMS test.
  NumInitBasis=1
 ! Output
  zAllText=.true.     ! Output all text-based files
- zDCD=.true.	! Output trajectory in DCD format
  zForce=.true.	! output forces
  nBonds=1
  iBond(1,1)=1

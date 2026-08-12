@@ -23,6 +23,10 @@ module TerachemModule
    private
    public :: InitTerachem, tc_finalize, RunTerachem
 
+   ! Sleep interval in miliseconds while waiting for TC calculation to finish.
+   ! For now, this is hardcoded.
+   integer, parameter :: MPI_MILISLEEP = 50
+
 #ifdef TeraChem
    integer, public, save :: newcomm = MPI_COMM_NULL ! Initialized in connect_to_terachem subroutine
 
@@ -33,16 +37,18 @@ module TerachemModule
    interface
       subroutine MPI_Send(buf, count, datatype, dest, tag, comm, ierr)
          implicit none
-         type(*), dimension(*) :: buf
-         integer :: count, datatype, dest, tag, comm, ierr
+         type(*), dimension(*), intent(in) :: buf
+         integer, intent(in) :: count, datatype, dest, tag, comm
+         integer, intent(inout) :: ierr
       end subroutine MPI_Send
 
       subroutine MPI_Recv(buf, count, datatype, source, tag, comm, status, ierr)
          import MPI_STATUS_SIZE
          implicit none
-         type(*), dimension(*) :: buf
-         integer :: count, datatype, source, tag, comm, ierr
-         integer :: status(MPI_STATUS_SIZE)
+         type(*), dimension(*), intent(inout) :: buf
+         integer, intent(in) :: count, datatype, source, comm, tag
+         integer, intent(inout) :: ierr
+         integer, intent(inout) :: status(MPI_STATUS_SIZE)
       end subroutine MPI_Recv
    end interface
 #endif
@@ -50,15 +56,15 @@ module TerachemModule
 contains
 
 #ifdef TeraChem
-   subroutine InitTerachem(NumParticles, NumStates)
+   subroutine InitTerachem(NumParticles, NumStates, tc_port_name)
       use GlobalModule, only: BohrToAng
       use ElecStrucModule
+      integer(kind=DefInt), intent(in) :: NumParticles, NumStates
+      character(len=:), allocatable, intent(inout) :: tc_port_name
 
       integer, parameter :: CLEN = 128
       integer(kind=DefInt) :: natoms, nqmmm
       real(kind=DefReal), allocatable :: atcoords(:, :)
-      character(len=:), allocatable :: server_name
-      integer(kind=DefInt) :: NumParticles, NumStates
       character(len=2), allocatable :: atom_types(:)
       integer(kind=DefInt) :: bufints(20)
       integer :: status(MPI_STATUS_SIZE)
@@ -70,10 +76,12 @@ contains
       character(len=1) :: txt
       logical :: GeomInAngs
       integer :: iunit
+      character(len=:), allocatable :: tc_options_file
+      logical :: file_exists
+      character(len=500) :: errmsg
 
       ! Setup on first program call
       write (fmiOut, *) '    >>>> FMS / TC <<<<'
-      server_name = get_server_name()
 
       natoms = NumParticles
       nqmmm = esNMM
@@ -82,7 +90,7 @@ contains
       ! Initialization: Connect to "terachem_port", set
       ! newcomm (global), send relevant namelist variables.
       ! ---------------------------------------------------
-      call connect_to_terachem(server_name)
+      call connect_to_terachem(tc_port_name)
 
       ! -------------------
       ! Send job info to TC
@@ -90,8 +98,17 @@ contains
       write (dbuffer(:, 1), '(a,/,E23.16)') 'coupthre', gldMaxEDiff
       write (dbuffer(:, 2), '(a,/,i0)') 'fmsnumstates', NumStates
 
-      ! Read the "misc_options" file and send the contents to TeraChem
-      open (newunit=iunit, file="misc_options")
+      ! Read the "tc_options" file and send its contents to TeraChem
+      ! If `tc_options` does not exist, try `misc_options` for backward compatibility
+      tc_options_file = 'tc_options'
+      inquire (file=tc_options_file, exist=file_exists)
+      if (.not. file_exists) then
+         tc_options_file = 'misc_options'
+      end if
+      open (newunit=iunit, file=tc_options_file, status='old', action='read', iostat=ierr, iomsg=errmsg)
+      if (ierr /= 0) then
+         call FMS_DieError(trim(errmsg))
+      end if
 
       noptions = 2
       do
@@ -111,8 +128,7 @@ contains
 !   Mpi::init in mpi_base.cpp on the TeraChem side.
 
 !   Send input parameters to TC (the startfile)
-      call MPI_Send(dbuffer, 2 * clen * size(dbuffer, 2), MPI_CHARACTER, 0, 2, &
-                    newcomm, ierr)
+      call MPI_Send(dbuffer, 2 * clen * size(dbuffer, 2), MPI_CHARACTER, 0, 2, newcomm, ierr)
 
       ! ---------------------------------------------
       ! Begin sending the inital geometry to terachem
@@ -122,14 +138,14 @@ contains
 
       ! Read initial coordinates from file
       ! TODO: Use the existing subroutine for this!
-      open (newunit=iunit, file="Geometry.dat", action='read', status='old')
+      open (newunit=iunit, file='Geometry.dat', action='read', status='old')
 
       GeomInAngs = .false.
       read (iunit, *) unitname
       txt = unitname(7:7)
-      if (txt == "a" .or. txt == "A") then ! Angstrom
+      if (txt == 'a' .or. txt == 'A') then ! Angstrom
          GeomInAngs = .true.
-      elseif (txt == "b" .or. txt == "B") then ! Bohr
+      else if (txt == 'b' .or. txt == 'B') then ! Bohr
          GeomInAngs = .false.
       end if
 
@@ -208,35 +224,38 @@ contains
    end function get_server_name
 
    ! Connect to the TeraChem server.
-   subroutine connect_to_terachem(server_name)
+   subroutine connect_to_terachem(port_name)
       use mpi, only: MPI_MAX_PORT_NAME, MPI_Init, &
                      MPI_Comm_size, MPI_COMM_CONNECT, MPI_INFO_NULL
 
-      character(len=*), intent(in) :: server_name
+      character(len=:), allocatable, intent(inout) :: port_name
+      character(len=:), allocatable :: server_name
       integer :: nproc
-      character(len=MPI_MAX_PORT_NAME) :: port_name
       integer :: ierr
 
-      write (*, *) "Terachem MPI Initialization"
+      write (*, *) 'Terachem MPI Initialization'
 
       ! Initialize MPI.
       call MPI_Init(ierr)
       if (ierr /= 0) then
-         call FMS_DieError("MPI_Init failed!")
+         call FMS_DieError('MPI_Init failed!')
       end if
 
       ! Check the number of processes, only 1 is allowed!
       call MPI_Comm_size(MPI_COMM_WORLD, nproc, ierr)
       if (nproc /= 1) then
          write (*, '(A,I0)') 'Number of MPI processes: ', nproc
-         call FMS_DieError("Only one MPI process should be running")
+         call FMS_DieError('Only one MPI process should be running')
       end if
 
       ! -----------------------------------
       ! Look for server_name, get port name
       ! After 60 seconds, exit if not found
       ! -----------------------------------
-      call lookup_port_via_nameserver(server_name, port_name)
+      if (.not. allocated(port_name)) then
+         server_name = get_server_name()
+         port_name = lookup_port_via_nameserver(server_name)
+      end if
 
       ! Establish new communicator via port name
       call MPI_COMM_CONNECT(port_name, MPI_INFO_NULL, 0, MPI_COMM_WORLD, newcomm, ierr)
@@ -272,11 +291,11 @@ contains
    end subroutine tc_finalize
 
    ! Look for server_name via MPI nameserver, get port name
-   subroutine lookup_port_via_nameserver(server_name, port_name)
+   function lookup_port_via_nameserver(server_name) result(port_name)
       use mpi, only: MPI_wtime, MPI_lookup_name, MPI_comm_set_errhandler, &
                      MPI_MAX_PORT_NAME, MPI_ERRORS_RETURN, MPI_ERRORS_ARE_FATAL, MPI_INFO_NULL
       character(len=*), intent(in) :: server_name
-      character(len=MPI_MAX_PORT_NAME), intent(out) :: port_name
+      character(len=MPI_MAX_PORT_NAME) :: port_name
       ! Give up trying to find the port after this many seconds
       integer, parameter :: connection_timeout = 30
       real(DefReal) :: timer
@@ -325,13 +344,14 @@ contains
          write (fmiOut, *) 'WARNING: Could not set MPI error handler to MPI_ERRORS_ARE_FATAL!'
       end if
 
-   end subroutine lookup_port_via_nameserver
+   end function lookup_port_via_nameserver
 
    subroutine RunTerachem(T_FMS, iCalcState, jCalcState, CalcCoup)
       use ElecStrucModule
       type(T_Trajectory), intent(inout) :: T_FMS
       integer(kind=DefInt), intent(in) :: iCalcState, jCalcState
       logical, intent(in) :: CalcCoup
+
       integer(DefInt), save :: first_call = 1
       real(kind=DefReal), allocatable :: atcoords(:, :), tmpcoords(:)
       integer(kind=DefInt) :: bufints(20)
@@ -487,6 +507,7 @@ contains
       ! TeraChem pitches from: Fms::send in fms.cpp
       ! ------------------------------------------------
 
+      call wait_for_terachem(newcomm)
       write (*, '(a)') 'Receiving data from TeraChem'
 
       !    Receive energies from TC
@@ -643,19 +664,19 @@ contains
 !<
    subroutine FMS_CheckOverlap(T1, SMat, nstate)
       use ElecStrucModule
-      type(T_Trajectory) :: T1
+      type(T_Trajectory), intent(inout) :: T1
+      real(kind=DefReal), intent(in) :: SMat(nstate, nstate)
+      integer(kind=DefInt), intent(in) :: nstate
 
-      integer(kind=DefInt) :: nstate
       integer(kind=DefInt) :: IState, JState, ioccstate
 
-      real(kind=DefReal) :: SMat(nstate, nstate)
       real(kind=DefReal) :: SCI_II, SCI_IJ, SCI_JI, SCI_JJ
       real(kind=defReal) :: E_occ, E_I, E_J, E_occ_old, E_I_old, E_J_old
 
       logical :: ImportantState
 
 1999  format('========================================================')
-2000  format("WARNING: Trajectory jumped an intersection.")
+2000  format('WARNING: Trajectory jumped an intersection.')
 
 !     Don't bother correcting phase if there was no electronic structure previously stored
       if (.not. T1%ESFlags%zESExists) then
@@ -679,7 +700,7 @@ contains
             SCI_IJ = SMat(IState, JState)
             SCI_JI = SMat(JState, IState)
 
-            write (*, *) "Overlap matrix for states:", IState, JState
+            write (*, *) 'Overlap matrix for states:', IState, JState
             write (*, *) SCI_II, SCI_JI
             write (*, *) SCI_IJ, SCI_JJ
             write (*, *)
@@ -750,10 +771,41 @@ contains
 
    end subroutine FMS_CheckOverlap
 
+   subroutine wait_for_terachem(tc_comm)
+      integer, intent(in) :: tc_comm
+      integer :: status(MPI_STATUS_SIZE)
+      integer :: ierr
+      logical :: ready
+
+      if (MPI_MILISLEEP <= 0) return
+
+      ! The idea here is to reduce the CPU usage of MPI_Recv() by taking a brief nap.
+      ! In most MPI implementations, MPI_Recv() is actively polling the other end
+      ! (in this case TeraChem) and consumes a whole CPU core. That's clearly wasteful,
+      ! since we're typically waiting for a long time for the ab initio result.
+      !
+      ! Some implementation provide an option to change this behaviour,
+      ! but I didn't figure out any for MPICH.
+      ! Based according to an answer here:
+      ! http://stackoverflow.com/questions/14560714/probe-seems-to-consume-the-cpu
+
+      ready = .false.
+      ! TODO: we need to somehow make sure that
+      ! we don't wait forever if TeraChem crashes.
+      ! At this moment, this is ensured at the BASH script level.
+      do while (.not. ready)
+         call MPI_IProbe(MPI_ANY_SOURCE, MPI_ANY_TAG, tc_comm, ready, status, ierr)
+         call milisleep(MPI_MILISLEEP)
+      end do
+   end subroutine wait_for_terachem
+
 #else
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    ! Stub routines when FMS is compiled without TeraChem interface
-   subroutine InitTerachem(NumParticles, NumStates)
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   subroutine InitTerachem(NumParticles, NumStates, tc_port_name)
       integer(kind=DefInt), intent(in) :: NumParticles, NumStates
+      character(len=:), allocatable, intent(inout) :: tc_port_name
       call FMS_DieError('ERROR: not compiled for use with TeraChem.')
    end subroutine InitTerachem
 
@@ -794,7 +846,7 @@ contains
       c_err = usleep(usec)
       ! DH: If you ever see this warning, please report it!
       if (c_err /= 0) then
-         write (error_unit, '(a,i0)') "WARNING: usleep syscall returned an error: ", c_err
+         write (error_unit, '(a,i0)') 'WARNING: usleep syscall returned an error: ', c_err
       end if
    end subroutine milisleep
 

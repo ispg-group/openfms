@@ -288,7 +288,7 @@ contains
 
          complex(kind=DefComp), dimension(size(C_t), size(C_t)) :: Id, B, Bn, Bn2, Bn3, Bn4, tayl, tayl_prod
 
-         real*8 :: error
+         real(kind=DefReal) :: error
 
          ndim = size(C_t)
          Id = (0., 0.)
@@ -729,7 +729,7 @@ contains
 !
       if (smSMD) then
          if (Bundle%NumTraj > 1) then
-            call FMS_DieError("SMD should only have 1 trajectory")
+            call FMS_DieError('SMD should only have 1 trajectory')
          end if
          if (SMD_Completed()) then
             call FMS_Shutdown(B1=Bundle)
@@ -813,7 +813,7 @@ contains
             if (iState == B1%Trajectory(iTraj)%StateID) cycle
             ! TODO(DH): Switch to SpawnModule::spawn_couple
             ! https://github.com/ispg-group/fms90-redux/issues/79
-            if (abs(FMS_SpawnDCouple(B1%Trajectory(iTraj), iState)) > spdCSThresh) then
+            if (abs(FMS_SpawnDCouple(B1%Trajectory(iTraj), iState)) > spawn_params%CSThresh) then
                zCoupling = .true.
                exit
             end if

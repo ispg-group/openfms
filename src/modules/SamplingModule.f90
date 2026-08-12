@@ -43,7 +43,6 @@ module SamplingModule
 !> For quasiclassical initial conditions, modes with extra quanta
    integer(kind=DefInt), public :: inIAddQuanta(100)
 
-   save
 contains
 
 !>
@@ -708,7 +707,7 @@ contains
 !    rotate it with our random rotation matrix.
 1        continue
          IOne = int(dble(NPSDim - 1) * FMS_ranb(i4zero) + 1.50d0)
-         if (IOne > NPSDim .or. IOne == 0) go to 1
+         if (IOne > NPSDim .or. IOne == 0) goto 1
 !    Matrix-vector multiplication CRMat*UnitVector
          do i = 1, NPSDim
             UVec(i) = real(CRMat(i, IOne))
@@ -966,12 +965,12 @@ contains
       ! TODO: call 'write_initial_condition' subroutine
       output_file = trim(FMSWorkingDir)//'Out.xyz'
       open (newunit=IGUnit, file=output_file, action='write')
-      write (IGUnit, '(A10)') "UNITS=BOHR"
+      write (IGUnit, '(A10)') 'UNITS=BOHR'
       write (IGUnit, *) natoms
       do I = 1, natoms
          write (IGUnit, 1005) T1%Particle(I)%Elmnt, (atcen((I - 1) * 3 + J), J=1, 3)
       end do
-      write (IGUnit, '(A9)') "# momenta"
+      write (IGUnit, '(A9)') '# momenta'
       do I = 1, natoms
          write (IGUnit, 1006) (atmom((I - 1) * 3 + J), J=1, 3)
       end do
@@ -1043,7 +1042,7 @@ contains
       real(DefReal), allocatable :: OReal(:, :)
 
       real(kind=DefReal) :: dmass, fac
-      integer(kind=DefInt) :: natom3, IFUnit, ios
+      integer(kind=DefInt) :: natom3, IFUnit
       integer(kind=DefInt) :: natomsin, i, j, k, ist, lst, ix, idof, ierr, ifreq
       character(len=256) :: filein, fileout, cbuffer
       character(len=10) :: method
@@ -1080,9 +1079,9 @@ contains
 
       select case (method)
 
-      case ("HESS")
+      case ('HESS')
          filein = trim(FMSWorkingDir)//'Hessian.dat'
-         open (newunit=ifunit, file=filein, status='old', action='read', iostat=ios)
+         open (newunit=ifunit, file=filein, status='old', action='read')
          write (fmiOut, *) 'Using Hessian.dat to find normal mode frequencies'
          read (IFUnit, *, end=999) natomsin
          if (natomsin /= natoms) then
@@ -1133,7 +1132,7 @@ contains
          end do
          close (IFUnit)
 
-      case ("FREQMP")
+      case ('FREQMP')
          write (fmiOut, *) 'Found FrequenciesMP.dat'
          filein = trim(FMSWorkingDir)//'FrequenciesMP.dat'
          open (newunit=ifunit, file=filein, status='old', action='read')
@@ -1169,13 +1168,13 @@ contains
          end do
          close (IFUnit)
 
-      case ("FREQ")
+      case ('FREQ')
          ! Handled below
          write (fmiOut, *) 'Found Frequencies.dat'
 
       case default
 
-         call FMS_DieError("No frequencies/Hessian found")
+         call FMS_DieError('No frequencies/Hessian found')
 
       end select
 
@@ -1276,7 +1275,7 @@ contains
       deallocate (Oreal)
 
       return
-999   call fms_dieerror("Reached end of file "//trim(filein))
+999   call fms_dieerror('Reached end of file '//trim(filein))
 
    end subroutine read_frequencies
 
@@ -1293,12 +1292,12 @@ contains
       output_file = trim(FMSWorkingDir)//'Out.xyz'
       open (newunit=IGUnit, file=output_file, action='write')
 
-      write (IGUnit, '(a)') "UNITS=BOHR"
+      write (IGUnit, '(a)') 'UNITS=BOHR'
       write (IGUnit, *) natoms
       do I = 1, natoms
          write (IGUnit, '(a,3es24.15)') T%Particle(I)%Elmnt, (R(I, J), J=1, 3)
       end do
-      write (IGUnit, '(a)') "# momenta"
+      write (IGUnit, '(a)') '# momenta'
       do I = 1, natoms
          write (IGUnit, '(3ES24.15)') (P(I, J), J=1, 3)
       end do
@@ -1403,7 +1402,7 @@ contains
       call T_init%destroy()
 
       B1_norm = FMS_Norm(B1)
-      write (fmiOut, *) "Overlap between Initial Trajectory and the Bundle"
+      write (fmiOut, *) 'Overlap between Initial Trajectory and the Bundle'
       write (fmiOut, *) sqrt(B1_norm)
 
       ! normalize the Bundle again

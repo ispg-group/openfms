@@ -1,6 +1,6 @@
 !     Copyright Todd J. Martinez and Raphael D. Levine, 1994
 !>
-!!    @brief Specification of the "Bundle" datatype and methods.
+!!    Specification of the "Bundle" datatype and methods.
 !!
 !!    The T_TrajectoryBundle datatype contains a specification of the
 !!    full nuclear/electronic wavefunction at a given instant in
@@ -47,7 +47,7 @@ module BundleModule
    end type T_BundleMatrices
 
 !>
-!!    @brief Datatype holding a collection of trajectories.
+!!    Datatype holding a collection of trajectories.
 !!
 !!    A bundle represents the full
 !!    wavefunction, represented as a linear combination of the trajectory
@@ -80,6 +80,7 @@ module BundleModule
       procedure :: destroy => destroy_bundle !< Deallocates internal bundle structures
       procedure :: add_traj => add_traj_to_bundle !< Adds trajectory to bundle
       procedure :: add_traj_triplet => add_traj_triplet_to_bundle !< Adds triplet trajectory to bundle
+      procedure, public :: copy_from
 
    end type T_TrajectoryBundle
 
@@ -93,13 +94,13 @@ contains
 
 ! Constructors/Destructors/Assignment
 !>
-!|    Memory allocation for creating a trajectory bundle
-!<
+!>    Memory allocation for creating a trajectory bundle
+!>
    subroutine create_bundle(B1, NumTraj, NumDeadTraj, NumStates, NumParticles, NCBFs)
       class(T_TrajectoryBundle), intent(inout) :: B1
-      integer(kind=DefInt), intent(in) :: NumTraj, NumDeadTraj, NumStates, NumParticles
+      integer(kind=DefInt), intent(in) :: NumTraj, NumDeadTraj, NumStates, NumParticles, NCBFs
 
-      integer(kind=DefInt) :: ITraj, iCent, ICBF, JCBF, NCBFs
+      integer(kind=DefInt) :: ITraj, iCent, ICBF, JCBF
 
       if (allocated(B1%Trajectory)) then
          if (B1%NumTraj == NumTraj .and. B1%NumDeadTraj == NumDeadTraj .and. &
@@ -168,7 +169,7 @@ contains
 !!    Memory deallocation to destroy a trajectory bundle structure
 !<
    subroutine destroy_bundle(B)
-      class(T_TrajectoryBundle) :: B
+      class(T_TrajectoryBundle), intent(inout) :: B
 
       integer(kind=DefInt) :: n
 
@@ -221,12 +222,14 @@ contains
    end subroutine destroy_bundle
 
 !>
-!!    Memory allocation and book-keeping for B1=B2, where B1 and B2 are
-!!    trajectory bundle structures
+!!    Memory allocation and book-keeping for B1 = B2 assignment,
+!!    where B1 and B2 are trajectory bundles.
 !<
    subroutine assign_bundle(B1, B2)
-      type(T_TrajectoryBundle), intent(inout) :: B1 !< Copy TO B1
-      type(T_TrajectoryBundle), intent(in) :: B2 !< Copy FROM B2
+      !> Copy to B1
+      type(T_TrajectoryBundle), intent(inout) :: B1
+      !> Copy from B2
+      type(T_TrajectoryBundle), intent(in) :: B2
       integer(kind=DefInt) :: ITraj
 
       if ((B1%NumStates /= B2%NumStates) .or. (B1%NumTraj /= B2%NumTraj) .or. B1%NumDeadTraj /= B2%NumDeadTraj) then
@@ -255,7 +258,7 @@ contains
          B1%BMatrices%AmpDot = B2%BMatrices%AmpDot
 
          do ITraj = 1, B2%NumTraj
-            B1%Trajectory(ITraj) = B2%Trajectory(ITraj)
+            call B1%Trajectory(ITraj)%copy_from(B2%Trajectory(ITraj))
             ! TODO(DH) Is this correct?? Or should it be:
             ! if (FMS_IsBundleCurrent(B2%Trajectory(ITraj))) call FMS_BundleUpdated(B1%Trajectory(ITraj))
             ! if (FMS_IsAmpDotCurrent(B2%Trajectory(ITraj))) call FMS_AmpDotUpdated(B1%Trajectory(ITraj))
@@ -266,7 +269,7 @@ contains
 
          if (glzCentroids) then
             do ITraj = 1, (B2%NCBFs * (B2%NCBFs - 1)) / 2
-               B1%Centroids(ITraj) = B2%Centroids(ITraj)
+               call B1%Centroids(ITraj)%copy_from(B2%Centroids(ITraj))
             end do
          end if
       end if
@@ -274,15 +277,23 @@ contains
       if (B2%NumDeadTraj > 0) then
          B1%NumDeadTraj = B2%NumDeadTraj
          do iTraj = 1, B2%NumDeadTraj
-            B1%DeadTraj(iTraj) = B2%DeadTraj(iTraj)
+            call B1%DeadTraj(iTraj)%copy_from(B2%DeadTraj(iTraj))
          end do
          B1%DeadH = B2%DeadH
       end if
    end subroutine assign_bundle
 
+   subroutine copy_from(B1, B2)
+      !> Copy to B1
+      class(T_TrajectoryBundle), intent(inout) :: B1
+      !> Copy from B2
+      class(T_TrajectoryBundle), intent(in) :: B2
+
+      call assign_bundle(B1, B2)
+   end subroutine copy_from
+
 !>
-!!    @ingroup spawning
-!!    @brief Add a new trajectory to a bundle
+!!    Add a new trajectory to a bundle
 !!
 !!    Add a new trajectory to the bundle; handle memory allocation
 !!    and expansion of trajectory-basis operators.
@@ -290,8 +301,8 @@ contains
 !!    Bundle%add_traj(Trajectory)
 !<
    subroutine add_traj_to_bundle(B1, T1)
-      class(T_TrajectoryBundle), intent(inout) :: B1 !> Bundle
-      type(T_Trajectory), intent(inout) :: T1 !> Add this trajectory to the bundle
+      class(T_TrajectoryBundle), intent(inout) :: B1
+      type(T_Trajectory), intent(inout) :: T1
 
       integer(kind=DefInt) :: ITraj, NumTrajP1, iCent
       integer(kind=DefInt) :: ICBF, NumCBFP1
@@ -308,12 +319,12 @@ contains
 
 !     Copy trajectories
       do ITraj = 1, B1%NumTraj
-         BTemp%Trajectory(ITraj) = B1%Trajectory(ITraj)
+         call BTemp%Trajectory(ITraj)%copy_from(B1%Trajectory(ITraj))
       end do
 
 !     Copy dead trajectories
       do iTraj = 1, B1%NumDeadTraj
-         BTemp%DeadTraj(iTraj) = B1%DeadTraj(iTraj)
+         call BTemp%DeadTraj(iTraj)%copy_from(B1%DeadTraj(iTraj))
       end do
 
 !     Copy centroids
@@ -321,10 +332,10 @@ contains
       if (glzCentroids) then
 !       do ITraj=1,((B1%NumTraj*(B1%NumTraj-1))/2)
          do ITraj = 1, ((B1%NCBFs * (B1%NCBFs - 1)) / 2)
-            BTemp%Centroids(ITraj) = B1%Centroids(ITraj)
+            call BTemp%Centroids(ITraj)%copy_from(B1%Centroids(ITraj))
          end do
 
-         BTemp%Trajectory(NumTrajP1) = T1
+         call BTemp%Trajectory(NumTrajP1)%copy_from(T1)
 !     GAIMS added
          BTemp%NCBFs = B1%NCBFs + 1
          BTemp%Trajectory(NumTrajP1)%CBF = BTemp%NCBFs
@@ -352,32 +363,31 @@ contains
 
       if (allocated(B1%DeadH)) BTemp%DeadH = B1%DeadH
 
-      B1 = BTemp
+      call B1%copy_from(BTemp)
 
       call BTemp%destroy()
 
    end subroutine add_traj_to_bundle
 
 !>
-!!    @ingroup spawning
-!!    @brief Add a new triplet trajectory to a bundle.
+!!    Add a new triplet trajectory to a bundle.
 !!
 !!    Unlike in add_traj_to_bundle, the triplet trajectory
 !!    is copied into three sublevels.
 !<
    subroutine add_traj_triplet_to_bundle(B1, T1)
-      class(T_TrajectoryBundle), intent(inout) :: B1 !> Bundle being modified
-      type(T_Trajectory), intent(inout) :: T1 !> Add this trajectory to the bundle
-      type(T_Trajectory) :: T2, T3 !> Additional sublevels
+      class(T_TrajectoryBundle), intent(inout) :: B1
+      type(T_Trajectory), intent(inout) :: T1
+      type(T_Trajectory) :: T2, T3
 
       integer(kind=DefInt) :: ITraj, NumTrajP1, iCent
       integer(kind=DefInt) :: i, j, NumCBFP1
       type(T_TrajectoryBundle) :: BTemp
 
-      T2 = T1
-      T3 = T1
+      call T2%copy_from(T1)
+      call T3%copy_from(T1)
 
-      NumTrajP1 = B1%NumTraj + 3 !> Add the three sublevels of Ms=-1,0,1
+      NumTrajP1 = B1%NumTraj + 3 ! Add the three sublevels of Ms=-1,0,1
       NumCBFP1 = B1%NCBFs + 1
 
       call BTemp%create(numtraj=NumTrajP1, &
@@ -391,25 +401,25 @@ contains
 
 !     Copy trajectories
       do ITraj = 1, B1%NumTraj
-         BTemp%Trajectory(ITraj) = B1%Trajectory(ITraj)
+         call BTemp%Trajectory(ITraj)%copy_from(B1%Trajectory(ITraj))
       end do
 
 !     Copy dead trajectories
       do iTraj = 1, B1%NumDeadTraj
-         BTemp%DeadTraj(iTraj) = B1%DeadTraj(iTraj)
+         call BTemp%DeadTraj(iTraj)%copy_from(B1%DeadTraj(iTraj))
       end do
 
 !     Copy centroids
       if (glzCentroids) then
 
          do ITraj = 1, (B1%NCBFs * (B1%NCBFs - 1)) / 2
-            BTemp%Centroids(ITraj) = B1%Centroids(ITraj)
+            call BTemp%Centroids(ITraj)%copy_from(B1%Centroids(ITraj))
          end do
 
 !        Add the new trajectories to the bundle
-         BTemp%Trajectory(NumTrajP1 - 2) = T1
-         BTemp%Trajectory(NumTrajP1 - 1) = T2
-         BTemp%Trajectory(NumTrajP1) = T3
+         call BTemp%Trajectory(NumTrajP1 - 2)%copy_from(T1)
+         call BTemp%Trajectory(NumTrajP1 - 1)%copy_from(T2)
+         call BTemp%Trajectory(NumTrajP1)%copy_from(T3)
          BTemp%NCBFs = B1%NCBFs + 1
          BTemp%Trajectory(NumTrajP1)%CBF = BTemp%NCBFs
          BTemp%Trajectory(NumTrajP1 - 1)%CBF = BTemp%NCBFs
@@ -430,7 +440,7 @@ contains
 
       if (allocated(B1%DeadH)) BTemp%DeadH = B1%DeadH
 
-      B1 = BTemp
+      call B1%copy_from(BTemp)
 
       B1%Trajectory(NumTrajP1)%Ms = 3
       B1%Trajectory(NumTrajP1 - 1)%Ms = 1

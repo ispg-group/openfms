@@ -213,7 +213,7 @@ contains
       case (QUANTICS)
          call RunQuantics(T1, iCalcState, jCalcState, zCalcCoup)
       case default
-         call FMS_DieError("Invalid iModel variable")
+         call FMS_DieError('Invalid iModel variable')
 
       end select
 
@@ -411,10 +411,10 @@ contains
 !     Find dimension index
       if (iParticle > 1) then
          jDim = sum(T1%Particle(1:iParticle - 1)%NumDimensions) + iDim
-      elseif (iParticle == 1) then
+      else if (iParticle == 1) then
          jDim = iDim
       else
-         call FMS_DieError("Invalid IParticle passed to FMS_MMForceComp")
+         call FMS_DieError('Invalid IParticle passed to FMS_MMForceComp')
          return
       end if
 
@@ -578,7 +578,7 @@ contains
       real(kind=DefReal) :: TDip(3)
 
       if (IState <= 1 .or. IState > T1%NumStates) then
-         call FMS_DieError("No transition dipole for requested state")
+         call FMS_DieError('No transition dipole for requested state')
       end if
 
       if (.not. eszTransDipole) then
@@ -732,9 +732,8 @@ contains
 !! \todo Document
 !<
    function FMS_KineticClass(Trajectory) result(Energy)
-      type(T_Trajectory) :: Trajectory
+      type(T_Trajectory), intent(in) :: Trajectory
       real(kind=DefReal) :: Energy
-      intent(in) Trajectory
       integer(kind=DefInt) :: IDim, IParticle
 
       Energy = 0
@@ -843,10 +842,10 @@ contains
 !     Find dimension index
       if (iParticle > 1) then
          jDim = sum(T1%Particle(1:iParticle - 1)%NumDimensions) + iDim
-      elseif (iParticle == 1) then
+      else if (iParticle == 1) then
          jDim = iDim
       else
-         call FMS_DieError("Invalid IParticle passed to FMS_MMForceComp")
+         call FMS_DieError('Invalid IParticle passed to FMS_MMForceComp')
       end if
 
       ForceComp = T1%ElecStruc%MMForce(jDim)
@@ -928,7 +927,7 @@ contains
       logical :: ImportantState
 
 1999  format('========================================================')
-2000  format("WARNING: Trajectory jumped an intersection.")
+2000  format('WARNING: Trajectory jumped an intersection.')
 
 !     Don't bother correcting phase if there was no electronic structure previously stored
       if (.not. T1%ESFlags%zESExists) then
@@ -1473,7 +1472,7 @@ contains
       end do
       if (esnBasis > 0 .and. .not. T1%ESFlags%zESExists) then
          call FMS_WriteInput(Geom, T1%StateID, 'template.genorb.write')
-      elseif (esnBasis > 0) then
+      else if (esnBasis > 0) then
          call FMS_WriteInput(Geom, T1%StateID, 'template.write', &
                              Orb=T1%ElecStruc%OldOrbitals, CIVec=T1%ElecStruc%OldCIVecs)
       else
@@ -1491,8 +1490,8 @@ contains
 !     Get forces
       if (eszAnalyticForces) then
          call FMS_ReadOutput(T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, :), T1%StateID, 'template.grad.read')
-         T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, :) = -tpigradsign * &
-                                                            T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, :) !minus sign because DerivMat storees -force
+         ! minus sign because DerivMat stores -force
+         T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, :) = -tpigradsign * T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, :)
          T1%ESFlags%zDerivCurrent(T1%StateID, T1%StateID) = .true.
       end if
 
@@ -1695,7 +1694,7 @@ contains
 
 !     Bundle scope routines
    function FMS_IsBundleCurrent(T1) result(zCurrent)
-      type(T_Trajectory), intent(IN) :: T1
+      type(T_Trajectory), intent(in) :: T1
       logical :: zCurrent
 
       zCurrent = T1%BFlags%zBundleCurrent
@@ -1710,7 +1709,7 @@ contains
    end subroutine FMS_BundleUpdated
 
    function FMS_IsAmpDotCurrent(T1) result(zCurrent)
-      type(T_Trajectory), intent(IN) :: T1
+      type(T_Trajectory), intent(in) :: T1
       logical :: zCurrent
 
       zCurrent = T1%BFlags%zAmpDotCurrent
@@ -1736,9 +1735,8 @@ contains
 !!    @ingroup analysis
 !<
    function FMS_KineticT(Trajectory) result(Energy)
-      type(T_Trajectory) :: Trajectory
+      type(T_Trajectory), intent(in) :: Trajectory
       real(kind=DefReal) :: Energy
-      intent(in) Trajectory
       integer(kind=DefInt) :: IDim, IParticle
 
       Energy = 0

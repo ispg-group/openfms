@@ -8,11 +8,16 @@ module RestartModule
    private
 
    public :: GetRestart, PutRestart
-   integer(kind=DefInt), public :: inIRestart, & !> Determines whether this is a restart (1 = restart, 0 = not restart)
-                                   RestartStep ! Number of steps between archived restarts
+   !> Determines whether this is a restart (1 = restart, 0 = not restart)
+   integer(kind=DefInt), public :: inIRestart
+   !> Number of steps between archived restarts
+   integer(kind=DefInt), public :: RestartStep
+   !> Number of steps between archived restarts
    integer(kind=DefReal), public :: inIRestartTraj(maxtrajlimit)
+   !> Time from which to restart in Checkpoint.txt
    real(kind=DefReal), public :: RestartTime
-   logical, public :: zRedoRestartES !> Redo the electronic structure calculation for restarted step?
+   !> Redo the electronic structure calculation for restarted step?
+   logical, public :: zRedoRestartES
 contains
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -31,11 +36,11 @@ contains
 ! . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ! Setup the file names
       if (time > 0) then
-         short_name = "Checkpoint.txt"
-         write (fmiOut, '(a,f10.2)') "Searching for time=", time, " in Checkpoint.txt"
+         short_name = 'Checkpoint.txt'
+         write (fmiOut, '(a,f10.2)') 'Searching for time=', time, ' in Checkpoint.txt'
       else
-         short_name = "Last_Bundle.txt"
-         write (fmiOut, *) "Taking restart from Last_Bundle.txt"
+         short_name = 'Last_Bundle.txt'
+         write (fmiOut, *) 'Taking restart from Last_Bundle.txt'
       end if
       long_name = trim(FMSWorkingDir)//trim(short_name)
 !temp_name = trim(FMSWorkingDir)//".tmp."//trim(short_name)
@@ -56,7 +61,7 @@ contains
             call ReadBundle(B, nfile)
 
             if (B%numtraj == 0) then
-               call FMS_DieError("GetRestart: end of Checkpoint.txt reached, requested time not found")
+               call FMS_DieError('GetRestart: end of Checkpoint.txt reached, requested time not found')
             end if
 
             if (abs(B%CurrentTime - time) < 0.25) exit
@@ -71,12 +76,12 @@ contains
          close (unit=nfile)
       else
          open (newunit=nfile, file=long_name, action='read', status='old')
-         write (fmiOut, '(a)') "Reading from: "//trim(long_name)
+         write (fmiOut, '(a)') 'Reading from: '//trim(long_name)
          call B%destroy()
          call ReadBundle(B, nfile)
 
          if (B%NumTraj == 0) then
-            call FMS_DieError("could not read Last_Bundle.txt")
+            call FMS_DieError('could not read Last_Bundle.txt')
          end if
 
          close (unit=nfile)
@@ -159,13 +164,14 @@ contains
                            numstates=B%NumStates, &
                            numparticles=B%NumParticles, &
                            ncbfs=B%NCBFs)
+
          itrajnew = 0
          do itraj = 1, B%numTraj
 !    TODO(danielhollas): It looks like this code is currently broken from non-GAIMS simulations?
 !    The following if statement should be uncommented!
 !    if (any(inirestarttraj(:).eq.B%trajectory(itraj)%trajid)) then
             itrajnew = itrajnew + 1
-            Btemp%Trajectory(itrajnew) = B%Trajectory(itraj)
+            call Btemp%Trajectory(itrajnew)%copy_from(B%Trajectory(itraj))
 
 !bfec
             if (glzCentroids) then
@@ -175,9 +181,10 @@ contains
 !         if (any(inirestarttraj(:).eq.B%trajectory(jtraj)%trajid)) then
                   CBFj = B%Trajectory(jtraj)%CBF !not ideal way, but for now let's see
                   jtrajnew = jtrajnew + 1
+                  if (CBFi == CBFj) cycle
                   iCent = ((CBFi - 2) * (CBFi - 1)) / 2 + CBFj
 !           jCent=((iTrajnew-2)*(iTrajnew-1))/2+jTrajnew
-                  Btemp%Centroids(iCent) = B%Centroids(iCent)
+                  call Btemp%Centroids(iCent)%copy_from(B%Centroids(iCent))
 !         endif
                end do
 !       do jtraj=1,B%numTraj-1 !centroid
@@ -191,9 +198,10 @@ contains
             end if
 !    endif
          end do
+
          if (B%NumDeadTraj > 0) then !copy dead trajectories
             do iTraj = 1, B%NumDeadTraj
-               Btemp%DeadTraj(iTraj) = B%DeadTraj(iTraj)
+               call Btemp%DeadTraj(iTraj)%copy_from(B%DeadTraj(iTraj))
             end do
             Btemp%DeadH = B%DeadH
          end if
@@ -209,7 +217,9 @@ contains
 
 !Find the dead trajectory to restart from
          do itraj = 1, B%numDeadTraj
-            if (inIRestartTraj(1) == B%DeadTraj(ITraj)%TrajID) Btemp%Trajectory(1) = B%DeadTraj(ITraj)
+            if (inIRestartTraj(1) == B%DeadTraj(ITraj)%TrajID) then
+               call Btemp%Trajectory(1)%copy_from(B%DeadTraj(ITraj))
+            end if
          end do
 !Set the current time to the trajectory's deadtime
          Btemp%CurrentTime = Btemp%Trajectory(1)%DeadTime
@@ -222,11 +232,11 @@ contains
          end if
 
       case default
-         call FMS_DieError("Whoops, we should not be here!")
+         call FMS_DieError('Whoops, we should not be here!')
 
       end select
 
-      B = Btemp
+      call B%copy_from(Btemp)
       call Btemp%destroy()
 
    end subroutine prune_bundle
@@ -244,9 +254,9 @@ contains
       character(len=200) :: temp_file, last_file, check_file
       integer(Defint) :: nfile
 
-      temp_file = trim(FMSWorkingDir)//"tmp.Last_Bundle.txt"
-      last_file = trim(FMSWorkingDir)//"Last_Bundle.txt"
-      check_file = trim(FMSWorkingDir)//"Checkpoint.txt"
+      temp_file = trim(FMSWorkingDir)//'tmp.Last_Bundle.txt'
+      last_file = trim(FMSWorkingDir)//'Last_Bundle.txt'
+      check_file = trim(FMSWorkingDir)//'Checkpoint.txt'
 
 ! . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ! Write the temp file
@@ -258,7 +268,7 @@ contains
       call FMS_DeleteFile('Last_Bundle.txt')
 
 ! Copy temp bundle to new bundle
-      call system("cp "//trim(temp_file)//" "//trim(last_file))
+      call system('cp '//trim(temp_file)//' '//trim(last_file))
 
 ! Kill temp bundle
       call FMS_DeleteFile('tmp.Last_Bundle.txt')
@@ -278,20 +288,14 @@ contains
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   subroutine WriteBundle(B, nfile_in)
+   subroutine WriteBundle(B, nf)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ! writes the Bundle out to a flat, plain text file
 ! this is used for restarting the Trajectory
       type(T_TrajectoryBundle), intent(in) :: B
-      integer(kind=DefInt), optional :: nfile_in
-
-      integer(kind=DefInt) :: nf ! unit number to write to
+      integer(kind=DefInt), intent(in) :: nf
 
       integer(kind=DefInt) :: ntraj, ndead, npart, n, ncbfs
-
-! set which file we are writing to
-      nf = 6
-      if (present(nfile_in)) nf = nfile_in
 
 1     format(i6, 34x, a) ! integer   format with label
 2     format(f14.2, 26x, a) ! time type format with label
@@ -301,22 +305,22 @@ contains
       npart = B%NumParticles
       nCBFs = B%NCBFs
 
-      write (nf, *) "############### START BUNDLE #################"
-      write (nf, 2) B%CurrentTime, " / Current time"
-      write (nf, 1) ntraj, " / Number of Live Trajectories"
-      write (nf, 1) ndead, " / Number of Dead Trajectories"
-      write (nf, 1) B%NumStates, " / Number of States"
-      write (nf, 1) NSing, " / Number of Singlet States"
-      write (nf, 1) npart, " / Number of Particles"
-      write (nf, 1) NCBFs, " / Number of Contracted Basis Functions"
+      write (nf, *) '############### START BUNDLE #################'
+      write (nf, 2) B%CurrentTime, ' / Current time'
+      write (nf, 1) ntraj, ' / Number of Live Trajectories'
+      write (nf, 1) ndead, ' / Number of Dead Trajectories'
+      write (nf, 1) B%NumStates, ' / Number of States'
+      write (nf, 1) NSing, ' / Number of Singlet States'
+      write (nf, 1) npart, ' / Number of Particles'
+      write (nf, 1) NCBFs, ' / Number of Contracted Basis Functions'
 
-      write (nf, *) "############ Common Particle info ###########"
+      write (nf, *) '############ Common Particle info ###########'
       do n = 1, npart
          call WriteParticle(B%Trajectory(1)%Particle(n), nf)
       end do
 
       do n = 1, ntraj
-         write (nf, '(a,i4,a)') "############### Live trajectory ", n, " ############"
+         write (nf, '(a,i4,a)') '############### Live trajectory ', n, ' ############'
          call WriteTraj(B%Trajectory(n), nf)
       end do
 
@@ -324,13 +328,13 @@ contains
       if (glzCentroids) then
 ! do n = 1, ntraj*(ntraj-1)/2
          do n = 1, nCBFs * (nCBFs - 1) / 2
-            write (nf, '(a,i4,a)') "###############   Centroid      ", n, " ############"
+            write (nf, '(a,i4,a)') '###############   Centroid      ', n, ' ############'
             call WriteTraj(B%Centroids(n), nf)
          end do
       end if
 
       do n = 1, ndead
-         write (nf, '(a,i4,a)') "############### Dead trajectory ", n, " ############"
+         write (nf, '(a,i4,a)') '############### Dead trajectory ', n, ' ############'
          call WriteTraj(B%DeadTraj(n), nf)
       end do
 
@@ -376,15 +380,15 @@ contains
 
 ! copy this info to the rest of the trajectories in the bundle
       do n = 2, ntraj
-         B%Trajectory(n) = T
+         call B%Trajectory(n)%copy_from(T)
       end do
       do n = 1, ndead
-         B%DeadTraj(n) = T
+         call B%DeadTraj(n)%copy_from(T)
       end do
 !bfec
       if (glzCentroids) then
          do n = 1, ncbfs * (ncbfs - 1) / 2
-            B%Centroids(n) = T
+            call B%Centroids(n)%copy_from(T)
          end do
       end if
 
@@ -418,7 +422,7 @@ contains
       return
 
 20    continue
-      write (fmiout, *) "error reading Bundle"
+      write (fmiout, *) 'error reading Bundle'
       call B%destroy()
    end subroutine ReadBundle
 
@@ -427,22 +431,16 @@ contains
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 !
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   subroutine WriteTraj(T1, nfile_in)
+   subroutine WriteTraj(T1, nf)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ! writes out the trajectory structure to a specefied file
       type(T_Trajectory), intent(in) :: T1
-      integer(kind=DefInt), optional :: nfile_in
+      integer(kind=DefInt), intent(in) :: nf
 
       real(kind=DefReal) :: Coupling(T1%NumStates - 1, T1%NumDimensions), ForceVector(T1%NumDimensions)
-      integer(kind=DefInt) :: nf, & ! unit number to write to
-                              nstate, i, & !
-                              npart, n, ns, ns2
+      integer(kind=DefInt) :: nstate, i, npart, n, ns, ns2
 
       logical :: ZCouplingCurrent(T1%NumStates)
-
-! set which file we are writing to
-      nf = 6
-      if (present(nfile_in)) nf = nfile_in
 
       npart = T1%NumParticles
       ns = T1%StateID
@@ -483,50 +481,50 @@ contains
          write (nf, 2) T1%SWISS%BirthDate, ' / Birth date '
          write (nf, 3) T1%SWISS%ParentOverlap, ' / Overlap with Parent'
       end if
-      write (nf, *) "# Last spawn"
+      write (nf, *) '# Last spawn'
       write (nf, 13) T1%LastSpawn
-      write (nf, *) "# Spawn time"
+      write (nf, *) '# Spawn time'
       write (nf, 13) T1%SpawnTime
 
-      write (nf, *) "# Positions"
+      write (nf, *) '# Positions'
       do n = 1, npart
          write (nf, 11) T1%Particle(n)%get_pos()
       end do
-      write (nf, *) "# Momenta"
+      write (nf, *) '# Momenta'
       do n = 1, npart
          write (nf, 11) T1%Particle(n)%get_mom()
       end do
 
-      write (nf, *) "# Energies"
+      write (nf, *) '# Energies'
       write (nf, 11) T1%ElecStruc%PotEn
 
-      write (nf, *) "# Dipoles Current"
+      write (nf, *) '# Dipoles Current'
       write (nf, 14) T1%ESFlags%ZDipolesCurrent
       if (T1%ESFlags%ZDipolesCurrent) then
          do i = 1, nstate
-            write (nf, *) "# Dipole", i
+            write (nf, *) '# Dipole', i
             write (nf, 11) T1%ElecStruc%Dipole(i, :)
          end do
       end if
 
-      write (nf, *) "# Transition Dipoles Current"
+      write (nf, *) '# Transition Dipoles Current'
       write (nf, 14) T1%ESFlags%ZTransDipsCurrent
       if (T1%ESFlags%ZTransDipsCurrent) then
          do i = 2, nstate
-            write (nf, *) "# Transition Dipole ", i
+            write (nf, *) '# Transition Dipole ', i
             write (nf, 11) T1%ElecStruc%TransDipole(i, :)
          end do
       end if
 
-      write (nf, *) "# Force "
+      write (nf, *) '# Force '
       write (nf, 11) ForceVector
 
-      write (nf, *) "# Coupling status array"
+      write (nf, *) '# Coupling status array'
       write (nf, 14) ZCouplingCurrent
 
       do i = 1, nstate
          if (i == ns) cycle
-         write (nf, *) "# Coupling history ", ns, i
+         write (nf, *) '# Coupling history ', ns, i
          write (nf, 11) T1%CoupHist(:, i)
       end do
 
@@ -535,13 +533,13 @@ contains
          if (i == ns) cycle
          ns2 = ns2 + 1
          if (ZCouplingCurrent(i)) then
-            write (nf, *) "# coupling ", ns, i
+            write (nf, *) '# coupling ', ns, i
             write (nf, 11) Coupling(ns2, :)
          end if
       end do
 
-      write (nf, 3) T1%Phase, " / Phase"
-      write (nf, *) T1%Amplitude, " / Amplitude"
+      write (nf, 3) T1%Phase, ' / Phase'
+      write (nf, *) T1%Amplitude, ' / Amplitude'
 
       call WriteElecStruc(T1%ElecStruc, nf)
 
@@ -549,24 +547,18 @@ contains
    end subroutine WriteTraj
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   subroutine ReadTraj(T1, nfile_in)
+   subroutine ReadTraj(T1, nf)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-! writes out the trajectory structure to a specefied file
+! writes out the trajectory structure to a specified file
       type(T_Trajectory), intent(inout) :: T1
-      integer(kind=DefInt), optional :: nfile_in
+      integer(kind=DefInt), intent(in) :: nf
 
       real(kind=DefReal) :: Coupling(T1%NumStates - 1, T1%NumDimensions), ForceVector(T1%NumDimensions)
 
       real(kind=DefReal), allocatable :: vec(:)
-      integer(kind=DefInt) :: nf, & ! unit number to write to
-                              nstate, i, & !
-                              npart, ndim, n, ns, ns2
+      integer(kind=DefInt) :: nstate, i, npart, ndim, n, ns, ns2
 
       logical :: ZCouplingCurrent(T1%NumStates)
-
-! set which file we are reading from
-      nf = 5
-      if (present(nfile_in)) nf = nfile_in
 
       npart = T1%NumParticles
       nstate = T1%NumStates
@@ -684,68 +676,218 @@ contains
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 ! This should be moved to a the electronic structure module
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   subroutine WriteElecStruc(ES, nfile_in)
+   subroutine WriteElecStruc(ES, nf)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       type(T_ElecStruc), intent(in) :: ES
-      integer(kind=DefInt), optional :: nfile_in
-
-      integer(kind=DefInt) :: nf ! unit number to write to
-! WTF: We shouldn't just blidly ignore all errors!
-      integer(kind=DefInt) :: ierr ! catch errors that may be thrown
-
-! set which file we are writing to
-      nf = 6
-      if (present(nfile_in)) nf = nfile_in
+      integer(kind=DefInt), intent(in) :: nf
+      integer(kind=DefInt) :: rows, cols
 
 3     format(10(1x, es15.8))
 
-      write (nf, *) "# Orbitals"
-      write (nf, 3, iostat=ierr) ES%OldOrbitals
-      write (nf, *) "# CI vectors"
-      write (nf, 3, iostat=ierr) ES%OldCIVecs
-      write (nf, *) "# Overlap matrix"
-      write (nf, 3, iostat=ierr) ES%OverlapMatrix
-      write (nf, *) "# TC Blob"
-      write (nf, 3, iostat=ierr) ES%OldBlob
-      write (nf, *) "# MSPT2 Coeffs"
-      write (nf, 3, iostat=ierr) ES%OldMSPT2C
-      write (nf, *) "# Electronic Phases"
-      write (nf, *, iostat=ierr) ES%ElecPhase
+      if (allocated(ES%OldOrbitals)) then
+         rows = size(ES%OldOrbitals, dim=1)
+         cols = size(ES%OldOrbitals, dim=2)
+         write (nf, *) '# Orbitals', rows, cols
+         write (nf, 3) ES%OldOrbitals
+      else
+         write (nf, *) '# Orbitals', 0, 0
+         write (nf, *)
+      end if
 
-      return
+      if (allocated(ES%OldCIVecs)) then
+         rows = size(ES%OldCIVecs, dim=1)
+         cols = size(ES%OldCIVecs, dim=2)
+         write (nf, *) '# CI vectors', rows, cols
+         write (nf, 3) ES%OldCIVecs
+      else
+         write (nf, *) '# CI vectors', 0, 0
+         write (nf, *)
+      end if
+
+      write (nf, *) '# Overlap matrix'
+      write (nf, 3) ES%OverlapMatrix
+      if (allocated(ES%OldBlob)) then
+         write (nf, *) '# TC Blob'
+         write (nf, 3) ES%OldBlob
+      end if
+      ! write (nf, *) '# MSPT2 Coeffs'
+      ! write (nf, 3) ES%OldMSPT2C
+      if (allocated(ES%ElecPhase)) then
+         write (nf, *) '# Electronic Phases'
+         write (nf, *) ES%ElecPhase
+      end if
+
    end subroutine WriteElecStruc
 
-! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   subroutine ReadElecStruc(ES, nfile_in)
-! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   subroutine ReadElecStruc(ES, nf)
+
+      use ElecStrucModule, only: esNBasis, esLCIVec
       type(T_ElecStruc), intent(inout) :: ES
-      integer(kind=DefInt), optional :: nfile_in
-
-      integer(kind=DefInt) :: nf ! unit number to write to
-! WTF: We shouldn't just blidly ignore all errors!
-      integer(kind=DefInt) :: ierr ! catch errors that may be thrown
-
-! set which file we are writing to
-      nf = 5
-      if (present(nfile_in)) nf = nfile_in
+      integer(kind=DefInt), intent(in) :: nf
+      integer(kind=DefInt) :: rows, cols
+      character(len=500) :: header
 
 3     format(10(1x, es15.8))
 
-      read (nf, *)
-      read (nf, 3, iostat=ierr) ES%OldOrbitals
-      read (nf, *)
-      read (nf, 3, iostat=ierr) ES%OldCIVecs
-      read (nf, *)
-      read (nf, 3, iostat=ierr) ES%OverlapMatrix
-      read (nf, *)
-      read (nf, 3, iostat=ierr) ES%OldBlob
-      read (nf, *)
-      read (nf, 3, iostat=ierr) ES%OldMSPT2C
-      read (nf, *)
-!DEBUG - changed v from read(nf,3,iostat=ierr)
-      read (nf, *, iostat=ierr) ES%ElecPhase
-      return
+      read (nf, '(A)') header
+
+      ! Read orbitals
+      call parse_matrix_header(header, '# Orbitals', rows, cols)
+      call resolve_orbital_restart_dimensions(rows, cols)
+      call read_matrix_from_unit(ES%OldOrbitals, nf, rows, cols, 'orbital matrix')
+      call read_next_restart_header(nf, header)
+      if (rows > 0) esNBasis = rows
+
+      ! Read CI vectors
+      call parse_matrix_header(header, '# CI vectors', rows, cols)
+      call resolve_ci_restart_dimensions(rows, cols, size(ES%PotEn))
+      call read_matrix_from_unit(ES%OldCIVecs, nf, rows, cols, 'CI vector matrix')
+      call read_next_restart_header(nf, header)
+      if (cols > 0) esLCIVec = cols
+
+      call require_header(header, '# Overlap matrix')
+      read (nf, 3) ES%OverlapMatrix
+      if (allocated(ES%OldBlob)) then
+         read (nf, *)
+         read (nf, 3) ES%OldBlob
+      end if
+      ! read (nf, *)
+      ! read (nf, 3) ES%OldMSPT2C
+      if (allocated(ES%ElecPhase)) then
+         read (nf, *)
+         read (nf, *) ES%ElecPhase
+      end if
+
    end subroutine ReadElecStruc
+
+   subroutine read_next_restart_header(nf, header)
+      !!
+      !! Reads the next non-empty restart header
+      !!
+      integer(kind=DefInt), intent(in) :: nf
+      character(len=500), intent(out) :: header
+
+      do
+         read (nf, '(A)') header
+         if (len_trim(header) > 0) exit
+      end do
+
+   end subroutine read_next_restart_header
+
+   subroutine resolve_orbital_restart_dimensions(rows, cols)
+      !!
+      !! Resolve old-orbital matrix dimensions from the restart header or from
+      !! an already-initialized backend, and check that both sources agree.
+      !!
+      use ElecStrucModule, only: esNBasis
+      integer(kind=DefInt), intent(inout) :: rows, cols
+
+      if (rows >= 0 .and. cols >= 0) then
+         if (rows == 0 .and. cols == 0) return
+         if (esNBasis > 0 .and. (rows /= esNBasis .or. cols /= esNBasis)) then
+            call FMS_DieError('Orbital matrix dimensions in restart file do not match initialized backend')
+         end if
+      else
+         if (esNBasis <= 0) then
+            call FMS_DieError('Restart orbital header must include dimensions when esNBasis is unknown')
+         end if
+         rows = esNBasis
+         cols = esNBasis
+      end if
+
+   end subroutine resolve_orbital_restart_dimensions
+
+   subroutine resolve_ci_restart_dimensions(rows, cols, num_states)
+      !!
+      !! Resolve CI vector dimensions from the restart header or from an
+      !! already-initialized backend, and check that both sources agree.
+      !!
+      use ElecStrucModule, only: esLCIVec
+      integer(kind=DefInt), intent(inout) :: rows, cols
+      integer(kind=DefInt), intent(in) :: num_states
+
+      if (rows >= 0 .and. cols >= 0) then
+         if (rows == 0 .and. cols == 0) return
+         if (rows /= num_states) then
+            call FMS_DieError('CI vector row count in restart file does not match number of states')
+         end if
+         if (esLCIVec > 0 .and. cols /= esLCIVec) then
+            call FMS_DieError('CI vector length in restart file does not match initialized backend')
+         end if
+      else
+         if (esLCIVec <= 0) then
+            call FMS_DieError('Restart CI vector header must include dimensions when esLCIVec is unknown')
+         end if
+         rows = num_states
+         cols = esLCIVec
+      end if
+
+   end subroutine resolve_ci_restart_dimensions
+
+   subroutine read_matrix_from_unit(matrix, nf, rows, cols, name)
+      !!
+      !! Reads named matrix from nf unit
+      !!
+      real(kind=DefReal), allocatable, intent(inout) :: matrix(:, :)
+      integer(kind=DefInt), intent(in) :: nf, rows, cols
+      character(len=*), intent(in) :: name
+      integer(kind=DefInt) :: ierr
+
+3     format(10(1x, es15.8))
+
+      if (rows < 0 .or. cols < 0) then
+         call FMS_DieError('Invalid dimensions for '//trim(name)//' in restart file')
+      end if
+
+      if (allocated(matrix)) deallocate (matrix)
+      if (rows > 0 .and. cols > 0) then
+         allocate (matrix(rows, cols))
+         read (nf, 3, iostat=ierr) matrix
+         if (ierr /= 0) call FMS_DieError('Error reading '//trim(name)//' from restart file')
+      end if
+
+   end subroutine read_matrix_from_unit
+
+   subroutine parse_matrix_header(header, label, rows, cols)
+      !!
+      !! Reads header with expected label (e.g., "# CI vectors") and extracts
+      !! the dimensions of the stored CI vectors according to the format
+      !! "# CI vectors [#rows] [#cols]".
+      !!
+      character(len=*), intent(in) :: header, label
+      integer(kind=DefInt), intent(out) :: rows, cols
+      integer(kind=DefInt) :: ios, start_pos
+      character(len=len(header)) :: adjusted_header
+
+      call require_header(header, label)
+
+      rows = -1
+      cols = -1
+      adjusted_header = adjustl(header)
+      start_pos = len_trim(label) + 1
+      if (len_trim(adjusted_header) >= start_pos) then
+         read (adjusted_header(start_pos:), *, iostat=ios) rows, cols
+         if (ios /= 0) then
+            rows = -1
+            cols = -1
+         end if
+      end if
+
+   end subroutine parse_matrix_header
+
+   subroutine require_header(header, label)
+      !!
+      !! Sanity check that expected header is actually == label
+      !!
+      character(len=*), intent(in) :: header, label
+
+      if (index(adjustl(header), trim(label)) /= 1) then
+
+         call FMS_DieError('Unsupported restart trajectory format: expected '''//trim(label)//'''')
+
+      end if
+
+   end subroutine require_header
 
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 !           PARTICLE
@@ -753,40 +895,28 @@ contains
 !
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   subroutine WriteParticle(P, nfile_in)
+   subroutine WriteParticle(P, nf)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       type(T_Particle), intent(in) :: P
-      integer(kind=DefInt), optional :: nfile_in
-
-      integer(kind=DefInt) :: nf ! unit number to write to
-
-! set which file we are writing to
-      nf = 6
-      if (present(nfile_in)) nf = nfile_in
+      integer(kind=DefInt), intent(in) :: nf
 
 1     format(i6, 34x, a) ! integer   format with label
 3     format(e17.10, 24x, a) ! real      format with label
 
-      write (nf, 1) P%ParticleID, " / Particle ID"
-      write (nf, *) P%Elmnt, " / Element"
-      write (nf, 3) P%Width, " / Width"
-      write (nf, 3) P%Mass, " / Mass"
-      write (nf, 3) P%Charge, " / Charge"
-      write (nf, 3) P%AtomicNum, " / Atomic number"
-
+      write (nf, 1) P%ParticleID, ' / Particle ID'
+      write (nf, *) P%Elmnt, ' / Element'
+      write (nf, 3) P%Width, ' / Width'
+      write (nf, 3) P%Mass, ' / Mass'
+      write (nf, 3) P%Charge, ' / Charge'
+      write (nf, 3) P%AtomicNum, ' / Atomic number'
    end subroutine WriteParticle
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   subroutine ReadParticle(P, nfile_in)
+   subroutine ReadParticle(P, nf)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       type(T_Particle), intent(inout) :: P
-      integer(kind=DefInt), optional :: nfile_in
-
-      integer(kind=DefInt) :: nf ! unit number to write to
-
-! set which file we are writing to
-      nf = 5
-      if (present(nfile_in)) nf = nfile_in
+      !> Unit number to write to
+      integer(kind=DefInt), intent(in) :: nf
 
       read (nf, *) P%ParticleID
       read (nf, *) P%Elmnt
@@ -794,7 +924,6 @@ contains
       read (nf, *) P%Mass
       read (nf, *) P%Charge
       read (nf, *) P%AtomicNum
-
    end subroutine ReadParticle
 
 end module RestartModule

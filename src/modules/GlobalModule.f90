@@ -10,7 +10,6 @@
 module GlobalModule
    implicit none
    public
-   save
 
 !---------------------------------------------------------------------------
 !                       COMPILE-TIME CONSTANTS
@@ -20,34 +19,30 @@ module GlobalModule
    integer :: idefault
    integer, parameter :: DefInt = kind(idefault) !<Default size of integer in bytes - allows for compiler flags to change this.
    integer, parameter :: DefInt4 = 4 !<4 byte integer
-   integer, parameter :: DefInt8 = 8 !<8 byte integer
 
-   double precision :: rdefault
-   integer(kind=DefInt), parameter :: DefReal = kind(rdefault) !<Default size of real in bytes - allows for compiler flags to change this.
-   integer(kind=DefInt), parameter :: DefReal4 = 4 !< 4 byte real
-   integer(kind=DefInt), parameter :: DefShort = 2 !< Default size of short integer in bytes
-!      integer (kind=DefInt),parameter::DefIntBlas=4 !< Default size of integer in bytes for BLAS ! may need to match to system requirement (for fms_ch)
-   integer(kind=DefInt), parameter :: DefIntBlas = DefInt !< Better to set blas integers to be default length. We can eventually clean up and remove DefIntBlas.
+   double precision :: rdefault ! (allows for compiler flags to change this)
+   integer(kind=DefInt), parameter :: DefReal = kind(rdefault) !<Default size of real in bytes
+   ! TODO: Remove defintblas
+   ! integer, parameter::DefIntBlas=4 !< Integer size for BLAS ! may need to match to system requirement (for fms_ch)
+   integer(kind=DefInt), parameter :: DefIntBlas = DefInt !< Better to set blas integers to be default length.
    integer(kind=DefInt), parameter :: DefComp = 8 !< Default size of complex in bytes
-   integer(kind=DefInt), parameter :: ShReal = 4 !< Default size of short real in bytes
    integer(kind=DefInt), parameter :: MaxTrajLimit = 1000 !< Maximum number of trajectories; 0 for no limit
 
 ! Physical Constants in AU and Unit Conversion Factors
-   real(kind=DefReal), parameter :: kcalPMtoH = 0.0015952353d0 !< Conversion factor from kilocalorie per mole to Hartree (atomic unit of energy)
+   real(kind=DefReal), parameter :: kcalPMtoH = 0.0015952353d0 !< Conversion factor from kilocalorie per mole to Hartree
    real(kind=DefReal), parameter :: FsToAU = 41.34137221718d0 !< Conversion factor from femtosecond to atomic unit of time
    real(kind=DefReal), parameter :: BohrToAng = 0.529177249d0 !< Conversion factor from bohr (atomic unit of distance) to Angstrom
-   real(kind=DefReal), parameter :: eVToH = 1.0 / 27.2113962d0 !< Conversion factor from electron volt to Hartree (atomic unit of energy)
+   real(kind=DefReal), parameter :: eVToH = 1.0 / 27.2113962d0 !< Conversion factor from electron volt to Hartree (a.u. of energy)
    real(kind=DefReal), parameter :: Pi = 3.141592653589793
    real(kind=DefReal), parameter :: d2 = 2.0 !< Floating point 2.0
    real(kind=DefReal), parameter :: dp5 = 0.5 !< Floating point 0.5
    real(kind=DefReal), parameter :: d1 = 1.0 !< Floating point one
    real(kind=DefReal), parameter :: d0 = 0.0 !< Floating point zero
    real(kind=DefReal), parameter :: FPZero = 1.0d-10 !< Floating point zero; an approximation to machine epsilon
-   real(kind=DefReal), parameter :: FPInfinity = 1.0d+100 !< Floating point infinity; an approximation to largest machine-representable number
-   real(kind=DefReal), parameter :: CMToAu = 0.000004556 !< Conversion factor from wavenumber to Hartree (atomic unit of energy)
-   real(kind=DefReal), parameter :: MassToAu = 1822.887 !< Conversion factor from atomic mass unit to mass of electron (atomic unit of mass)
-   real(kind=DefReal), parameter :: BoltzK = 3.16681520371153d-6 !< Conversion factor from Kelvin to Hartree (atomic unit of energy)
-   real(kind=DefReal), parameter :: DegToAu = BoltzK !< Conversion factor from degrees Celsius to Hartree (atomic unit of energy)
+   real(kind=DefReal), parameter :: CMToAu = 0.000004556 !< Conversion factor from wavenumber to Hartree (a.u. of energy)
+   real(kind=DefReal), parameter :: MassToAu = 1822.887 !< Conversion factor from atomic mass unit to mass of electron (au of mass)
+   real(kind=DefReal), parameter :: BoltzK = 3.16681520371153d-6 !< Conversion factor from Kelvin to Hartree (a.u.)
+   real(kind=DefReal), parameter :: DegToAu = BoltzK !< Conversion factor from degrees Celsius to Hartree
    integer(kind=DefInt), parameter :: i0 = 0 !< Integer zero
    integer(kind=DefInt4), parameter :: i4zero = 0 !< 4 byte Integer zero (used to call fms_ranb)
    complex(kind=DefComp), parameter :: c1i = (0.0, 1.0) !< Complex imaginary unit
@@ -103,11 +98,9 @@ module GlobalModule
    real(kind=DefReal) :: GlDEShift !< Global potential energy shift
    real(kind=DefReal) :: GlDTripletShift !< Global (additional) triplet energy shift
    real(kind=DefReal) :: GlDRegThresh !< Regularization Threshold.
-   logical :: GlZAssumeHermitian !< if TRUE the code does not check for Hermiticity of H or S.
-   logical :: GlZAdaptive !< If false, overrides adaptive integrators
+   ! TODO: Maybe put this to BundleModule params
    integer(kind=DefInt) :: GlISaddle !< Type of saddle point approximation to use in integral evaluation
    logical :: glzMinSearch
-   real(kind=DefReal) :: GlMaxCoup !Max couplings
    logical :: glzIterInv
    integer(DefInt) :: NumInitBasis
    real(kind=DefReal) :: gldCurrentTStep
@@ -121,21 +114,7 @@ module GlobalModule
    logical :: glzRejectAllStateFlip
    logical :: glzCentroids
 !bfec
-!-----------------------------------------------
-!
-!     Global parameters controlling the Izmaylov 2-D 2-state
-!     toy model. Used in FMS_ToyModel, where their purpose is
-!     explained in detail.
-!
-   real(kind=DefReal) :: glIzmOmegax
-   real(kind=DefReal) :: glIzmOmegay
-   real(kind=DefReal) :: glIzmXshift
-   real(kind=DefReal) :: glIzmYshift
-   real(kind=DefReal) :: glIzmDeltaE
-   real(kind=DefReal) :: glIzmCoupC
-!     Global parameter for the GAIMS model in ToyModelModule
-   real(kind=DefReal) :: glGrsigma
-
+   logical :: glzSPA1_SOC_model
 !
 !-----------------------------------------------
    logical :: glzStoSwiss
@@ -147,8 +126,6 @@ module GlobalModule
    logical :: glzConstrain !< Use constraints for propagation?
    logical :: glzAnalysisMode
    real(kind=DefReal) :: gldSimulationTime
-   logical :: gldNoisyGuess !< Add noise to the initial guess?
-   real(kind=DefReal) :: gldNoisyGuessFac !< Factor by which noise is multiplied before being added to orbital guess
    real(kind=DefReal) :: gldNormThresh !< Threshold for norm convergence for VV propagation
    real(kind=DefReal) :: gldNGradStep !< Step size for numerical gradient
    logical :: glzCentNGrad !< Central numerical gradient? (if false, just forward)
@@ -231,7 +208,6 @@ module GlobalModule
    logical :: fmzAmpFile
    logical :: fmzAllText
    logical :: fmzXYZ
-   logical :: fmzDCD
    logical :: fmzWriteEveryStep
    logical :: fmzPCOlap ! print the overlap (abs, Re, Im) between parent and child
    logical :: fmzSOME ! print the SOME at the centroid position
@@ -240,35 +216,6 @@ module GlobalModule
    integer(kind=DefInt) :: fmIAngle(3, MaxGeometry), fmNAngles
    integer(kind=DefInt) :: fmIDihedral(4, MaxGeometry), fmNDihedrals
    integer(kind=DefInt) :: fmIPyram(4, MaxGeometry), fmNPyrams
-
-!>
-!!    Holds open unit files
-!<
-   type File_Units
-      integer(kind=DefInt) :: ICUnit
-      integer(kind=DefInt) :: Unit_E
-      integer(kind=DefInt) :: Unit_N
-      integer(kind=DefInt) :: Unit_Spawn
-      integer(kind=DefInt) :: Unit_Traj
-      integer(kind=DefInt) :: Unit_Restart
-   end type File_Units
-!>
-!!    Holds data for a grid to plot the wavefunction
-!<
-   type GridData
-      real(DefReal) :: InX !< initial value of X
-      real(DefReal) :: InY !< initial value of Y
-      real(DefReal) :: InZ !< initial value of Z
-      real(DefReal) :: FnX !< final value of X
-      real(DefReal) :: FnY !< final value of Y
-      real(DefReal) :: FnZ !< final value of Z
-      integer(kind=DefInt) :: NXpoints !< Number of grid points in the X direction
-      integer(kind=DefInt) :: NYpoints !< Number of grid points in the Y direction
-      integer(kind=DefInt) :: NZpoints !< Number of grid points in the Z direction
-      real(DefReal) :: DelX !< increment in the X direction
-      real(DefReal) :: DelY !< increment in the X direction
-      real(DefReal) :: DelZ !< increment in the X direction
-   end type GridData
 
 !---------------------------------------------------------------------------
 !     ERROR THRESHOLDS
@@ -425,7 +372,7 @@ contains
 !!    \param SetVal   Logical to flag step as rejected or not
 !<
    subroutine FMS_RejectStep(SetVal)
-      logical, intent(IN) :: SetVal
+      logical, intent(in) :: SetVal
 
       if (.not. SetVal) then
          glzRejectStep = SetVal
@@ -484,7 +431,7 @@ contains
       filePath = trim(FMSWorkingDir)//trim(fileName)
       inquire (file=filePath, exist=fileExists)
       if (fileExists) then
-         open (newunit=iunit, file=filePath, position="append")
+         open (newunit=iunit, file=filePath, position='append')
       else
          open (newunit=iunit, file=filePath)
       end if

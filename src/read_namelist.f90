@@ -6,7 +6,8 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    use, intrinsic :: iso_fortran_env, only: error_unit
    use GlobalModule
    use QM_MM_Module
-   use SpawnModule
+   use ToyModelModule, only: izmaylov_params, GAIMS_model_params
+   use SpawnModule, only: spawn_params, OMAX_DEFAULT
    use InitialModule
    use SamplingModule
    use SMDModule
@@ -54,14 +55,12 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    real(kind=DefReal) :: InitGapWidth
    logical :: SelectState
    real(kind=DefReal) :: MaxEDiff
-   real(kind=DefReal) :: NoisyGuessFac
    real(kind=DefReal) :: OMax
    real(kind=DefReal) :: Omin_parent, OMax_intra, OMax_inter
    real(kind=DefReal) :: NumGradStep
    real(kind=DefReal) :: PopToSpawn
    real(kind=DefReal) :: RegThresh
    real(kind=DefReal) :: DecoherenceTime
-   real(kind=DefReal) :: MaxCoup
 !bfec
    real(kind=DefReal) :: StochasticThresh
    ! Switch on AIMSWISS?
@@ -89,6 +88,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    integer(kind=DefInt) :: NumTriplets
    real(kind=DefReal) :: SOCThresh
    real(kind=DefReal) :: ShiftTrip
+   logical :: SPA1_SOC_model
 ! GAIMS added end
 
 ! Thermostat added
@@ -157,9 +157,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
 
    integer*4 :: IRndSeed
 
-   logical :: Adaptive
    logical :: AnalysisMode
-   logical :: AssumeHermitian
    logical :: Brown
    logical :: BrownCon
    logical :: StochasticOlap
@@ -182,7 +180,6 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    integer(kind=DefInt) :: AvHStates(MaxArray)
    logical :: MinSearch
    logical :: MirrorBasis
-   logical :: NoisyGuess
    logical :: NormInitial
    logical :: OSAmp
    logical :: SharpEnergy
@@ -248,7 +245,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    integer(kind=DefInt) :: nCubeOrbIndex(MaxArray)
    integer(kind=DefInt) :: NCubeStep
 
-   namelist /control/ Adaptive, AnalysisMode, AssumeHermitian, Brown &
+   namelist /control/ AnalysisMode, Brown &
       , BrownCon, CFThresh, CSThresh, DGamma, EnergyAdjust, Equi &
       , EquilTStep, EquiRes, ExShift, FirstGauss &
       , FModeSharp, ForceKill, FullyCoupled, Stochastic &
@@ -258,7 +255,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
       , InitialCond, InitState, InitGap, InitGapWidth, SelectState, IntegType &
       , IRestart, IRestartTraj, RestartTime, RestartStep, zRedoRestartES &
       , IRndSeed, ISaddle &
-      , IterInv, MaxCoup, MaxEDiff, MaxTraj, MirrorBasis, MirrorState &
+      , IterInv, MaxEDiff, MaxTraj, MirrorBasis, MirrorState &
       , Model, MoldenStep, MultiSpawn, NAddQuanta, NCycles, OSAmp &
       , NormInitial, NSteps, NStepToPrint, NTemp, numas &
       , NumIseed, NumParticles, NumMM, NumInitBasis &
@@ -275,8 +272,8 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
       , zPCOlap, zSOME, zSOCeff &
       , EquiCon, GenSolvent, nRelaxSteps, nFixSteps, ConfineD, ConfineK &
       , SMD, VelPull, ForceConst, PullRate, Force, SMDNAtoms, IAtoms &
-      , NDummy, IDummy, ElongCut, autodirect, NoisyGuess &
-      , NoisyGuessFac, NormThresh, NormCons, NormStepCons &
+      , NDummy, IDummy, ElongCut, autodirect &
+      , NormThresh, NormCons, NormStepCons &
       , EnergyCons, EnergyStepCons, CoupTimeStep, Timesteprejection &
       , DieOnMinStep, RejectAllStateFlip, tStepThresh, WriteEveryStep &
       , MinTimeStep, OLapThresh, nEquiStepPrint, NumGradStep, CentNGrad &
@@ -289,7 +286,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
       , tspwnixf, tspwnfxf &
       ! xf added end
       ! GAIMS added
-      , NumSinglets, NumTriplets, SOCThresh, ShiftTrip &
+      , NumSinglets, NumTriplets, SOCThresh, ShiftTrip, SPA1_SOC_model &
       ! GAIMS added end
       , StochasticSwiss, StochasticStateSpecific &
       ! Toy models
@@ -328,9 +325,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    nCubeOrbs = 0
    nCubeOrbIndex = 0
    nCubeStep = 0
-   Adaptive = .false.
    AnalysisMode = .false.
-   AssumeHermitian = .true.
    Brown = .false.
    BrownCon = .false.
    CFThresh = 0.005
@@ -348,7 +343,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    IMethod = 1
    InitBright = .false.
    InitDark = .false.
-   InitialCond = "NOSAMPLE"
+   InitialCond = 'NOSAMPLE'
    ForceKill(:) = 0
    IzmOmegax = 0.009557d0
    IzmOmegay = 0.0033515d0
@@ -381,18 +376,15 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    end do
    ISaddle = 0
    IterInv = .false.
-   MaxCoup = 1.d6
    MaxEDiff = 0.03d0
    MaxTraj = 100
    MinSearch = .false.
    MirrorBasis = .false.
    MirrorState = 1
-   Model = "UNDEF"
+   Model = 'UNDEF'
    MoldenStep = 200
    MultiSpawn = 1
    NCycles = 0
-   NoisyGuessFac = 0.05
-   NoisyGuess = .false.
    NormInitial = .false.
    OSAmp = .false.
    NSteps = 0
@@ -494,6 +486,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    NumTriplets = 0
    SOCThresh = 0.d0
    ShiftTrip = 0.d0
+   SPA1_SOC_model = .false.
 ! GAIMS added end
 
 ! Thermostat added
@@ -530,7 +523,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
 
 !     Copy global parameters into Global_Module
    select case (trim(lower_case(Model)))
-   case ("undef")
+   case ('undef')
       write (error_unit, *) '"Model" must be defined in Control.dat'// &
          NL//'Available models:'//NL//'  '//AVAILABLE_MODELS
       zFatal = .true.
@@ -577,10 +570,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    gldTripletShift = TripletShift
    glcIntegType = IntegType
    gldRegThresh = RegThresh
-   glzAssumeHermitian = AssumeHermitian
-   glzAdaptive = Adaptive
    gliSaddle = ISaddle
-   glMaxCoup = MaxCoup
    glzIterInv = IterInv
 
    glRestartTime = RestartTime
@@ -590,15 +580,14 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    gldTStepThresh = tStepThresh
 
    gliForceKill = ForceKill
-   glIzmOmegax = IzmOmegax
-   glIzmOmegay = IzmOmegay
-   glIzmXshift = IzmXshift
-   glIzmYshift = IzmYshift
-   glIzmDeltaE = IzmDeltaE
-   glIzmCoupC = IzmCoupC
-   glGrsigma = Grsigma
+
+   call izmaylov_params%initialize(W1=IzmOmegax, W2=IzmOmegay, XA=IzmXshift, YA=IzmYshift, &
+                                   deltaE=IzmDeltaE, coupC=IzmCoupC)
+   call GAIMS_model_params%initialize(r_sigma=Grsigma)
+
    glzFullyCoupled = FullyCoupled
    glzStochastic = Stochastic
+   glzSPA1_SOC_model = SPA1_SOC_model
 !bfec
    gldStochaThresh = StochasticThresh
    glzCentroids = CentroidApprox
@@ -614,8 +603,6 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    glzConstrain = constrain
    glzAnalysisMode = AnalysisMode
    gldSimulationTime = SimulationTime
-   gldNoisyGuess = NoisyGuess
-   gldNoisyGuessFac = NoisyGuessFac
    gldNormThresh = NormThresh
    gldNormCons = NormCons
    gldNormStepCons = NormStepCons
@@ -640,7 +627,6 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    fmNAngles = NAngles
    fmNPyrams = NPyrams
    fmzXYZ = zXYZ
-   fmzDCD = zDCD
    fmzTrajFile = zTrajFile
    fmzPotEnFile = zPotEnFile
    fmzMMFile = zMMFile
@@ -766,34 +752,27 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    if (NumTriplets == 0 .and. NumSinglets == -1) NumSinglets = NumStates
    NSing = NumSinglets
    NTrip = NumTriplets
-   spdSOCThresh = SOCThresh
-! GAIMS added end
 
+!  OMax parameter had originally multiple meanings that are now covered
+!  by separate parameters: OMin_parent, OMax_inter and OMax_intra.
+!  To preserve the meaning of existing input files, we only overwrite
+!  them with OMax if they are not explicitly specified in Control.dat
+   if (OMax_intra < 0) then
+      OMax_intra = OMax
+   end if
+   if (OMax_inter < 0) then
+      OMax_inter = OMax
+   end if
+   if (OMin_parent < 0) then
+      OMin_parent = OMax
+   end if
+   if (MaxTraj == 0) then
+      MaxTraj = MaxTrajLimit
+   end if
 
-
-!     Copy Spawning parameters into SpawnModule
-   spdCSThresh = CSThresh
-   spdCFThresh = CFThresh
-   spdPopToSpawn = PopToSpawn
-!     OMax parameter had originally multiple meanings that are now covered
-!     by separate parameters: OMin_parent, OMax_inter and OMax_intra.
-!     To preserve the meaning of existing input files,
-!     we only overwrite them if they are explicitly specified in Control.dat
-   spdOMax_intra = OMax
-   spdOMax_inter = OMax
-   spdOMin_parent = OMax
-   if (OMax_intra >= 0) then
-      spdOMax_intra = OMax_intra
-   end if
-   if (OMax_inter >= 0) then
-      spdOMax_inter = OMax_inter
-   end if
-   if (OMin_parent >= 0) then
-      spdOMin_parent = OMin_parent
-   end if
-   spMaxTraj = MaxTraj
-   spMultiSpawn = MultiSpawn
-   spzSpawnCoupV = SpawnCoupV
+   call spawn_params%initialize(CSThresh=CSThresh, CFThresh=CFThresh, PopToSpawn=PopToSpawn, OMax_inter=OMax_inter, &
+                                OMax_intra=OMax_intra, OMin_parent=OMin_parent, SOCThresh=SOCThresh, MaxTraj=MaxTraj, &
+                                MultiSpawn=MultiSpawn, SpawnCoupV=SpawnCoupV)
 
 !     Copy QM/MM variables into QM_MM_Module
    qcZQMMM = ZQMMM
@@ -820,7 +799,6 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    else
       indEquilTStep = EquilTStep
    end if
-   if (spMaxTraj == 0) spMaxTraj = MaxTrajLimit
    if (gliModel == 9) qcNumMM = numas * nums
    if (ConfineK /= 0) qczConfine = .true.
    indGamma = indGamma * (1.d-15 / FsToAu) !convert from 1/s to 1/au
@@ -853,6 +831,11 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    call RPMD_Check()
 
    if (zFatal) call FMS_DieError('Namelist input failed.')
+
+   if (zDCD) then
+      call FMS_DieError('DCD output has been removed. If you need it, please comment on this this GitHub issue:'//NL// &
+                        'https://github.com/ispg-group/openfms/issues/33')
+   end if
 
 !
 !     Make sure output options make sense

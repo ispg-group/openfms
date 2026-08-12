@@ -1,6 +1,6 @@
 ! Copyright Todd J. Martinez and Raphael D. Levine, 1994
 module RandomModule
-   use GlobalModule, only: DefInt, DefReal, fmiOut
+   use GlobalModule, only: DefInt4, DefReal, fmiOut
    implicit none
    private
    public :: FMS_ranb, initialize_fortran_prng
@@ -14,11 +14,14 @@ contains
 !<
    function fms_ranb(ixt)
 
-      real*8 :: FMS_RANB
-      integer*4, intent(in) :: ixt
-      integer*4, save :: FMS_IX
-      integer*4 :: I1, I2, I3, I4, I5, I6, I7, I8, I9
-      data I2/16807/, I4/32768/, I5/65536/, I3/2147483647/
+      real(kind=DefReal) :: FMS_RANB
+      integer(kind=DefInt4), intent(in) :: ixt
+      integer(kind=DefInt4), save :: FMS_IX
+      integer(kind=DefInt4), parameter :: I2 = 16807
+      integer(kind=DefInt4), parameter :: I3 = 2147483647
+      integer(kind=DefInt4), parameter :: I4 = 32768
+      integer(kind=DefInt4), parameter :: I5 = 65536
+      integer(kind=DefInt4) :: I1, I6, I7, I8, I9
 
       if (ixt /= 0) then
          FMS_ix = ixt

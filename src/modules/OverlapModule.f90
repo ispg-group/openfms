@@ -1,6 +1,7 @@
 ! Copyright Todd J. Martinez and Raphael D. Levine, 1994
 module OverlapModule
    use GlobalModule
+   use ToyModelModule, only: GAIMS_model_params
    use ParticleModule
    use TrajectoryModule
    use TrajectoryCalcsModule, only: FMS_Forces, FMS_PotentialT, FMS_KineticT, &
@@ -79,7 +80,7 @@ contains
 ! right acting
       real(kind=DefReal), intent(in) :: x_i, p_i, alpha_i, &
                                         x_j, p_j, alpha_j
-      logical, optional :: prefactor ! pre calculated overlap
+      logical, intent(in), optional :: prefactor ! pre calculated overlap
       complex(kind=DefComp) :: dp_S_ij
 
       real(kind=DefReal) :: delta_x, delta_p
@@ -110,7 +111,7 @@ contains
 ! the expection of d/dx between two complex gaussians
       real(kind=DefReal), intent(in) :: x_i, p_i, alpha_i, &
                                         x_j, p_j, alpha_j
-      logical, optional :: prefactor
+      logical, intent(in), optional :: prefactor
       complex(kind=DefComp) :: dx_S_ij
 
       real(kind=DefReal) :: P_ij, delta_x
@@ -141,7 +142,7 @@ contains
 ! the expectation of the d^2/dx^2  between two complex gaussians
       real(kind=DefReal), intent(in) :: x_i, p_i, alpha_i, &
                                         x_j, p_j, alpha_j
-      logical, optional :: prefactor ! pre calculated overlap
+      logical, intent(in), optional :: prefactor ! pre calculated overlap
       complex(kind=DefComp) :: d2x_S_ij
       real(kind=DefReal) :: P_ij, delta_x
 
@@ -208,7 +209,7 @@ contains
 ! this calculates the expectation of the derivative operator for a particle
 ! returns a ndim vector
       type(T_Particle), intent(in) :: P1, P2
-      logical, optional :: prefactor
+      logical, intent(in), optional :: prefactor
       complex(kind=DefComp) :: dx_S_ij(P1%NumDimensions)
 
       integer(kind=DefInt) :: ndim_1, ndim_2, n
@@ -219,8 +220,9 @@ contains
       ndim_1 = P1%NumDimensions
       ndim_2 = P2%NumDimensions
 
-      if (ndim_1 /= ndim_2) &
+      if (ndim_1 /= ndim_2) then
          call FMS_DieError('overlap_dx_particle: dimension mismatch')
+      end if
 
       a_1 = P1%width
       a_2 = P2%width
@@ -252,7 +254,7 @@ contains
 ! calculates the expectation of d/dp.  Needed for calculating Sdot
 ! if prefactor is true the overlap part of the expression is not calculated
       type(T_Particle), intent(in) :: P1, P2
-      logical, optional :: prefactor
+      logical, intent(in), optional :: prefactor
       complex(kind=DefComp) :: dp_S_ij(P1%NumDimensions)
 
       integer(kind=DefInt) :: ndim_1, ndim_2, n
@@ -263,8 +265,9 @@ contains
       ndim_1 = P1%NumDimensions
       ndim_2 = P2%NumDimensions
 
-      if (ndim_1 /= ndim_2) &
+      if (ndim_1 /= ndim_2) then
          call FMS_DieError('overlap_dp_particle: dimension mismatch')
+      end if
 
       a_1 = P1%width
       a_2 = P2%width
@@ -296,7 +299,7 @@ contains
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ! calculates the Del^2 operator between two particles
       type(T_Particle), intent(in) :: P1, P2
-      logical, optional :: prefactor
+      logical, intent(in), optional :: prefactor
       complex(kind=DefComp) :: d2x_S_ij
 
       integer(kind=DefInt) :: ndim_1, ndim_2, i
@@ -307,8 +310,9 @@ contains
       ndim_1 = P1%NumDimensions
       ndim_2 = P2%NumDimensions
 
-      if (ndim_1 /= ndim_2) &
+      if (ndim_1 /= ndim_2) then
          call FMS_DieError('overlap_d2x_particle: Particle Dimensionalities must be the same!')
+      end if
 
       alpha_1 = P1%width
       alpha_2 = P2%width
@@ -343,7 +347,7 @@ contains
    function overlap_trajectory(T1, T2, same_state) result(S)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       type(T_Trajectory), intent(in) :: T1, T2
-      logical, optional :: same_state
+      logical, intent(in), optional :: same_state
       complex(kind=DefComp) :: S
       real(kind=DefReal) :: time_tmp1, time_tmp2
       integer :: n
@@ -380,7 +384,7 @@ contains
    function overlap_dp_trajectory(T1, T2, S_ij_precalc) result(dp_S_ij)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       type(T_Trajectory), intent(in) :: T1, T2
-      complex(kind=DefComp), optional :: S_ij_precalc
+      complex(kind=DefComp), intent(in), optional :: S_ij_precalc
       complex(kind=DefComp) :: dp_S_ij(T1%NumDimensions)
 
       complex(kind=DefComp) :: dp_S_ij_tmp(T1%Particle(1)%NumDimensions, &
@@ -412,7 +416,7 @@ contains
    function overlap_dx_trajectory(T1, T2, S_ij_precalc) result(dx_S_ij)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       type(T_Trajectory), intent(in) :: T1, T2
-      complex(kind=DefComp), optional :: S_ij_precalc
+      complex(kind=DefComp), intent(in), optional :: S_ij_precalc
       complex(kind=DefComp) :: dx_S_ij(T1%NumDimensions)
 
       complex(kind=DefComp) :: dx_S_ij_tmp(T1%Particle(1)%NumDimensions, &
@@ -446,7 +450,7 @@ contains
 ! this appears in the equations of motion on the off diagonal coupling
 ! different states together theough the NACME
       type(T_Trajectory), intent(in) :: T1, T2
-      complex(kind=DefComp), optional :: S_ij_precalc
+      complex(kind=DefComp), intent(in), optional :: S_ij_precalc
       complex(kind=DefComp) :: dx_M_S_ij(T1%NumDimensions)
 
       complex(kind=DefComp) :: dx_M_S_ij_tmp(T1%Particle(1)%NumDimensions, &
@@ -574,7 +578,7 @@ contains
 
       type(T_Trajectory), intent(in) :: T_i
       type(T_Trajectory), intent(in), optional :: T_j, T_c
-      complex(kind=DefComp), optional :: S_ij_precalc
+      complex(kind=DefComp), intent(in), optional :: S_ij_precalc
       complex(kind=DefComp) :: V
 ! enumerated type for cases
       integer :: mode
@@ -636,7 +640,7 @@ contains
             else
                mode = C
             end if
-         elseif (.not. (T_i%triplet .and. T_j%triplet)) then ! (2)
+         else if (.not. (T_i%triplet .and. T_j%triplet)) then ! (2)
             mode = D
          else ! (3)
 !    if( CBFi /= CBFj ) then
@@ -666,8 +670,9 @@ contains
       case (B, C, D, G, H, I)
 !bfec
          if (glzCentroids) then
-            if (.not. present(T_c)) &
+            if (.not. present(T_c)) then
                call FMS_DieError('overlap_V_trajectory :: no centroid passed')
+            end if
 
             ! check that the correct centroid was passed
 !    cent_match = (it==ic .and. jt==jc) .or. (jt==ic .and. it==jc)
@@ -705,6 +710,11 @@ contains
       select case (mode)
       case (A)
          V = FMS_PotentialT(T_i)
+
+         if (glzSPA1_SOC_model) then
+            V = V + SPA1_SOC_model(T_i, T_i, S_ij)
+         end if
+
 !   write(fmiOut,*) '#########AAAAAAAAAAA###########'
 !   write(fmiOut,*) T_i%TrajID,T_i%StateID
 !   write(fmiOut,*) FMS_PotentialT( T_i )
@@ -782,6 +792,10 @@ contains
       case (D)
          SOC_ij = FMS_SOCoupling(T_c, is, js, Msi, Msj)
          V = S_ij * SOC_ij
+
+         if (glzSPA1_SOC_model) then
+            V = V + SPA1_SOC_model(T_i, T_j, S_ij)
+         end if
 !   write(fmiOut,*) '########DDDD#############'
 !   write(fmiOut,*) 'd',T_i%TrajID,T_j%TrajID,T_i%StateID,T_j%StateID
 !   write(fmiOut,*) Msi,Msj
@@ -792,6 +806,10 @@ contains
 
       case (F)
          V = (0.d0, 0.d0)
+
+         if (glzSPA1_SOC_model) then
+            V = V + SPA1_SOC_model(T_i, T_j, S_ij)
+         end if
 
       case (G)
          if (Msi /= Msj) then
@@ -822,7 +840,7 @@ contains
       case (I)
          if (abs(Msi - Msj) > 1) then
             V = (0.d0, 0.d0)
-         elseif (CBFi == CBFj) then
+         else if (CBFi == CBFj) then
             V = (0.d0, 0.d0)
          else
             SOC_ij = FMS_SOCoupling(T_c, is, js, Msi, Msj)
@@ -836,7 +854,7 @@ contains
 !   write(fmiOut,*) '#########################'
 
       case default
-         call FMS_DieError("Invalid mode in overlap_V_trajectory")
+         call FMS_DieError('Invalid mode in overlap_V_trajectory')
 
       end select
 
@@ -848,7 +866,7 @@ contains
    function overlap_KE_trajectory(T1, T2, S_ij_precalc) result(KE)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       type(T_Trajectory), intent(in) :: T1, T2
-      complex(kind=DefComp), optional :: S_ij_precalc
+      complex(kind=DefComp), intent(in), optional :: S_ij_precalc
       complex(kind=DefComp) :: KE
 
       complex(kind=DefComp) :: S_ij
@@ -881,8 +899,8 @@ contains
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    function overlap_S_dot_trajectory(T1, T2, S_ij_precalc) result(S_dot)
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      type(T_Trajectory) :: T1, T2
-      complex(kind=DefComp), optional :: S_ij_precalc
+      type(T_Trajectory), intent(in) :: T1, T2
+      complex(kind=DefComp), intent(in), optional :: S_ij_precalc
       complex(kind=DefComp) :: S_dot
 
       complex(kind=DefComp) :: S_ij
@@ -893,19 +911,22 @@ contains
          S_ij = overlap_trajectory(T1, T2)
       end if
 
-! I don't understand the need for the minus
-! but it is important, the norm is not conserved otherwise
-!
-! TODO(danielhollas): On HDF_free branch, there's this additional comment,
-! but there's no minus sign anymore! We should make sure the formula below is correct.
-!
-! Tuesday, 20 December 2011 12:01:21
-!  Worked out the problem:
-!     overlap_dx   = < g1 | d/dx | g2 >
-! This equation actually needs
-!     overlap_dx_2 = < g1 | d/dx_2 | g2 >
-! A little algebra shows
-!     overlap_dx  = -overlap_dx_2
+      !  The necessity of the minus sign in the first term can be seen by looking
+      !  at the i-th TBF
+      !
+      !  χ_i = N exp(-α * (R - R_i)**2 + i P_i (R-R_i) + i ɣ_i)
+      !
+      !  Then taking the gradient of chi_i with respect to the nuclear configuration
+      !  space variable R (not the parameter!) we get
+      !
+      !  ∇_R χ_i = [ α (R - R_i) + i P_i ] χ_i
+      !
+      ! while if we take the gradient with respect to the parameter
+      ! R_i (the center of the Gaussian) we get
+      !
+      !  ∇_{R_i} χ_i = [- α (R - R_i) - i P_i ] χ_i
+      !
+      !  Thus it follows that ∇_R χ_i = - ∇_{R_i} χ_i
       S_dot = (-dot_product(T2%get_vel(), &
                             overlap_dx_trajectory(T1, T2, S_ij)) &
                + dot_product(FMS_Forces(T2), &
@@ -953,16 +974,17 @@ contains
    function nuc_dip_particlexf(P1, P2, charge) result(S_ij)
 ! Calculates the overlap between two particles
       type(T_Particle), intent(in) :: P1, P2
+      real(kind=DefReal), intent(in) :: charge
       complex(kind=DefComp) :: S_ij(P1%NumDimensions), Rterm
 
       integer(kind=DefInt) :: i
 
       real(kind=DefReal) :: x_1, p_1, a_1, &
                             x_2, p_2, a_2, &
-                            delta_x, delta_p, x_cent, charge
+                            delta_x, delta_p, x_cent
 
       if (P1%NumDimensions /= 3) then
-         call FMS_DieError("nuc_dip_particlexf only implemented for 3D systems")
+         call FMS_DieError('nuc_dip_particlexf only implemented for 3D systems')
       end if
 
       a_1 = P1%width
@@ -985,5 +1007,91 @@ contains
       end do
 
    end function nuc_dip_particlexf
+
+! Calculates the Saddle Point Approximation 1st order term for 1D toy model (Granucci, J. Chem. Phys., 2012, 137, 22A501)
+! Analytical Computation only valid for specific model only
+! SPA 1st order term:
+!    Interstate:
+!        dSO_{I,J}^{Msi,Msj}(X_c)/dx * < X_i^I | x-x_c | X_j^I >
+!
+!        (r_sigma-1 < x_c < r_sigma +1) :
+!                  dSO_{I,J}^{Msi,Msj}(X_c) / dx = 12 * ( (x_c-r_sigma)^2) / dr_sigma^3 ) - 3/dr_sigma
+!         otherwise:
+!                  dSO_{I,J}^{Msi,Msj}(X_c) / dx = 0
+!
+!    Intrastate:
+!        dV(X_c)/dx * < X_i^I | x-x_c | X_j^I >
+!
+!        Singlet state:
+!                  dV(X_c)/dx =  -a_1 * alpha_1 * e^(-alpha_1 * x_c)
+!        Triplet state:
+!                  dV(X_c)/dx =  -a_2 * alpha_2 * e^(-alpha_2 * x_c)
+!
+!
+!  < X_i^I | x-x_c | X_j^I > = -i * (p_1-p_2)/4 * alpha_I * < X_i^I | X_j^I > (Vanicek, J. Chem. Phys.,2013 139, 034112)
+
+   function SPA1_SOC_model(T1, T2, S_ij) result(PotEn)
+      type(T_Trajectory), intent(in) :: T1, T2
+      complex(kind=DefComp), intent(in) :: S_ij
+      real(kind=DefReal) :: x_cent, x_1, x_2, p_1, p_2, sigma_G, alpha_1, alpha_2
+      complex(kind=DefComp) :: PotEn, dE, dSOC, roe
+      real(kind=DefReal) :: r_sigma
+
+      if (glIMethod /= 4) then
+         call FMS_DieError('SPA1 only available for GAIMS 1D Toy Model')
+      end if
+
+      x_1 = T1%Particle(1)%get_pos(1)
+      x_2 = T2%Particle(1)%get_pos(1)
+      p_1 = T1%Particle(1)%get_mom(1)
+      p_2 = T2%Particle(1)%get_mom(1)
+      alpha_1 = T1%Particle(1)%width
+      alpha_2 = T2%Particle(1)%width
+      r_sigma = GAIMS_model_params%r_sigma
+
+      x_cent = (alpha_1 * x_1 + alpha_2 * x_2) / (alpha_1 + alpha_2) !centroid position
+      ! roe from appendix A of Vanicek, J. Chem. Phys.,2013 139, 034112
+      roe = -c1i * (p_1 - p_2) / (4 * (alpha_1))
+
+      if ((T1%StateID == T2%StateID) .and. (T1%Ms == T2%Ms)) then !for intrastate case A
+         !Derivative of potential energy
+         if (T1%StateID == 2) then !T
+            dE = -0.25d0 * 0.5d0 * exp(-0.25d0 * x_cent) !Derivative of V from Granucci, J. Chem. Phys., 2012, 137, 22A501
+         else !S
+            dE = -0.35d0 * 0.03452d0 * exp(-0.35d0 * x_cent)
+         end if
+         PotEn = dE * S_ij * roe
+      else if ((T1%StateID == T2%StateID) .and. (T1%Ms /= T2%Ms)) then !for interstate case F
+         dSOC = (0.0, 0.0)
+         PotEn = dSOC * S_ij * roe
+      else !for interstate case D
+         !Derivative of SO_{I,J}^{Msi,Msj}(X_c) in Eq(11) from Granucci, J. Chem. Phys., 2012, 137, 22A501
+         if (((r_sigma - 1.d0) < x_cent) .and. (x_cent < (r_sigma + 1.d0))) then
+            sigma_G = 12.d0 * (((x_cent - r_sigma)**2) / (2.d0**3)) - 3.d0 / 2.d0
+         else
+            sigma_G = 0.d0
+         end if
+
+         if (T1%StateID == 1) then
+            if (T2%Ms == 1) then
+               dSOC = conjg((0.0005, 0.0005) * sigma_G) ! z*  : S,T-1
+            else if (T2%Ms == 2) then
+               dSOC = c1i * 0.001d0 * sigma_G ! ib  : S,T0
+            else
+               dSOC = (0.0005, 0.0005) * sigma_G ! z   : S,T1
+            end if
+         else
+            if (T1%Ms == 1) then
+               dSOC = (0.0005, 0.0005) * sigma_G ! z   : T-1,S
+            else if (T1%Ms == 2) then
+               dSOC = -c1i * 0.001d0 * sigma_G ! -ib : T0,S
+            else
+               dSOC = conjg((0.0005, 0.0005) * sigma_G) ! z*  : T1,S
+            end if
+         end if
+         PotEn = dSOC * S_ij * roe
+      end if
+
+   end function SPA1_SOC_model
 
 end module OverlapModule

@@ -44,6 +44,7 @@ module ParticleModule
       procedure, public :: create => create_particle
       procedure, public :: destroy => destroy_particle
       procedure, public :: print_info => print_particle_info
+      procedure, public :: copy_from
       procedure :: get_position_component
       procedure :: get_position_vec
       procedure :: get_momentum_component
@@ -101,7 +102,7 @@ contains
       P1%Mass = 0.0d0
       P1%Charge = 0.0d0
       P1%AtomicNum = 0.0d0
-      P1%Elmnt = "XX"
+      P1%Elmnt = 'XX'
 
       allocate (P1%Position(NumDim))
       P1%Position = 0.d0
@@ -144,6 +145,12 @@ contains
       P1%Momentum2 = P2%Momentum2
    end subroutine assign_particle
 
+   subroutine copy_from(P1, P2)
+      class(T_Particle), intent(inout) :: P1
+      class(T_Particle), intent(in) :: P2
+
+      call assign_particle(P1, P2)
+   end subroutine copy_from
 !>
 !!    Memory deallocation to destroy a particle structure
 !!    \param Particle Particle to annihilate
@@ -157,7 +164,7 @@ contains
       P1%Width = 0.0d0
       P1%Charge = 0.0d0
       P1%AtomicNum = 0.0d0
-      P1%Elmnt = "XX"
+      P1%Elmnt = 'XX'
 
       if (allocated(P1%Position)) then
          deallocate (P1%Position)
@@ -234,7 +241,7 @@ contains
       real(kind=DefReal) :: pos
 
       if (i < 1 .or. i > size(P1%Position)) then
-         call FMS_DieError("Particle%get_position_component: index out of range")
+         call FMS_DieError('Particle%get_position_component: index out of range')
          pos = 0.0d0; return
       end if
 
@@ -274,7 +281,7 @@ contains
       real(kind=DefReal), intent(in) :: NewPosition
 
       if (i < 1 .or. i > size(P1%Position)) then
-         call FMS_DieError("Particle%set_position_component: index out of range ")
+         call FMS_DieError('Particle%set_position_component: index out of range ')
          return
       end if
 
@@ -297,7 +304,7 @@ contains
       real(kind=DefReal), intent(in) :: NewPosition(:)
 
       if (size(P1%Position) /= size(NewPosition)) then
-         call FMS_DieError("Particle%set_position_vec: wrong array size")
+         call FMS_DieError('Particle%set_position_vec: wrong array size')
          return
       end if
 
@@ -318,7 +325,7 @@ contains
       real(kind=DefReal) :: mom
 
       if (i < 1 .or. i > size(P1%Momentum)) then
-         call FMS_DieError("Particle%get_momentum_component: index out of range")
+         call FMS_DieError('Particle%get_momentum_component: index out of range')
          mom = 0.0d0; return
       end if
 
@@ -355,7 +362,7 @@ contains
       real(kind=DefReal), intent(in) :: NewMomentum
 
       if (i < 1 .or. i > size(P1%Momentum)) then
-         call FMS_DieError("Particle%set_momentum_component: index out of range ")
+         call FMS_DieError('Particle%set_momentum_component: index out of range ')
          return
       end if
 
@@ -372,7 +379,7 @@ contains
       real(kind=DefReal), intent(in) :: new_momentum(:)
 
       if (size(P1%Momentum) /= size(new_momentum)) then
-         call FMS_DieError("Particle%set_momentum_vec: wrong array size")
+         call FMS_DieError('Particle%set_momentum_vec: wrong array size')
          return
       end if
 
@@ -384,7 +391,7 @@ contains
       real(kind=DefReal), intent(in) :: new_mom2(:)
 
       if (size(P%Momentum) /= size(new_mom2)) then
-         call FMS_DieError("Particle%set_momentum2_vec: wrong array size")
+         call FMS_DieError('Particle%set_momentum2_vec: wrong array size')
          return
       end if
       P%Momentum2 = new_mom2
@@ -480,12 +487,12 @@ contains
 ! if the angle betwenn i,j,k or j,k,l are less than 5 deg. print a warning
       theta = FMS_Angle_Particle(Pi, Pj, Pk)
       if (theta < tol_lo .or. tol_hi < theta) then
-         write (fmiOut, *) "FMS_Dihedral_Particle : small angle between i,j,k"
+         write (fmiOut, *) 'FMS_Dihedral_Particle : small angle between i,j,k'
       end if
 
       theta = FMS_Angle_Particle(Pj, Pk, Pl)
       if (theta < tol_lo .or. tol_hi < theta) then
-         write (fmiOut, *) "FMS_Dihedral_Particle : small angle between j,k,l"
+         write (fmiOut, *) 'FMS_Dihedral_Particle : small angle between j,k,l'
       end if
 
       Xji = Pi%get_pos() - Pj%get_pos()

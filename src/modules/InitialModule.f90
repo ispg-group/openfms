@@ -7,8 +7,7 @@ module InitialModule
    use ThermoModule, only: thermo_init, thermo
    use TrajectoryModule, only: FMS_InitializeNHC
    implicit none
-   public 
-   save
+   public
 
 !> Initial state to create wavefunctions on
    integer(kind=DefInt) :: inInitState
