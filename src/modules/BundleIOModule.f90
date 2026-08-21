@@ -444,7 +444,7 @@ contains
             zWriteHeader = .true.
          end if
          write (suffix, '(i32)') B1%Trajectory(iTraj)%TrajID
-         call FMS_WriteTrajFiles(B1%Trajectory(iTraj), trim(adjustl(suffix)), zFirst=zWriteHeader)
+         call FMS_WriteTrajFiles(B1%Trajectory(iTraj), trim(adjustl(suffix)), zFirst=zWriteHeader, itraj=iTraj)
 ![ydl
 !     Write trajectory-pair-level files
          if ((fmzPCOlap) .and. (B1%Numtraj > 1)) then
