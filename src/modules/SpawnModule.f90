@@ -14,6 +14,7 @@ module SpawnModule
    use BundleCalcsModule, only: FMS_UpdateMulliken
    use OverlapModule, only: overlap
    use VerletModule, only: FMS_PropVV
+   use RingModule, only: FMS_ring_add_child
    implicit none
 
    !> OMax is a legacy threshold value that functioned
@@ -252,6 +253,7 @@ contains
                            call FMS_CalculateSelectionTime(parent_s, child_s, child_i)
                         end if
                         call B1%add_traj(child_i)
+                        call FMS_ring_add_child(i, child_i)
 !bfec
                         if (glzStochastic) gldLastSpawnSto = spawn_time
 
@@ -321,8 +323,10 @@ contains
                         !GAIMS change
                         if (child_i%StateID > NSing) then
                            call B1%add_traj_triplet(child_i)
+                           call FMS_ring_add_child(i, child_i, 3)
                         else
                            call B1%add_traj(child_i)
+                           call FMS_ring_add_child(i, child_i)
                         end if
                         !GAIMS change end
 

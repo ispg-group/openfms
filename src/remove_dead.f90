@@ -16,6 +16,7 @@ subroutine FMS_RemoveDead(B1)
    use BundleModule
    use BundleCalcsModule, only: FMS_bH, FMS_Mulliken
    use SpawnModule, only: spawn_couple, spawn_params
+   use RingModule, only: FMS_ring_compact
    implicit none
    type(T_TrajectoryBundle), intent(inout) :: B1
    type(T_TrajectoryBundle) :: BTemp
@@ -33,6 +34,7 @@ subroutine FMS_RemoveDead(B1)
 
    logical :: NotCoupled, OnIgnoreState, PopBelowThresh, &
               MarkForDeath, OverSpawnThresh, ForceDead
+   logical :: ring_keep(B1%NumTraj)
 
    ntraj = B1%NumTraj
    nstate = B1%NumStates
@@ -124,6 +126,11 @@ subroutine FMS_RemoveDead(B1)
 
    ! Remove dead trajectories
    if (ndead > 0) then
+      do iTraj = 1, B1%NumTraj
+         ring_keep(iTraj) = .not. B1%Trajectory(iTraj)%is_dead()
+      end do
+      call FMS_ring_compact(ring_keep)
+
       call BTemp%create(numtraj=B1%NumTraj - nDead, &
                         numdeadtraj=B1%NumDeadTraj + nDead, &
                         numstates=B1%NumStates, &

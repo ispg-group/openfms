@@ -1,4 +1,6 @@
 module RingModule
+use GlobalModule, only: FMS_DieError
+use TrajectoryModule, only: T_Trajectory
 implicit none
 real(8),parameter ::  pi=4.0d0*datan(1.0d0)
 type T_Ring
@@ -13,6 +15,7 @@ real (8),allocatable :: rNHC(:,:,:,:) !< nNHC,ndim,natom,n (bohr)
 real (8),allocatable :: pNHC(:,:,:,:) !< nNHC,ndim,natom,n (bohr)
 real (8),allocatable :: mNHC(:,:)     !< nNHC,n NHC masses for ring normal modes
 real (8),allocatable :: F_ext(:,:,:)  !< ndim,natom,n External force (au)
+real (8),allocatable :: V_ext(:)      !< n External potential energy (au)
 real (8),allocatable :: m(:,:)        !< natom,n Mass of ring normal modes
 real (8),allocatable :: m_inv(:,:)    !< natom,n Inverse mass of ring normal modes
 real (8),allocatable :: omega(:)      !< normal mode frequencies
@@ -55,6 +58,7 @@ endif
 ring1%r          = ring2%r
 ring1%p          = ring2%p
 ring1%F_ext      = ring2%F_ext
+ring1%V_ext      = ring2%V_ext
 ring1%m          = ring2%m
 ring1%m_inv      = ring2%m_inv
 ring1%omega      = ring2%omega
@@ -90,6 +94,7 @@ istat=0
 allocate(ring%r(ndim,natom,n),stat=IStat) ; if(IStat /= 0) ZSuccess=.false.
 allocate(ring%p(ndim,natom,n),stat=IStat) ; if(IStat /= 0) ZSuccess=.false.
 allocate(ring%F_ext(ndim,natom,n),stat=IStat) ; if(IStat /= 0) ZSuccess=.false.
+allocate(ring%V_ext(n),stat=IStat) ; if(IStat /= 0) ZSuccess=.false.
 allocate(ring%m(natom,n),stat=IStat) ; if(IStat /= 0) ZSuccess=.false.
 allocate(ring%m_inv(natom,n),stat=IStat) ; if(IStat /= 0) ZSuccess=.false.
 allocate(ring%omega(n),stat=IStat) ; if(IStat /= 0) ZSuccess=.false.
@@ -100,6 +105,7 @@ allocate(ring%mNHC(nNHC,n),stat=IStat) ; if(IStat /= 0) ZSuccess=.false.
 ring%r=0.0d0
 ring%p=0.0d0
 ring%F_ext=0.0d0
+ring%V_ext=0.0d0
 ring%m=0.0d0
 ring%m_inv=0.0d0
 ring%omega=0.0d0
@@ -146,6 +152,7 @@ ring%natom=0
 if(allocated(ring%r)) deallocate(ring%r,stat=istat) ; if (istat /= 0) ZSuccess=.false.
 if(allocated(ring%p))  deallocate(ring%p,stat=istat) ; if (istat /= 0) ZSuccess=.false.
 if(allocated(ring%F_ext))  deallocate(ring%F_ext,stat=istat) ; if (istat /= 0) ZSuccess=.false.
+if(allocated(ring%V_ext))  deallocate(ring%V_ext,stat=istat) ; if (istat /= 0) ZSuccess=.false.
 if(allocated(ring%m))  deallocate(ring%m,stat=istat) ; if (istat /= 0) ZSuccess=.false.
 if(allocated(ring%m_inv))  deallocate(ring%m_inv,stat=istat) ; if (istat /= 0) ZSuccess=.false.
 if(allocated(ring%omega))  deallocate(ring%omega,stat=istat) ; if (istat /= 0) ZSuccess=.false.
@@ -165,6 +172,90 @@ subroutine FMS_ring_setup(nTraj)
   if (allocated(FMS_rings)) deallocate(FMS_rings)
   allocate(FMS_rings(nTraj))
 end subroutine FMS_ring_setup
+
+subroutine FMS_ring_add_child(parent_index, child, copies)
+  integer, intent(in) :: parent_index
+  type(T_Trajectory), intent(in) :: child
+  integer, intent(in), optional :: copies
+
+  type(T_Ring), allocatable :: rings_temp(:)
+  real(8), allocatable :: r_cent(:, :), p_cent(:, :)
+  integer :: i, ibead, icopy, iparticle, ncopies, nold
+  logical :: success
+
+  if (.not. allocated(FMS_rings)) return
+  if (parent_index < 1 .or. parent_index > size(FMS_rings)) then
+    call FMS_DieError('Cannot create child ring: parent ring index is out of bounds')
+  end if
+
+  ncopies = 1
+  if (present(copies)) ncopies = copies
+  if (ncopies < 1) return
+
+  nold = size(FMS_rings)
+  allocate(rings_temp(nold + ncopies))
+  do i = 1, nold
+    success = ring_create(rings_temp(i), FMS_rings(i)%ndim, FMS_rings(i)%natom, &
+                          FMS_rings(i)%n, FMS_rings(i)%nNHC)
+    if (.not. success) call FMS_DieError('Failed to copy ring polymer array')
+    rings_temp(i) = FMS_rings(i)
+  end do
+
+  allocate(r_cent(FMS_rings(parent_index)%ndim, FMS_rings(parent_index)%natom))
+  allocate(p_cent(FMS_rings(parent_index)%ndim, FMS_rings(parent_index)%natom))
+  r_cent = ring_centvec(FMS_rings(parent_index)%r, FMS_rings(parent_index)%ndim, &
+                        FMS_rings(parent_index)%natom, FMS_rings(parent_index)%n)
+  p_cent = ring_centvec(FMS_rings(parent_index)%p, FMS_rings(parent_index)%ndim, &
+                        FMS_rings(parent_index)%natom, FMS_rings(parent_index)%n)
+
+  do icopy = 1, ncopies
+    i = nold + icopy
+    success = ring_create(rings_temp(i), FMS_rings(parent_index)%ndim, &
+                          FMS_rings(parent_index)%natom, FMS_rings(parent_index)%n, &
+                          FMS_rings(parent_index)%nNHC)
+    if (.not. success) call FMS_DieError('Failed to create spawned trajectory ring polymer')
+    rings_temp(i) = FMS_rings(parent_index)
+    do ibead = 1, rings_temp(i)%n
+      do iparticle = 1, rings_temp(i)%natom
+        rings_temp(i)%r(:, iparticle, ibead) = rings_temp(i)%r(:, iparticle, ibead) &
+                                               + child%Particle(iparticle)%get_pos() &
+                                               - r_cent(:, iparticle)
+        rings_temp(i)%p(:, iparticle, ibead) = rings_temp(i)%p(:, iparticle, ibead) &
+                                               + child%Particle(iparticle)%get_mom() &
+                                               - p_cent(:, iparticle)
+      end do
+    end do
+  end do
+
+  call move_alloc(rings_temp, FMS_rings)
+end subroutine FMS_ring_add_child
+
+subroutine FMS_ring_compact(keep)
+  logical, intent(in) :: keep(:)
+
+  type(T_Ring), allocatable :: rings_temp(:)
+  integer :: i, ikeep
+  logical :: success
+
+  if (.not. allocated(FMS_rings)) return
+  if (size(keep) /= size(FMS_rings)) then
+    call FMS_DieError('Cannot compact ring polymers: trajectory count mismatch')
+  end if
+  if (all(keep)) return
+
+  allocate(rings_temp(count(keep)))
+  ikeep = 0
+  do i = 1, size(FMS_rings)
+    if (.not. keep(i)) cycle
+    ikeep = ikeep + 1
+    success = ring_create(rings_temp(ikeep), FMS_rings(i)%ndim, FMS_rings(i)%natom, &
+                          FMS_rings(i)%n, FMS_rings(i)%nNHC)
+    if (.not. success) call FMS_DieError('Failed to compact ring polymer array')
+    rings_temp(ikeep) = FMS_rings(i)
+  end do
+
+  call move_alloc(rings_temp, FMS_rings)
+end subroutine FMS_ring_compact
 
 function ring_write(ring,iunit) result(ZSuccess)
 implicit none
@@ -206,6 +297,8 @@ write(iunit,*)'Momenta:'
 write(iunit,3)ring%p
 write(iunit,*)'External forces:'
 write(iunit,3)ring%F_ext
+write(iunit,*)'External potential energies:'
+write(iunit,3)ring%V_ext
 write(iunit,*)'NHC Positions:'
 write(iunit,3)ring%rNHC
 write(iunit,*)'NHC Momenta:'
@@ -251,6 +344,8 @@ read(iunit,*)
 read(iunit,*)ring%p
 read(iunit,*)
 read(iunit,*)ring%F_ext
+read(iunit,*)
+read(iunit,*)ring%V_ext
 read(iunit,*)
 read(iunit,*)ring%rNHC
 read(iunit,*)

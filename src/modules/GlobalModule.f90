@@ -184,6 +184,10 @@ module GlobalModule
    character(len=10) :: glRPMDThermostat = 'NONE'
    real(kind=DefReal) :: gldRPMDTau0 = 1.0d0
    integer(kind=DefInt) :: gliRPMDNNHC = 2
+   logical :: glzRPMDSetInitialPositions = .false.
+   real(kind=DefReal) :: gldRPMDInitialPositions(100) = 0.0d0
+   logical :: glzRPMDSetInitialMomenta = .false.
+   real(kind=DefReal) :: gldRPMDInitialMomenta(100) = 0.0d0
 
 !---------------------------------------------------------------------------
 !                      OUTPUT CONTROL

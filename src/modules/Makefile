@@ -104,7 +104,7 @@ SelectionModule.o: SelectionModule.f90 GlobalModule.o RandomModule.o OverlapModu
 
 SpawnModule.o: SpawnModule.f90 GlobalModule.o SelectionModule.o FMSModule.o \
                TrajectoryModule.o TrajectoryCalcsModule.o TrajectoryIOModule.o \
-	       BundleModule.o BundleCalcsModule.o OverlapModule.o VerletModule.o
+	       BundleModule.o BundleCalcsModule.o OverlapModule.o VerletModule.o RingModule.o
 
 QM_MM_Module.o: QM_MM_Module.f90 GlobalModule.o
 
@@ -138,6 +138,6 @@ FFTModule.o: FFTModule.f90
 	@$(FC) $(filter-out -fimplicit-none,$(FFLAGS)) $(INCFLAGS) -std=legacy \
 		-Wno-maybe-uninitialized -Wno-array-bounds -Wno-do-subscript -c $<
 
-RingModule.o: RingModule.f90 ThermoModule.o FFTModule.o GlobalModule.o
+RingModule.o: RingModule.f90 ThermoModule.o FFTModule.o GlobalModule.o TrajectoryModule.o
 
 PropVVRing.o: PropVVRing.f90 GlobalModule.o TrajectoryModule.o TrajectoryCalcsModule.o ParticleModule.o RingModule.o

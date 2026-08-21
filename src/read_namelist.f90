@@ -105,6 +105,10 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    character(len=10) :: RPMDThermostat
    real(kind=DefReal) :: RPMDTau0
    integer(kind=DefInt) :: RPMDNNHCChain
+   logical :: RPMDSetInitialPositions
+   real(kind=DefReal) :: RPMDInitialPositions(MaxArray)
+   logical :: RPMDSetInitialMomenta
+   real(kind=DefReal) :: RPMDInitialMomenta(MaxArray)
 ! RPMD added end
    
 
@@ -299,7 +303,9 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
       ! Thermostat added
       , zThermostatis, thermostattype, NumNHCChain, LangevinGamma, LangevinTemp, NHCTau &
       ! RPMD added
-      , nBeads, RPMDMethod, RPMDThermostat, RPMDTau0, RPMDNNHCChain
+      , nBeads, RPMDMethod, RPMDThermostat, RPMDTau0, RPMDNNHCChain &
+      , RPMDSetInitialPositions, RPMDInitialPositions &
+      , RPMDSetInitialMomenta, RPMDInitialMomenta
 
    IRestart = 0
    IRestartTraj(:) = 0
@@ -503,6 +509,10 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    RPMDThermostat = 'NONE'
    RPMDTau0 = 1.0d0
    RPMDNNHCChain = 2
+   RPMDSetInitialPositions = .false.
+   RPMDInitialPositions = 0.0d0
+   RPMDSetInitialMomenta = .false.
+   RPMDInitialMomenta = 0.0d0
 ! RPMD added end
 
 !     Flag for input errors
@@ -715,6 +725,10 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    glRPMDThermostat = RPMDThermostat
    gldRPMDTau0 = RPMDTau0
    gliRPMDNNHC = RPMDNNHCChain
+   glzRPMDSetInitialPositions = RPMDSetInitialPositions
+   gldRPMDInitialPositions = RPMDInitialPositions
+   glzRPMDSetInitialMomenta = RPMDSetInitialMomenta
+   gldRPMDInitialMomenta = RPMDInitialMomenta
    if (nBeads > 1 .and. Temperature > 0.0d0) then
       gldRPMDBeta = 1.0d0 / (BoltzK * Temperature)
    end if

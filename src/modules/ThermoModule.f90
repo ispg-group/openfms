@@ -1,6 +1,7 @@
 ! Copyright Todd J. Martinez and Raphael D. Levine, 1994
 module ThermoModule
    use GlobalModule
+   use RandomModule, only: initialize_fortran_prng
    use TrajectoryModule
    use TrajectoryCalcsModule, only: FMS_PhaseDot, FMS_GetForce
    implicit none
@@ -11,7 +12,8 @@ module ThermoModule
    double precision, save :: beta_s = 0.0 !inverse temperature in simple interface
    double precision, save :: thermtime = 0.0 !Thermostat relaxation time (in au) for simple interface
    logical, save :: zcom_s = .true. !Do center of mass removal in simple interface?
-   integer(4), parameter :: i4one = 1 !Ensure type is consistent with uses of integer(4)
+   !integer(4), parameter :: i4one = 1 !Ensure type is consistent with uses of integer(4)
+
 
 contains
 
@@ -21,11 +23,7 @@ contains
       double precision, optional :: beta_in, thermtime_in
       logical, optional :: zcom_in
 
-      double precision :: foo
-      integer(4) :: idum
-
-      idum = sign(iseed, -i4one) !ensure seed is negative
-      call thermo_ran(foo, idum) !Initialize random number generator
+      call initialize_fortran_prng(iseed)
 
       if (present(therm_in)) therm = therm_in !Set the thermostat for the simple interface
       if (present(beta_in)) beta_s = beta_in !Set the temperature for the simple interface

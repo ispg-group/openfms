@@ -237,7 +237,7 @@ contains
             t%particle(i)%get_mom()
       end do
       write (unit=iunit, fmt='(5(f10.4))') &
-         t%phase, t%amplitude%re, t%amplitude%im, FMS_Weight(t), real(t%stateID)
+         t%phase, real(t%amplitude), aimag(t%amplitude), FMS_Weight(t), real(t%stateID)
 
    end subroutine FMS_WriteFTrajDump
 !>

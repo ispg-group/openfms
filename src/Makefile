@@ -54,7 +54,7 @@ MODFILES = modules/globalmodule.mod modules/fmsmodule.mod modules/eispackmodule.
 	modules/restartmodule.mod modules/templatemodule.mod modules/toymodelmodule.mod\
 	modules/qm_mm_module.mod modules/terachemmodule.mod modules/verletmodule.mod \
 	modules/quanticsmodule.mod modules/rattlemodule.mod modules/thermomodule.mod \
-	modules/smdmodule.mod modules/constraintmodule.mod modules/propagationmodule.mod \
+	modules/ringmodule.mod modules/smdmodule.mod modules/constraintmodule.mod modules/propagationmodule.mod \
 	modules/minsearchmodule.mod modules/selectionmodule.mod modules/overlapmodule.mod
 
 #################################

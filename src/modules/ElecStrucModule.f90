@@ -165,6 +165,16 @@ contains
                NumStates = 2
             end if
 
+         case (5)
+            write (fmiOut, *) 'gliMethod=5: Quartic potential 1D 1-state'
+            if (NumStates /= 1) then
+               write (fmiOut, *) 'Number of states set to 1.'
+               NumStates = 1
+            end if
+            if (NumParticles < 1) then
+               call FMS_DieError('Quartic potential requires >=1 particle.')
+            end if
+
          case default
             write (errmsg, '(a, i0)') 'Invalid iMethod value: ', gliMethod
             call FMS_DieError(errmsg)

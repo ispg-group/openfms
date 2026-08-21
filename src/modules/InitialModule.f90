@@ -86,8 +86,10 @@ contains
       ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       use GlobalModule, only: DefReal, fmiOut, FMSWorkingDir, FMS_DieError, BoltzK, &
                               gliNBeads, gliRPMDNNHC, gldRPMDBeta, glRPMDMethod, &
-                              glRPMDThermostat, gldRPMDTau0
-      use RingModule, only: ring_create, ring_init, FMS_ring_setup, FMS_rings
+                              glRPMDThermostat, gldRPMDTau0, glzRPMDSetInitialPositions, &
+                              gldRPMDInitialPositions, glzRPMDSetInitialMomenta, &
+                              gldRPMDInitialMomenta
+      use RingModule, only: ring_create, ring_init, ring_centvec, FMS_ring_setup, FMS_rings
       use TrajectoryModule
       use TrajectoryCalcsModule, only: Potential
       use BundleModule
@@ -102,8 +104,8 @@ contains
       !thermostat
       integer :: ntraj, n, i
       ! ring polymer
-      real(kind=DefReal), allocatable :: rp_masses(:), rp_refgeom(:,:)
-      integer :: rp_ndim, rp_natom, rp_iatom
+      real(kind=DefReal), allocatable :: rp_masses(:), rp_refgeom(:,:), rp_centmom(:,:)
+      integer :: rp_ndim, rp_natom, rp_iatom, rp_ibead, rp_offset
       logical :: rp_success
 
       logical :: zExist, redo
@@ -247,7 +249,8 @@ contains
          do i = 1, ntraj
             rp_ndim = B1%Trajectory(i)%Particle(1)%NumDimensions
             rp_natom = B1%Trajectory(i)%NumParticles
-            allocate(rp_masses(rp_natom), rp_refgeom(rp_ndim, rp_natom))
+            allocate(rp_masses(rp_natom), rp_refgeom(rp_ndim, rp_natom), &
+                     rp_centmom(rp_ndim, rp_natom))
             do rp_iatom = 1, rp_natom
                rp_masses(rp_iatom) = B1%Trajectory(i)%get_mass(rp_iatom)
                rp_refgeom(:, rp_iatom) = B1%Trajectory(i)%Particle(rp_iatom)%get_pos()
@@ -258,7 +261,39 @@ contains
             call ring_init(FMS_rings(i), rp_refgeom, rp_masses, gldRPMDBeta, &
                            glRPMDMethod, 'MB        ', glRPMDThermostat, gldRPMDTau0, &
                            .false., iniRndSeed)
-            deallocate(rp_masses, rp_refgeom)
+            if (glzRPMDSetInitialPositions) then
+               if (size(FMS_rings(i)%r) > size(gldRPMDInitialPositions)) then
+                  call FMS_DieError('Too many ring coordinates for RPMDInitialPositions')
+               end if
+               do rp_iatom = 1, rp_natom
+                  do rp_ibead = 1, FMS_rings(i)%n
+                     rp_offset = ((rp_iatom - 1) * FMS_rings(i)%n + rp_ibead - 1) * rp_ndim
+                     FMS_rings(i)%r(:, rp_iatom, rp_ibead) = &
+                        gldRPMDInitialPositions(rp_offset + 1:rp_offset + rp_ndim)
+                  end do
+               end do
+               rp_refgeom = ring_centvec(FMS_rings(i)%r, rp_ndim, rp_natom, FMS_rings(i)%n)
+               do rp_iatom = 1, rp_natom
+                  call B1%Trajectory(i)%set_pos(rp_iatom, rp_refgeom(:, rp_iatom))
+               end do
+            end if
+            if (glzRPMDSetInitialMomenta) then
+               if (size(FMS_rings(i)%p) > size(gldRPMDInitialMomenta)) then
+                  call FMS_DieError('Too many ring coordinates for RPMDInitialMomenta')
+               end if
+               do rp_iatom = 1, rp_natom
+                  do rp_ibead = 1, FMS_rings(i)%n
+                     rp_offset = ((rp_iatom - 1) * FMS_rings(i)%n + rp_ibead - 1) * rp_ndim
+                     FMS_rings(i)%p(:, rp_iatom, rp_ibead) = &
+                        gldRPMDInitialMomenta(rp_offset + 1:rp_offset + rp_ndim)
+                  end do
+               end do
+               rp_centmom = ring_centvec(FMS_rings(i)%p, rp_ndim, rp_natom, FMS_rings(i)%n)
+               do rp_iatom = 1, rp_natom
+                  call B1%Trajectory(i)%set_mom(rp_iatom, rp_centmom(:, rp_iatom))
+               end do
+            end if
+            deallocate(rp_masses, rp_refgeom, rp_centmom)
          end do
       end if
 

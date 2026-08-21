@@ -11,6 +11,9 @@
 !!      (gliModel==4) GAIMS Model 1D 2-state SOC
 !!            Granucci et al, J CP 137, 22A501 (2012).
 !!
+!!      (gliModel==5) Quartic potential 1D 1-state
+!!            V(x) = x^4/4.
+!!
 !!    All dimensions higher than required for the model potential
 !!    are ignored, and their forces and derivative coupling set to 0
 !!
@@ -70,7 +73,7 @@ module ToyModelModule
    type(t_izmaylov_params) :: izmaylov_params
    type(t_GAIMS_model_params) :: GAIMS_model_params
 
-   public :: FMS_ToyModel, izmaylov_params, GAIMS_model_params
+   public :: FMS_ToyModel, izmaylov_params, GAIMS_model_params, quartic_force
 
 contains
 
@@ -110,12 +113,38 @@ contains
 
          call GAIMS_model(T)
 
+      case (5)
+
+         call quartic_model(T)
+
       case default
          write (errmsg, '(a, i0)') 'Invalid iMethod value: ', gliMethod
          call FMS_DieError(errmsg)
       end select
 
    end subroutine FMS_ToyModel
+
+   subroutine quartic_model(T)
+      type(T_Trajectory), intent(inout) :: T
+      real(kind=DefReal) :: x
+
+      x = T%Particle(1)%get_pos(1)
+
+      T%ElecStruc%PotEn(1) = 0.25d0*x**4
+      T%ESFlags%ZPotEnCurrent = .true.
+
+      T%ElecStruc%DerivMat = 0.d0
+      T%ElecStruc%DerivMat(1, 1, 1) = x**3
+      T%ESFlags%zDerivCurrent = .true.
+   end subroutine quartic_model
+
+   function quartic_force(r_vec, ndim, natom, n) result(force)
+      integer, intent(in) :: ndim, natom, n
+      real(8), intent(in) :: r_vec(ndim, natom, n)
+      real(8) :: force(ndim, natom, n)
+
+      force = -r_vec**3
+   end function quartic_force
 
    subroutine GAIMS_model(T)
       type(T_Trajectory), intent(inout) :: T
