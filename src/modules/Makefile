@@ -2,7 +2,7 @@
 # Machine dependencies #
 ########################
 CONFIG = ../../CONFIGFMS
-INCFLAGS = -I /usr/local/include/fortran_stdlib/GNU-13.3.0
+INCFLAGS = -I $(STDLIB_MODULEDIR)
 SUFFIXES = .f90 .f .F90 .F
 INTERFACES = ../fortran_interfaces.inc
 MAKEFILE = Makefile
