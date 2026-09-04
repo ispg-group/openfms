@@ -2,7 +2,10 @@
 # Machine dependencies #
 ########################
 CONFIG = ../../CONFIGFMS
-INCFLAGS = -I $(STDLIB_MODULEDIR)
+INCFLAGS = -I ..
+ifneq ($(STDLIB_LIBDIR),)
+	INCFLAGS += -I $(STDLIB_MODULEDIR)
+endif
 SUFFIXES = .f90 .f .F90 .F
 INTERFACES = ../fortran_interfaces.inc
 MAKEFILE = Makefile

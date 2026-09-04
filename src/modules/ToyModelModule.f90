@@ -25,6 +25,7 @@ module ToyModelModule
    use EispackModule
 #ifdef STDLIB
    use stdlib_linalg, only: eye, cross_product, eigh
+#endif
    implicit none
    private
 
@@ -363,7 +364,7 @@ contains
          T1%ElecStruc%SOMat(2, 1, 3, 2) = conjg(c_1 * sigma_G) ! z*  : T1,S
 
          T1%ESFlags%zSOMCurrent = .true.
-      
+ 
       case (5) ! Three-state triangle model
 
          A = triangle_params%A
@@ -391,19 +392,24 @@ contains
          !write (fmiOut, *) 'V2', Eval(3)
 
          ! Forces and coupling (numerical)
+#ifdef STDLIB 
          call diag3x3(H_Diab, Eval, Evec)
+#endif
          T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, :) = 0.d0
          !write (fmiOut, *) 'Evec0', Evec(1,:)
          !write (fmiOut, *) 'Evec1', Evec(2,:)
          !write (fmiOut, *) 'Evec2', Evec(3,:)
 
          call Triangle(x+dx, H_DiabPlus)
+#ifdef STDLIB 
          call eigh(H_DiabPlus,EvalPlus)
          call diag3x3(H_DiabPlus, EvalPlus, EvecPlus)
+#endif
          call Triangle(x-dx, H_DiabMinus)
+#ifdef STDLIB 
          call eigh(H_DiabMinus,EvalMinus)
          call diag3x3(H_DiabMinus, EvalMinus, EvecMinus)
-
+#endif
          ! openfms only works in cartesians. For a 1D model system,
          ! we set NumParticles=1 and set gradients for two cartesian components to be 0.
          ! Evaluate gradients by finite differences (central)
@@ -592,6 +598,7 @@ contains
 !! The eigenvectors are normalized
 !! Done to ensure the eigenvectors change smoothly
 !<
+#ifdef STDLIB
    subroutine diag3x3(H, Eval, Evec)
       real(kind=DefReal), intent(in) :: H(3, 3), Eval(3)
       real(kind=DefReal), intent(out) :: Evec(3,3)
@@ -626,7 +633,7 @@ contains
       Evec(3,:) = Evec(3,:)/norm
    
    end subroutine diag3x3
-
+#endif
       
       
       
