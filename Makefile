@@ -7,6 +7,8 @@ include CONFIGFMS
 export FC
 export FCTYPE
 export LD
+export STDLIB_LIBDIR
+export STDLIB_MODULEDIR
 export FFLAGS
 export LDFLAGS
 export KERNEL
@@ -54,13 +56,7 @@ endif
 MODULEDIR=Modules/
 
 #stdlib
-# Replace STDLIB_LIBDIR and STDLIB_MODULEDIR with the location of the stdlib libraries and modules respectively
-STDLIB_LIBDIR=/usr/local/lib
-STDLIB_MODULEDIR+=/usr/local/include/fortran_stdlib/GNU-13.3.0/
 STDLIB_LIBS = -Wl,--start-group $(wildcard $(STDLIB_LIBDIR)/*.a) -Wl,--end-group
-export PKG_CONFIG_PATH := $(STDLIB_LIBDIR)/lib/pkgconfig:$(PKG_CONFIG_PATH)
-STDLIB_CFLAGS := `pkg-config --cflags fortran_stdlib`
-#STDLIB_LIBS := `pkg-config --libs fortran_stdlib`
 
 SUFFIXES=.f .c .F
 

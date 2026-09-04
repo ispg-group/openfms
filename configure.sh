@@ -15,6 +15,18 @@ if [[ $ESP != "tc" && $ESP != "zero" && $ESP != "quantics" ]]; then
     exit 1
 fi
 
+# Fortran's STDLIB package
+STDLIB_LIBDIR=${2-none}
+STDLIB_MODULEDIR=${3-none}
+if [[ $STDLIB_LIBDIR != "none" && $STDLIB_MODULEDIR = "none" ]]; then
+	echo "ERROR: Please provide location of the STDLIB module directory"
+	exit 1
+fi
+if [[ $STDLIB_LIBDIR = "none" ]]; then
+	STDLIB_LIBDIR=""
+	STDLIB_MODULEDIR=""
+fi
+
 if [[ -z $FC ]]; then
     if [[ $ESP = 'tc' ]];then
 	# We need MPI compiler for TC interface
@@ -71,6 +83,8 @@ cat << EOF > $VARS
 ESP = $ESP
 FC = $FC
 LD = $FC
+STDLIB_LIBDIR = $STDLIB_LIBDIR
+STDLIB_MODULEDIR = $STDLIB_MODULEDIR
 FCTYPE = $FCTYPE
 FFLAGS = $FFLAGS
 KERNEL = $(uname -s)
