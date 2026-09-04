@@ -6,7 +6,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    use, intrinsic :: iso_fortran_env, only: error_unit
    use GlobalModule
    use QM_MM_Module
-   use ToyModelModule, only: izmaylov_params, GAIMS_model_params
+   use ToyModelModule, only: izmaylov_params, GAIMS_model_params, triangle_params
    use SpawnModule, only: spawn_params, OMAX_DEFAULT
    use InitialModule
    use SamplingModule
@@ -138,6 +138,12 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    real(kind=DefReal) :: IzmDeltaE
    real(kind=DefReal) :: IzmCoupC
    real(kind=DefReal) :: Grsigma
+
+   real(kind=DefReal) :: TriangleA
+   real(kind=DefReal) :: TriangleB
+   real(kind=DefReal) :: TriangleC
+   real(kind=DefReal) :: TriangleX02
+   real(kind=DefReal) :: TriangleX12
 
    integer*4 :: IRndSeed
 
@@ -278,6 +284,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
       ! Toy models
       , IzmOmegax, IzmOmegay, IzmXshift, IzmYshift, IzmDeltaE, IzmCoupC &
       , Grsigma &
+      , TriangleA, TriangleB, TriangleC, TriangleX02, TriangleX12 &
       ! Backwards compat
       , Tunnel, EShellOnly, SpawnAdaptive, SteepestDescent &
       !TM
@@ -336,6 +343,11 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    IzmDeltaE = 0.01984d0
    IzmCoupC = 0.0006127d0
    Grsigma = 10.0d0
+   TriangleA = 0.008
+   TriangleB = 0.0015
+   TriangleC = 1.0
+   TriangleX02 = 1.0
+   TriangleX12 = 6.0
    FullyCoupled = .true.
    Stochastic = .false.
 !bfec
@@ -558,6 +570,8 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    call izmaylov_params%initialize(W1=IzmOmegax, W2=IzmOmegay, XA=IzmXshift, YA=IzmYshift, &
                                    deltaE=IzmDeltaE, coupC=IzmCoupC)
    call GAIMS_model_params%initialize(r_sigma=Grsigma)
+   call triangle_params%initialize(A=TriangleA, B=TriangleB, C=TriangleC, &
+                                   X02=TriangleX02, X12=TriangleX12)
 
    glzFullyCoupled = FullyCoupled
    glzStochastic = Stochastic

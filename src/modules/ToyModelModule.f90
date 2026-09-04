@@ -22,6 +22,9 @@ module ToyModelModule
    use GlobalModule
    use TrajectoryModule
    use ElecStrucModule
+   use EispackModule
+#ifdef STDLIB
+   use stdlib_linalg, only: eye, cross_product, eigh
    implicit none
    private
 
@@ -80,10 +83,31 @@ module ToyModelModule
    end type t_GAIMS_model_params
 !-----------------------------------------------
 
+!-----------------------------------------------
+!
+!  Parameters for three-state triangle:
+!     * A ....... Energy at whcih V0 and V1 intersect
+!     * B ....... Linear scaling factor for diabatic coupling
+!     * C ....... Exponential scaling factor for diabatic coupling
+!     * X02 ..... Intersection point of V0 and V2
+!     * X12 ..... Intersection point of V1 and V2
+!
+!-----------------------------------------------
+   type :: t_triangle_params
+      real(kind=DefReal) :: A
+      real(kind=DefReal) :: B
+      real(kind=DefReal) :: C
+      real(kind=DefReal) :: X02
+      real(kind=DefReal) :: X12
+   contains
+      procedure, public :: initialize => initialize_triangle_params
+   end type t_triangle_params
+
    type(t_izmaylov_params) :: izmaylov_params
    type(t_GAIMS_model_params) :: GAIMS_model_params
+   type(t_triangle_params) :: triangle_params
 
-   public :: FMS_ToyModel, izmaylov_params, GAIMS_model_params
+   public :: FMS_ToyModel, izmaylov_params, GAIMS_model_params, triangle_params
 
 contains
 
@@ -105,19 +129,37 @@ contains
       self%r_sigma = r_sigma
    end subroutine initialize_gaims_model_params
 
+   subroutine initialize_triangle_params(self, A, B, C, X02, X12)
+      class(t_triangle_params), intent(inout) :: self
+      real(kind=DefReal), intent(in) :: A, B, C, X02, X12
+      self%A = A
+      self%B = B
+      self%C = C
+      self%X02 = X02
+      self%X12 = X12
+   end subroutine initialize_triangle_params
+
    subroutine FMS_ToyModel(T1)
       type(T_Trajectory), intent(inout) :: T1
 
       real(kind=DefReal) :: Coupling(T1%NumStates - 1, T1%NumDimensions)
-      real(kind=DefReal) :: x, y, H_Diab(2, 2)
-      real(kind=DefReal), dimension(2) :: Evec1, Evec2, EDisplace1, &
-                                          EDisplace2, EvecTemp
+      real(kind=DefReal) :: x, y, H_Diab(T1%NumStates, T1%NumStates)
+      real(kind=DefReal), dimension(T1%NumStates) :: Evec1, Evec2, EDisplace1, &
+                                          EDisplace2, EvecTemp, Eval
+      real(kind=DefReal), dimension(T1%NumStates,T1%NumStates) :: Evec
+      real(kind=DefReal), dimension(T1%NumStates,T1%NumStates) :: &
+      H_DiabPlus(T1%NumStates, T1%NumStates), &
+      H_DiabMinus(T1%NumStates, T1%NumStates), &
+      EvecPlus(T1%NumStates, T1%NumStates), &
+      EvecMinus(T1%NumStates, T1%NumStates)
+      real(kind=DefReal), dimension(T1%NumStates) :: EvalPlus, EvalMinus
       real(kind=DefReal) :: v11, v12, v21, v22
       real(kind=DefReal) :: dv11dx, dv12dx, dv22dx
       real(kind=DefReal) :: dv11dy, dv12dy, dv22dy
       real(kind=DefReal) :: MASSY, MASSX
       real(kind=DefReal) :: sigma_G
       real(kind=DefReal) :: W1, W2, XA, YA, coupC
+      real(kind=DefReal) :: A, B, C, X02, X12
 
       select case (gliMethod)
 
@@ -321,6 +363,81 @@ contains
          T1%ElecStruc%SOMat(2, 1, 3, 2) = conjg(c_1 * sigma_G) ! z*  : T1,S
 
          T1%ESFlags%zSOMCurrent = .true.
+      
+      case (5) ! Three-state triangle model
+
+         A = triangle_params%A
+         B = triangle_params%B
+         C = triangle_params%C
+         X02 = triangle_params%X02
+         X12 = triangle_params%X12
+         !MASSX = T1%Particle(1)%Mass
+         !MASSY = T1%Particle(2)%Mass
+
+         ! Adiabatic energy
+         x = T1%Particle(1)%get_pos(1)
+         !y = T1%Particle(2)%get_pos(1)
+
+         call Triangle(x, H_Diab)
+         ! call FMS_RS(3,3,H_Diab,Eval,0,Evec)
+         call eigh(H_Diab,Eval)
+         
+         T1%ElecStruc%PotEn(1) = Eval(1)
+         T1%ElecStruc%PotEn(2) = Eval(2)
+         T1%ElecStruc%PotEn(3) = Eval(3)
+         T1%ESFlags%ZPotEnCurrent = .true.
+         !write (fmiOut, *) 'V0', Eval(1)
+         !write (fmiOut, *) 'V1', Eval(2)
+         !write (fmiOut, *) 'V2', Eval(3)
+
+         ! Forces and coupling (numerical)
+         call diag3x3(H_Diab, Eval, Evec)
+         T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, :) = 0.d0
+         !write (fmiOut, *) 'Evec0', Evec(1,:)
+         !write (fmiOut, *) 'Evec1', Evec(2,:)
+         !write (fmiOut, *) 'Evec2', Evec(3,:)
+
+         call Triangle(x+dx, H_DiabPlus)
+         call eigh(H_DiabPlus,EvalPlus)
+         call diag3x3(H_DiabPlus, EvalPlus, EvecPlus)
+         call Triangle(x-dx, H_DiabMinus)
+         call eigh(H_DiabMinus,EvalMinus)
+         call diag3x3(H_DiabMinus, EvalMinus, EvecMinus)
+
+         ! openfms only works in cartesians. For a 1D model system,
+         ! we set NumParticles=1 and set gradients for two cartesian components to be 0.
+         ! Evaluate gradients by finite differences (central)
+         T1%ElecStruc%DerivMat(1, 1, 1) = (EvalPlus(1)-EvalMinus(1))/(2.d0 * dx)
+         T1%ElecStruc%DerivMat(2, 2, 1) = (EvalPlus(2)-EvalMinus(2))/(2.d0 * dx)
+         T1%ElecStruc%DerivMat(3, 3, 1) = (EvalPlus(3)-EvalMinus(3))/(2.d0 * dx)
+
+         !write (fmiOut, *) 'G0', T1%ElecStruc%DerivMat(1, 1, 1)
+         !write (fmiOut, *) 'G1', T1%ElecStruc%DerivMat(2, 2, 1)
+         !write (fmiOut, *) 'G2', T1%ElecStruc%DerivMat(3, 3, 1)
+
+         ! first-order NAC between states 1 and 2
+         EVecTemp = (EvecPlus(2,:)-EvecMinus(2,:))/(2.d0 * dx)
+         T1%ElecStruc%DerivMat(2, 1, 1) = dot_product(Evec(1,:),EVecTemp)
+         T1%ElecStruc%DerivMat(1, 2, 1) = -T1%ElecStruc%DerivMat(2, 1, 1)
+         ! first-order NAC between states 1 and 3
+         EVecTemp = (EvecPlus(3,:)-EvecMinus(3,:))/(2.d0 * dx)
+         T1%ElecStruc%DerivMat(3, 1, 1) = dot_product(Evec(1,:),EVecTemp)
+         T1%ElecStruc%DerivMat(1, 3, 1) = -T1%ElecStruc%DerivMat(3, 1, 1)
+         ! first-order NAC between states 2 and 3
+         !EVecTemp = (EvecPlus(3,:)-EvecMinus(3,:))/(2.d0 * dx)
+         T1%ElecStruc%DerivMat(3, 2, 1) = dot_product(Evec(2,:),EVecTemp)
+         T1%ElecStruc%DerivMat(2, 3, 1) = -T1%ElecStruc%DerivMat(3, 2, 1)
+
+         !write (fmiOut, *) 'd01', T1%ElecStruc%DerivMat(2, 1, 1)
+         !write (fmiOut, *) 'd02', T1%ElecStruc%DerivMat(3, 1, 1)
+         !write (fmiOut, *) 'd12', T1%ElecStruc%DerivMat(3, 2, 1)
+         !write (fmiOut, *) 'd10', T1%ElecStruc%DerivMat(1, 2, 1)
+         !write (fmiOut, *) 'd20', T1%ElecStruc%DerivMat(1, 3, 1)
+         !write (fmiOut, *) 'd21', T1%ElecStruc%DerivMat(2, 3, 1)
+
+         ! what does this do?
+         T1%ESFlags%zDerivCurrent(:, :) = .true.
+
 
       case default
          write (fmiOut, *) 'iMethod', gliMethod
@@ -403,6 +520,30 @@ contains
    end subroutine GAIMS_model_ham
 
 !>
+!! Returns Three-state triangle diabatic Hamiltonian
+!<
+   subroutine triangle(x, H)
+      real(kind=DefReal), intent(in) :: x
+      real(kind=DefReal), intent(out) :: H(3, 3)
+      real(kind=DefReal) :: A, B, C, X02, X12
+      A = triangle_params%A
+      B = triangle_params%B
+      C = triangle_params%C
+      X02 = triangle_params%X02
+      X12 = triangle_params%X12
+
+      H(1, 1) = A * (1-x/X02)
+      H(2, 2) = A * (1-x/X12)
+      H(3, 3) = 0.0d0
+      H(1, 2) = B * exp(-C*x*x)
+      H(1, 3) = B * exp(-C*((x-X02)**2))
+      H(2, 3) = B * exp(-C*((x-X12)**2))
+      H(2, 1) = H(1, 2)
+      H(3, 1) = H(1, 3)
+      H(3, 2) = H(2, 3)
+   end subroutine triangle
+
+!>
 !! Helper routine for numerical derivative couplings; diagonalize a 2x2
 !! matrix of the form ( (A,B), (B,C)); the eigenvectors are normalized
 !! This is done analytically, since we can.
@@ -445,5 +586,54 @@ contains
       EVec2(1) = EVec2(1) / norm
       EVec2(2) = EVec2(2) / norm
    end subroutine diagABBC
+
+!>
+!! Helper routine for eigenvectors of a 3x3 matrix H, using its eigenvalues Eval
+!! The eigenvectors are normalized
+!! Done to ensure the eigenvectors change smoothly
+!<
+   subroutine diag3x3(H, Eval, Evec)
+      real(kind=DefReal), intent(in) :: H(3, 3), Eval(3)
+      real(kind=DefReal), intent(out) :: Evec(3,3)
+      real(kind=DefReal) :: norm
+      real(kind=DefReal), dimension(3,3) :: I, char_mat, tmp_mat 
+
+      I = eye(3,3)
+      char_mat = H - (Eval(1)*I)
+      tmp_mat(1,:) = cross_product(char_mat(:,2), char_mat(:,3))
+      tmp_mat(2,:) = cross_product(char_mat(:,3), char_mat(:,1))
+      tmp_mat(3,:) = cross_product(char_mat(:,1), char_mat(:,2))
+      Evec(1,:) = tmp_mat(1,:) - tmp_mat(3,:)
+      norm = sqrt(Evec(1,1)**2 + Evec(1,2)**2 + Evec(1,3)**2)
+      Evec(1,:) = Evec(1,:)/norm
+      
+      I = eye(3,3)
+      char_mat = H - (Eval(2)*I)
+      tmp_mat(1,:) = cross_product(char_mat(:,2), char_mat(:,3))
+      tmp_mat(2,:) = cross_product(char_mat(:,3), char_mat(:,1))
+      tmp_mat(3,:) = cross_product(char_mat(:,1), char_mat(:,2))
+      Evec(2,:) = tmp_mat(2,:)
+      norm = sqrt(Evec(2,1)**2 + Evec(2,2)**2 + Evec(2,3)**2)
+      Evec(2,:) = Evec(2,:)/norm
+
+      I = eye(3,3)
+      char_mat = H - (Eval(3)*I)
+      tmp_mat(1,:) = cross_product(char_mat(:,2), char_mat(:,3))
+      tmp_mat(2,:) = cross_product(char_mat(:,3), char_mat(:,1))
+      tmp_mat(3,:) = cross_product(char_mat(:,1), char_mat(:,2))
+      Evec(3,:) = tmp_mat(1,:) + tmp_mat(3,:)
+      norm = sqrt(Evec(3,1)**2 + Evec(3,2)**2 + Evec(3,3)**2)
+      Evec(3,:) = Evec(3,:)/norm
+   
+   end subroutine diag3x3
+
+      
+      
+      
+
+
+
+
+
 
 end module ToyModelModule

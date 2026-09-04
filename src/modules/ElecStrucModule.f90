@@ -163,6 +163,13 @@ contains
                write (fmiOut, *) 'Number of states set to 2.'
                NumStates = 2
             end if
+         
+         case (5) !Three-state triangle model
+            write (fmiOut, *) 'gliMethod=5: Three-state triangle model system.'
+            if (NumStates /= 3) then
+               write (fmiOut, *) 'Number of states set to 3.'
+               NumStates = 3
+            end if
 
          case default
             write (fmiOut, *) 'Invalid gliMethod = ', gliMethod
