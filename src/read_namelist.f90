@@ -170,6 +170,8 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    logical :: AvH
    integer(kind=DefInt) :: AvHNStates
    integer(kind=DefInt) :: AvHStates(MaxArray)
+   logical :: KinematicMomentum
+   logical :: SpawnSecondOrderCoup
    logical :: MinSearch
    logical :: MirrorBasis
    logical :: NoisyGuess
@@ -241,6 +243,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
       , BrownCon, CFThresh, CSThresh, DGamma, EnergyAdjust, Equi &
       , EquilTStep, EquiRes, ExShift, FirstGauss &
       , FModeSharp, ForceKill, FullyCoupled, Stochastic &
+      , KinematicMomentum, SpawnSecondOrderCoup &
       , IAddQuanta, IBrown, IDark, StochasticThresh, StochasticOlap &
       , CentroidApprox, TripletShift &
       , IMethod, IModeSharp, InitBright, InitDark &
@@ -350,6 +353,8 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    TriangleX12 = 6.0
    FullyCoupled = .true.
    Stochastic = .false.
+   KinematicMomentum = .false.
+   SpawnSecondOrderCoup = KinematicMomentum
 !bfec
    StochasticThresh = 1.0d-10
    StochasticOlap = .false.
@@ -572,6 +577,14 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    call GAIMS_model_params%initialize(r_sigma=Grsigma)
    call triangle_params%initialize(A=TriangleA, B=TriangleB, C=TriangleC, &
                                    X02=TriangleX02, X12=TriangleX12)
+
+   glzKinematicMomentum = KinematicMomentum
+   glzSpawnSecondOrderCoup = SpawnSecondOrderCoup
+   if ((.not. glzKinematicMomentum) .and. (glzSpawnSecondOrderCoup)) then
+      write (error_unit, *) 'Cannot use SpawnSecondOrderCoup=.true. with ', &
+      'KinematicMomentum = .false. '
+      zFatal = .true. 
+   end if
 
    glzFullyCoupled = FullyCoupled
    glzStochastic = Stochastic

@@ -109,6 +109,8 @@ module GlobalModule
    real(kind=DefReal) :: gldTimeStep
    real(kind=DefReal) :: gldCoupTimeStep
    real(kind=DefReal) :: gldMinTimeStep
+   logical :: glzKinematicMomentum
+   logical :: glzSpawnSecondOrderCoup
    logical :: glzFullyCoupled
    logical :: glzStochastic !< Use Stochastic Collapse algorithm?
 !bfec
