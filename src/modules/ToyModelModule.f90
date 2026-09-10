@@ -372,13 +372,9 @@ contains
          C = triangle_params%C
          X02 = triangle_params%X02
          X12 = triangle_params%X12
-         !MASSX = T1%Particle(1)%Mass
-         !MASSY = T1%Particle(2)%Mass
 
          ! Adiabatic energy
          x = T1%Particle(1)%get_pos(1)
-         !y = T1%Particle(2)%get_pos(1)
-
          call Triangle(x, H_Diab)
          ! call FMS_RS(3,3,H_Diab,Eval,0,Evec)
          call eigh(H_Diab,Eval)
@@ -387,18 +383,12 @@ contains
          T1%ElecStruc%PotEn(2) = Eval(2)
          T1%ElecStruc%PotEn(3) = Eval(3)
          T1%ESFlags%ZPotEnCurrent = .true.
-         !write (fmiOut, *) 'V0', Eval(1)
-         !write (fmiOut, *) 'V1', Eval(2)
-         !write (fmiOut, *) 'V2', Eval(3)
 
          ! Forces and coupling (numerical)
 #ifdef STDLIB 
          call diag3x3(H_Diab, Eval, Evec)
 #endif
-         T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, :) = 0.d0
-         !write (fmiOut, *) 'Evec0', Evec(1,:)
-         !write (fmiOut, *) 'Evec1', Evec(2,:)
-         !write (fmiOut, *) 'Evec2', Evec(3,:)
+         T1%ElecStruc%DerivMat(:, :, :) = 0.d0
 
          call Triangle(x+dx, H_DiabPlus)
 #ifdef STDLIB 
@@ -417,9 +407,6 @@ contains
          T1%ElecStruc%DerivMat(2, 2, 1) = (EvalPlus(2)-EvalMinus(2))/(2.d0 * dx)
          T1%ElecStruc%DerivMat(3, 3, 1) = (EvalPlus(3)-EvalMinus(3))/(2.d0 * dx)
 
-         !write (fmiOut, *) 'G0', T1%ElecStruc%DerivMat(1, 1, 1)
-         !write (fmiOut, *) 'G1', T1%ElecStruc%DerivMat(2, 2, 1)
-         !write (fmiOut, *) 'G2', T1%ElecStruc%DerivMat(3, 3, 1)
 
          ! first-order NAC between states 1 and 2
          EVecTemp = (EvecPlus(2,:)-EvecMinus(2,:))/(2.d0 * dx)
@@ -434,14 +421,7 @@ contains
          T1%ElecStruc%DerivMat(3, 2, 1) = dot_product(Evec(2,:),EVecTemp)
          T1%ElecStruc%DerivMat(2, 3, 1) = -T1%ElecStruc%DerivMat(3, 2, 1)
 
-         !write (fmiOut, *) 'd01', T1%ElecStruc%DerivMat(2, 1, 1)
-         !write (fmiOut, *) 'd02', T1%ElecStruc%DerivMat(3, 1, 1)
-         !write (fmiOut, *) 'd12', T1%ElecStruc%DerivMat(3, 2, 1)
-         !write (fmiOut, *) 'd10', T1%ElecStruc%DerivMat(1, 2, 1)
-         !write (fmiOut, *) 'd20', T1%ElecStruc%DerivMat(1, 3, 1)
-         !write (fmiOut, *) 'd21', T1%ElecStruc%DerivMat(2, 3, 1)
-
-         ! what does this do?
+         ! update flag for calc at current position
          T1%ESFlags%zDerivCurrent(:, :) = .true.
 
 
