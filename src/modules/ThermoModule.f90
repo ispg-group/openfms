@@ -14,10 +14,10 @@ module ThermoModule
 contains
 
    subroutine thermo_init(iseed, therm_in, beta_in, thermtime_in, zcom_in)
-      integer(4) :: iseed
-      character(len=8), optional :: therm_in
-      double precision, optional :: beta_in, thermtime_in
-      logical, optional :: zcom_in
+      integer(4), intent(in) :: iseed
+      character(len=8), intent(in), optional :: therm_in
+      double precision, intent(in), optional :: beta_in, thermtime_in
+      logical, intent(in), optional :: zcom_in
 
       double precision :: foo
       integer(4) :: idum
@@ -33,8 +33,10 @@ contains
    end subroutine thermo_init
 
    subroutine thermo(ndim, natom, p, mass, dt, thermE)
-      integer :: ndim, natom
-      double precision :: p(ndim, natom), mass(natom), dt, tau, thermE
+      integer, intent(in) :: ndim, natom
+      double precision, intent(inout) :: p(ndim, natom), thermE
+      double precision, intent(in) :: mass(natom), dt
+      double precision :: tau
 
       tau = thermtime / dt
 
@@ -59,10 +61,11 @@ contains
    end function thermo_NormDist
 
    subroutine thermo_MBDist(ndim, natom, p, mass, beta, zcom)
-      integer :: ndim, natom
-      double precision :: p(ndim, natom), mass(natom)
-      double precision :: beta
-      logical :: zcom
+      integer, intent(in) :: ndim, natom
+      double precision, intent(inout) :: p(ndim, natom)
+      double precision, intent(in) :: mass(natom)
+      double precision, intent(in) :: beta
+      logical, intent(in) :: zcom
 
       double precision :: mxw_unitf, sigma
       integer :: iatom, idm
@@ -83,10 +86,12 @@ contains
    end subroutine thermo_MBDist
 
    subroutine thermo_bussi_global(ndim, natom, p, mass, beta, tau, thermE, zcom)
-      integer :: ndim, natom
-      double precision :: p(ndim, natom), mass(natom)
-      double precision :: beta, tau, thermE
-      logical :: zcom
+      integer, intent(in) :: ndim, natom
+      double precision, intent(inout) :: p(ndim, natom)
+      double precision, intent(in) :: mass(natom)
+      double precision, intent(in) :: beta, tau
+      double precision, intent(inout) :: thermE
+      logical, intent(in) :: zcom
 
       double precision :: ekin_old, ekin_new, ekinfac, sigma, signfac, vscale
       integer :: ndeg, iatom, idm
@@ -127,10 +132,12 @@ contains
    end subroutine thermo_bussi_global
 
    subroutine thermo_bussi_local(ndim, natom, p, mass, beta, tau, thermE, zcom)
-      integer :: ndim, natom
-      double precision :: p(ndim, natom), mass(natom)
-      double precision :: beta, tau, thermE
-      logical :: zcom
+      integer, intent(in) :: ndim, natom
+      double precision, intent(inout) :: p(ndim, natom)
+      double precision, intent(in) :: mass(natom)
+      double precision, intent(in) :: beta, tau
+      double precision, intent(inout) :: thermE
+      logical, intent(in) :: zcom
 
       double precision :: vtot(ndim)
       double precision :: c1, c2, c2fac, ekin_old, ekin_new, ekinfac
@@ -235,8 +242,8 @@ contains
 
    subroutine thermo_ran(rnd, iseed)
 ! interface to random number generators
-      integer(4), optional :: iseed
-      double precision :: rnd
+      integer(4), intent(in), optional :: iseed
+      double precision, intent(in) :: rnd
 
       call FMS_DieError('ERROR: thermo_ran not implemented')
       if (present(iseed)) then
@@ -247,9 +254,9 @@ contains
    end subroutine thermo_ran
 
    subroutine vcom_project(ndim, natom, p, mass)
-      integer :: ndim, natom
-      double precision :: p(ndim, natom)
-      double precision :: mass(natom)
+      integer, intent(in) :: ndim, natom
+      double precision, intent(inout) :: p(ndim, natom)
+      double precision, intent(in) :: mass(natom)
 
       double precision :: vtot(ndim)
       integer :: iatom, idm

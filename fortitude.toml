@@ -30,7 +30,7 @@ allow-bare-use = [
 
 [check.per-file-ignores]
 # TODO: Add missing intents!
-"src/modules/{Trajectory,BundleCalcs,Thermo,SMD,Rattle,MinSearch}*Module.[fF]90" = ["missing-intent"]
+"src/modules/{Trajectory,BundleCalcs,SMD,Rattle,MinSearch}*Module.[fF]90" = ["missing-intent"]
 "src/read_namelist.f90" = ["use-all"]
 # TODO: Resolve this!
 "src/modules/SpawnModule.f90" = ["missing-exit-or-cycle-label"]

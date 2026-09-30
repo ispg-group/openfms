@@ -3,7 +3,7 @@
 # https://prek.j178.dev/languages/#dependency-management-with-uv
 #
 # /// script
-# requires-python = ">=3.6"
+# requires-python = ">=3.7"
 # dependencies = [
 #     "configargparse",
 # ]
