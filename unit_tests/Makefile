@@ -12,7 +12,7 @@ CONFIG = ../CONFIGFMS
 	@echo "Compiling $<"
 	@$(FC) -Wall $(FFLAGS) $(INCFLAGS) -c $<
 
-TESTFILES=$(wildcard test_*.F90)
+TESTFILES=$(wildcard test_*.F90) $(wildcard test_*.f90)
 TESTOBJECTS=$(addsuffix .o,$(basename $(TESTFILES)))
 TESTDRIVEOBJS = testdrive.o testutils.o
 
@@ -34,4 +34,5 @@ testutils.o: testutils.F90 testdrive.o
 testdrive.o: $(MAKEFILE) $(CONFIG)
 
 clean:
-	rm *.mod *.o ./test
+	rm -f *.mod *.o ./test
+

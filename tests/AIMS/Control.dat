@@ -19,6 +19,7 @@ Basic AIMS test on a model potential including a single spawning event
  NumStates=2		!number of electronic states
  zAllText=.true.     ! Output all text-based files
  NumInitBasis=1
+ zThermostatis=.true.
 !-------- Integration and numerics --------!
  TimeStep=1.0		!timestep for integration
  SimulationTime=30.00	!integration time
@@ -29,6 +30,11 @@ Basic AIMS test on a model potential including a single spawning event
  OMax=0.6
  SpawnCoupV=.false.
  CSThresh=0.0001
+!-------- Thermostat ----!
+ thermostattype='Langevin'
+ !NumNHCChain=3
+
+
  
  PopToSpawn=0.001
  CoupTimeStep=0.250

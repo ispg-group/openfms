@@ -9,12 +9,14 @@ module TrajectoryIOModule
    use TrajectoryCalcsModule, only: FMS_Weight, FMS_CIVec, FMS_Coupling, FMS_SOCoupling, FMS_CoupDotVel, &
                                     Kinetic, Potential, FMS_PotentialT, FMS_MMPot, FMS_Dipole, FMS_TransDipole
    use QM_MM_Module, only: qczQMMM
+   use RingModule, only: ring_write, FMS_rings, T_Ring
 
    implicit none
 
    private
    public :: FMS_WriteFXYZ
    public :: FMS_WriteTrajFiles
+   public :: FMS_WriteFRing
 
 contains
 !--------------- Module Procedures ---------------!
@@ -64,11 +66,12 @@ contains
 !!          the trajectory
 !!    @ingroup output
 !<
-   subroutine FMS_WriteTrajFiles(T1, suff, zFirst)
+   subroutine FMS_WriteTrajFiles(T1, suff, zFirst, itraj)
       use ElecStrucModule
       type(T_Trajectory), intent(in) :: T1
       character(len=*), intent(in) :: suff
       logical, optional, intent(in) :: zFirst
+      integer, optional, intent(in) :: itraj
       character(len=:), allocatable :: suffix
 
       logical :: zHeader
@@ -161,7 +164,15 @@ contains
             call FMS_WriteFForces(T1, cfname, trim(comment)//trim(suffix))
          end if
 
+!     Write ring polymer files
+         if (gliNBeads > 1 .and. present(itraj)) then
+            cfname = 'ring.'//trim(suffix)//'.xyz'
+            write (comment, 1030) T1%get_time()
+            call FMS_WriteFRing(T1, FMS_rings(itraj), cfname, trim(comment)//trim(suffix))
+         end if
+
       end if
+
    end subroutine FMS_WriteTrajFiles
 !>
 !!    Write formatted trajectory data.
@@ -1058,6 +1069,38 @@ contains
       close (IUnit)
 
    end subroutine FMS_WriteFForces
+
+!>
+!!    Writes ring polymer bead positions to an XYZ file (one frame per bead).
+!!    @ingroup output
+!<
+   subroutine FMS_WriteFRing(T1, ring, filename, comment)
+      type(T_Trajectory), intent(in) :: T1
+      type(T_Ring), intent(in) :: ring
+      character(len=*), intent(in) :: filename, comment
+
+      integer(kind=DefInt) :: IUnit, IBead, IAtom
+      character(len=256) :: file_name, bead_comment
+
+      file_name = trim(FMSWorkingDir)//filename
+
+      open (newunit=IUnit, file=file_name, position='append')
+
+      do IBead = 1, ring%n
+         write (bead_comment, '(A,I0,A,A)') 'bead=', IBead, ' ', trim(comment)
+         write (IUnit, *) ring%natom
+         write (IUnit, *) trim(bead_comment)
+         do IAtom = 1, ring%natom
+            write (IUnit, '(A3, 3F17.9)') T1%Particle(IAtom)%Elmnt, &
+               ring%r(1, IAtom, IBead), &
+               ring%r(2, IAtom, IBead), &
+               ring%r(3, IAtom, IBead)
+         end do
+      end do
+
+      close (IUnit)
+
+   end subroutine FMS_WriteFRing
 
 !>
 !!    Writes formatted potential energy data
