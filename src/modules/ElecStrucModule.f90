@@ -165,6 +165,22 @@ contains
                NumStates = 2
             end if
 
+         case (5) !XFAIMS CH3I_model
+            write (fmiOut, *) 'gliMethod=5: XFAIMS CH3I Model 1D 2-state'
+            if (NumStates /= 2) then
+               write (fmiOut, *) 'Number of states set to 2.'
+               write (fmiOut, *) 'Extension to 3 states not available.'
+               NumStates = 2
+            end if
+
+            if (NumParticles /= 1) then
+               call FMS_DieError('CH3I model requires 1 particle.')
+            end if
+
+            ! allowing dipoles and TDMs
+            eszTransDipole = .true.
+            eszDipoleMoment = .true.
+
          case default
             write (errmsg, '(a, i0)') 'Invalid iMethod value: ', gliMethod
             call FMS_DieError(errmsg)

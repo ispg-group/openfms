@@ -14,6 +14,7 @@ module SpawnModule
    use BundleCalcsModule, only: FMS_UpdateMulliken
    use OverlapModule, only: overlap
    use VerletModule, only: FMS_PropVV
+   use XFAIMSModule, only: xfaims_params
    implicit none
 
    !> OMax is a legacy threshold value that functioned
@@ -97,14 +98,23 @@ contains
 
    subroutine print_spawning_parameters(unit)
       integer, intent(in) :: unit
-      write (unit, '(a30)') 'SPAWNING PARAMETERS'
-      write (unit, '(a14,i7  ,a)') 'maxTraj:    ', spawn_params%MaxTraj, ' (Max number of Trajectories)'
-      write (unit, '(a14,f7.4,a)') 'OMin_parent:', spawn_params%OMin_parent, ' (Min parent-child overlap to spawn)'
-      write (unit, '(a14,f7.4,a)') 'OMax_inter: ', spawn_params%OMax_inter, ' (Max overlap between parent and existing TBFs)'
-      write (unit, '(a14,f7.4,a)') 'OMax_intra: ', spawn_params%Omax_intra, ' (Max overlap between child and existing TBFs)'
-      write (unit, '(a14,f7.4,a)') 'CSThresh:   ', spawn_params%CSThresh, ' (Coupling threshold to enter spawning region)'
-      write (unit, '(a14,f7.4,a)') 'CFThresh:   ', spawn_params%CFThresh, ' (Coupling threshold to exit spawning region)'
-      write (unit, '(a14,f7.4,a)') 'PopToSpawn: ', spawn_params%PopToSpawn, ' (Min population to Spawn)'
+      character(len=*), parameter :: divider = &
+                                     ' -----------------------------------------------------------'
+
+      write (fmiOut, *)
+      write (fmiOut, '(a)') divider
+      write (fmiOut, '(a)') ' SPAWNING parameters'
+      write (fmiOut, '(a)') divider
+
+      write (unit, '(a14,i7  ,a)') 'maxTraj:     ', spawn_params%MaxTraj, ' (Max number of Trajectories)'
+      write (unit, '(a14,f7.4,a)') 'OMin_parent: ', spawn_params%OMin_parent, ' (Min parent-child overlap to spawn)'
+      write (unit, '(a14,f7.4,a)') 'OMax_inter:  ', spawn_params%OMax_inter, ' (Max overlap between parent and existing TBFs)'
+      write (unit, '(a14,f7.4,a)') 'OMax_intra:  ', spawn_params%Omax_intra, ' (Max overlap between child and existing TBFs)'
+      write (unit, '(a14,f7.4,a)') 'CSThresh:    ', spawn_params%CSThresh, ' (Coupling threshold to enter spawning region)'
+      write (unit, '(a14,f7.4,a)') 'CFThresh:    ', spawn_params%CFThresh, ' (Coupling threshold to exit spawning region)'
+      write (unit, '(a14,f7.4,a)') 'PopToSpawn:  ', spawn_params%PopToSpawn, ' (Min population to Spawn)'
+
+      write (fmiOut, '(a)') divider
    end subroutine print_spawning_parameters
 
 !!    @brief Driver for spawning algorithm
@@ -176,18 +186,29 @@ contains
 !    contain previous timestep couplings
 
 ! xf changed
-            COUP_FIELD = .false.
-            COUP_CI = .false.
             if (glzxfaims) then
-               if (B1%CurrentTime > sp_spwn_i .and. B1%CurrentTime < sp_spwn_f) then
+               COUP_FIELD = .false.
+               COUP_CI = .false.
+
+               ! check if we are in the field coupling region
+               if (glzxfactive) then
                   coup = spawn_couple_field(B1%Trajectory(i), cs)
                   B1%Trajectory(i)%CoupHist(:, cs) = eoshift(B1%Trajectory(i)%CoupHist(:, cs), -1, coup)
                   COUP_FIELD = .true.
                end if
+
+               ! check if we are in the nonadiabatic coupling region
                if (spawn_couple(B1%Trajectory(i), cs) > spawn_params%CSThresh) then
                   coup = spawn_couple(B1%Trajectory(i), cs)
                   B1%Trajectory(i)%CoupHist(:, cs) = eoshift(B1%Trajectory(i)%CoupHist(:, cs), -1, coup)
                   COUP_CI = .true.
+               end if
+
+               ! currently, we cannot handle both field and nonadiabatic couplings
+               if (COUP_CI .and. COUP_FIELD) then
+                  write (fmiOut, *) 'ERROR! Field and nonadiabatic couplings are present simultaneously. ', &
+                     'XFAIMS algorithm not ready yet!'
+                  !jj - probably kill the code here or turn off one of the couplings (maybe the field one)
                end if
 
             else
@@ -376,7 +397,7 @@ contains
 !xf added
       if (glzxfaims) then
          if (COUP_FIELD) then
-            if (T1%get_time() < sp_spwn_i .or. T1%get_time() > sp_spwn_f) spwn = .false.
+            if (T1%get_time() < xfaims_params%sp_spwn_i .or. T1%get_time() > xfaims_params%sp_spwn_f) spwn = .false.
          end if
          if (COUP_CI) then
             if (spawn_couple(T1, is) < spawn_params%CSThresh) spwn = .false.
@@ -1157,13 +1178,14 @@ contains
 ! "coup" is the electric field in this case.
       t = T1%get_time()
 
-      if (onespawnonly_xf) then
-         Dcouple = abs(exp(-(t - t0_xf)**2 / (2 * sigma_xf * sigma_xf)))
+      if (xfaims_params%onespawnonly) then
+         Dcouple = abs(exp(-(t - xfaims_params%t0)**2 / (2 * xfaims_params%sigma * xfaims_params%sigma)))
       else
          Dcouple = &
-            exp(-(t - t0_xf)**2 / (2 * sigma_xf * sigma_xf)) * ( &
-            cos(freq_xf * t + CEP_xf) - &
-            sin(freq_xf * t + CEP_xf) * (t - t0_xf) / (sigma_xf * sigma_xf * freq_xf))
+            exp(-(t - xfaims_params%t0)**2 / (2 * xfaims_params%sigma**2)) * ( &
+            cos(xfaims_params%freq * t + xfaims_params%CEP) - &
+            sin(xfaims_params%freq * t + xfaims_params%CEP) * (t - xfaims_params%t0) &
+            / (xfaims_params%sigma**2 * xfaims_params%freq))
       end if
 
    end function spawn_couple_field
