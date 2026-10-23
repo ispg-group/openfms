@@ -7,7 +7,8 @@ module TrajectoryIOModule
    use GlobalModule
    use TrajectoryModule
    use TrajectoryCalcsModule, only: FMS_Weight, FMS_CIVec, FMS_Coupling, FMS_SOCoupling, FMS_CoupDotVel, &
-                                    Kinetic, Potential, FMS_PotentialT, FMS_MMPot, FMS_Dipole, FMS_TransDipole
+                                    Kinetic, Potential, FMS_PotentialT, FMS_MMPot, FMS_Dipole, FMS_TransDipole, &
+                                    FMS_SecondOrderCoup_KM
    use QM_MM_Module, only: qczQMMM
 
    implicit none
@@ -97,6 +98,9 @@ contains
 !     GAIMS changed
          if ((fmzCoupFile .or. fmzAllText) .and. eszNACoupVec) then
             call FMS_WriteFCouple(T1)
+            if (glzKinematicMomentum) then
+               call FMS_WriteFSecondOrderCouple(T1)
+            end if
             if (NTrip /= 0) call FMS_WriteFSOCouple(T1)
          end if
 !     GAIMS end changed
@@ -571,6 +575,45 @@ contains
          (FMS_CoupDotVel(T, j), j=1, nstate)
 
    end subroutine FMS_WriteFCouple
+
+!>
+!!
+!!    Writes formatted second-order couplings to file.
+!!
+!!    @ingroup output
+!<
+   ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+   subroutine FMS_WriteFSecondOrderCouple(T)
+      ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      type(T_Trajectory), intent(in) :: T
+      logical :: file_existed
+      integer(DefInt) :: iunit
+      integer(DefInt), save :: units(MaxTrajLimit) = 0 ! this keeps track of the
+      ! unit number of the files
+
+      integer :: nstate, i, j
+
+1     format(a10, 50(a15))
+2     format(f10.2, 50(1x, f14.7))
+
+      nstate = T%NumStates
+      i = T%StateID
+
+      iunit = units(T%TrajID)
+
+      if (iunit == 0) then
+         call FMS_OpenFile(FMS_NumberedFileName('SecondCoup', T%TrajID), iunit, file_existed)
+         if (.not. file_existed) then
+            write (iUnit, 1) '#Time', (FMS_NumberedFileName('SecondCoup', j), j=1, nstate)
+         end if
+         units(T%TrajID) = iunit
+      end if
+
+      ! 4. Write the couplings
+      write (IUnit, 2) T%get_time(), (FMS_SecondOrderCoup_KM(T, i, j), j=1, nstate)
+
+   end subroutine FMS_WriteFSecondOrderCouple
 !>
 !!
 !!    Writes formatted coupling norm, dot product of coupling and

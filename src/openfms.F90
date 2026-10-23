@@ -190,6 +190,7 @@ contains
          call FMS_DeleteFile(FMS_NumberedFileName('Charge', ITraj))
          call FMS_DeleteFile(FMS_NumberedFileName('CIVec', ITraj))
          call FMS_DeleteFile(FMS_NumberedFileName('Coup', ITraj))
+         call FMS_DeleteFile(FMS_NumberedFileName('SecondCoup', ITraj))
          call FMS_DeleteFile(FMS_NumberedFileName('SOCoup', ITraj))
          call FMS_DeleteFile(FMS_NumberedFileName('positions', ITraj)//'.xyz') !written in analysis
          call FMS_DeleteFile(FMS_NumberedFileName('positions', ITraj)//'.dcd') !written in analysis
