@@ -26,7 +26,7 @@
 module TrajectoryModule
 
    use GlobalModule, only: D2, Pi, DefInt, DefReal, DefComp, fmiOut, FPZero, &
-                           glzStoSwiss, gldDecoherenceTime, FMS_DieError
+                           glzStoSwiss, gldTimeLeftToDeath, FMS_DieError
    use ParticleModule
    use QM_MM_Module, only: qczQMMM
    implicit none
@@ -1160,7 +1160,7 @@ contains
       CurrentTime = T%get_time()
       UncoupledTime = T%UncoupledTime
 
-      is_dead = .not. T%zCent .and. ((CurrentTime - UncoupledTime) > (gldDecoherenceTime + FPZero))
+      is_dead = .not. T%zCent .and. ((CurrentTime - UncoupledTime) > (gldTimeLeftToDeath + FPZero))
    end function is_dead
 
 !     Private routine to flip flags
