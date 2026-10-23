@@ -85,15 +85,15 @@ CMakeFiles/openfms.dir/src/openfms.F90.s: cmake_force
 CMakeFiles/openfms.dir/generated/build_info.F90.o: CMakeFiles/openfms.dir/flags.make
 CMakeFiles/openfms.dir/generated/build_info.F90.o: generated/build_info.F90
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/scratch/tl4521/nhc/openfms/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building Fortran object CMakeFiles/openfms.dir/generated/build_info.F90.o"
-	/gpfsnyu/packages/gcc/12.2/bin/gfortran $(Fortran_DEFINES) -DOPENFMS_BUILD_DATE="\"2026-09-30 18:48:50 +0800\"" $(Fortran_INCLUDES) $(Fortran_FLAGS) -c /scratch/tl4521/nhc/openfms/build/generated/build_info.F90 -o CMakeFiles/openfms.dir/generated/build_info.F90.o
+	/gpfsnyu/packages/gcc/12.2/bin/gfortran $(Fortran_DEFINES) -DOPENFMS_BUILD_DATE="\"2026-10-05 18:01:11 +0800\"" $(Fortran_INCLUDES) $(Fortran_FLAGS) -c /scratch/tl4521/nhc/openfms/build/generated/build_info.F90 -o CMakeFiles/openfms.dir/generated/build_info.F90.o
 
 CMakeFiles/openfms.dir/generated/build_info.F90.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing Fortran source to CMakeFiles/openfms.dir/generated/build_info.F90.i"
-	/gpfsnyu/packages/gcc/12.2/bin/gfortran $(Fortran_DEFINES) -DOPENFMS_BUILD_DATE="\"2026-09-30 18:48:50 +0800\"" $(Fortran_INCLUDES) $(Fortran_FLAGS) -E /scratch/tl4521/nhc/openfms/build/generated/build_info.F90 > CMakeFiles/openfms.dir/generated/build_info.F90.i
+	/gpfsnyu/packages/gcc/12.2/bin/gfortran $(Fortran_DEFINES) -DOPENFMS_BUILD_DATE="\"2026-10-05 18:01:11 +0800\"" $(Fortran_INCLUDES) $(Fortran_FLAGS) -E /scratch/tl4521/nhc/openfms/build/generated/build_info.F90 > CMakeFiles/openfms.dir/generated/build_info.F90.i
 
 CMakeFiles/openfms.dir/generated/build_info.F90.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling Fortran source to assembly CMakeFiles/openfms.dir/generated/build_info.F90.s"
-	/gpfsnyu/packages/gcc/12.2/bin/gfortran $(Fortran_DEFINES) -DOPENFMS_BUILD_DATE="\"2026-09-30 18:48:50 +0800\"" $(Fortran_INCLUDES) $(Fortran_FLAGS) -S /scratch/tl4521/nhc/openfms/build/generated/build_info.F90 -o CMakeFiles/openfms.dir/generated/build_info.F90.s
+	/gpfsnyu/packages/gcc/12.2/bin/gfortran $(Fortran_DEFINES) -DOPENFMS_BUILD_DATE="\"2026-10-05 18:01:11 +0800\"" $(Fortran_INCLUDES) $(Fortran_FLAGS) -S /scratch/tl4521/nhc/openfms/build/generated/build_info.F90 -o CMakeFiles/openfms.dir/generated/build_info.F90.s
 
 # Object files for target openfms
 openfms_OBJECTS = \

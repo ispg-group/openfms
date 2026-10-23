@@ -54,10 +54,12 @@ contains
 
    function thermo_NormDist(sigma) result(x)
 !This subroutine generates a normal distribution exp(-x^2/2sigma^2)
+!This function is currently not working because gasdev() is yet to be implemented.
       double precision :: x
       double precision, intent(in) :: sigma
 
       x = gasdev() * sigma
+
    end function thermo_NormDist
 
    subroutine thermo_MBDist(ndim, natom, p, mass, beta, zcom)
@@ -276,12 +278,31 @@ contains
 
    end subroutine vcom_project
 
+   !> Draw independent Maxwell-Boltzmann momenta for the Nose-Hoover chain.
+   !> Each chain momentum is sampled with variance \(m_i/\beta\), and
+   !> thermE is initialized to the kinetic energy of the sampled chain.
+   !> This is the canonical momentum distribution used with the NHC
+   !> extended-system dynamics of Martyna et al. (1996).
+   !>
+   !> Reference: G. J. Martyna, M. E. Tuckerman, D. J. Tobias, and
+   !> M. L. Klein, "Explicit reversible integrators for extended systems
+   !> dynamics," Molecular Physics, 87(5), 1117-1157 (1996).
+   !> https://doi.org/10.1080/00268979600100761
    subroutine thermo_NHC_MBDist(beta, M, pNHC, mNHC, thermE)
-      !Initialise Nose variables
-      integer :: M
-      real(8) :: beta, thermE
-      real(8), dimension(M) :: mNHC, pNHC
+      !> Number of thermostats in the Nose-Hoover chain.
+      integer, intent(in) :: M
+      !> Inverse temperature, \(1/(k_B T)\).
+      real(8), intent(in) :: beta
+      !> Chain kinetic energy, initialized and accumulated by this routine.
+      real(8), intent(out) :: thermE
+      !> Thermostat masses, one for each chain degree of freedom.
+      real(8), intent(in), dimension(M) :: mNHC
+      !> Sampled momenta of the Nose-Hoover chain.
+      real(8), intent(out), dimension(M) :: pNHC
+      !> Standard deviation of the Maxwell-Boltzmann distribution for the
+      !> current chain momentum.
       real(8) :: sigma
+      !> Index of the chain thermostat being initialized.
       integer :: i
 
       thermE = 0.0d0
@@ -292,22 +313,55 @@ contains
       end do
    end subroutine thermo_NHC_MBDist
 
+   !> Propagate a single scalar momentum coupled to a Nose-Hoover chain.
+   !> The scalar degree of freedom is treated as a local thermostat group,
+   !> so the first chain thermostat is driven by \(p^2/m-1/\beta\)
+   !> (twice the particle kinetic energy minus the target value).
+   !> The chain and particle momenta are advanced with
+   !> thermo_NHC_prop; afterward thermE is recomputed as the chain kinetic
+   !> plus chain potential energy. The reversible NHC propagator follows
+   !> Eq. (35) of Martyna et al. (1996); see thermo_NHC_prop for the
+   !> update equations.
+
+   !> Reference: G. J. Martyna, M. E. Tuckerman, D. J. Tobias, and
+   !> M. L. Klein, "Explicit reversible integrators for extended systems
+   !> dynamics," Molecular Physics, 87(5), 1117-1157 (1996).
+   !> https://doi.org/10.1080/00268979600100761
    subroutine thermo_NHC_local(dt, M, p, mass, beta, rNHC, pNHC, mNHC, thermE)
       implicit none
-      integer :: M
-      real(8) :: dt, p, mass, beta, thermE
-      real(8), dimension(M) :: mNHC, rNHC, pNHC
-
-      real(8) :: akin, scale
+      !> Number of thermostats in the chain.
+      integer, intent(in) :: M
+      !> timestep for the thermostat propagation
+      real(8), intent(in) :: dt
+      !> Particle momentum; updated in place by the chain scaling factor.
+      real(8), intent(inout) :: p
+      !> Mass associated with the particle momentum.
+      real(8), intent(in) :: mass
+      !> Inverse temperature, \(1/(k_B T)\).
+      real(8), intent(in) :: beta
+      !> Extended thermostat energy, overwritten with the current chain energy.
+      real(8), intent(out) :: thermE
+      !> Masses of the Nose-Hoover chain thermostats.
+      real(8), intent(in), dimension(M) :: mNHC
+      !> Positions of the Nose-Hoover chain thermostats.
+      real(8), intent(inout), dimension(M) :: rNHC
+      !> Momenta of the Nose-Hoover chain thermostats.
+      real(8), intent(inout), dimension(M) :: pNHC
+      !> Twice the particle kinetic energy, \(p^2/m\), coupling to chain 1.
+      real(8) :: akin
+      !> Accumulated multiplicative scaling applied to the particle momentum.
+      real(8) :: scale
+      !> Index of the chain thermostat used to accumulate its energy.
       integer :: l
 
-      akin = p * p / mass !Note factor of 2. Grr Glenn....
+      akin = p * p / mass
       call thermo_NHC_prop(dt, akin, beta, 1, M, rNHC, pNHC, mNHC, scale)
 
-      !scale momenta
+      !Apply the chain's accumulated scaling to the local momentum.
       p = p * scale
 
-      !Calculate thermostat energy
+      !Include each chain momentum and chain-position contribution to the
+      !extended thermostat energy.
       thermE = 0.0d0
       do l = 1, M
          thermE = thermE + 0.5d0 * pNHC(l) * pNHC(l) / mNHC(l) + rNHC(l) / beta
@@ -315,16 +369,54 @@ contains
 
    end subroutine thermo_NHC_local
 
+   !> Propagate all particle momenta as one global Nose-Hoover thermostat
+   !> group. The chain propagator and
+   !> common momentum scaling follow Eq. (35) of Martyna et al. (1996);
+   !> see thermo_NHC_prop for the update equations and full citation.
+   !> If any particle mass is effectively zero, this routine returns
+   !> without changing the inputs.
+
+   !> Reference: G. J. Martyna, M. E. Tuckerman, D. J. Tobias, and
+   !> M. L. Klein, "Explicit reversible integrators for extended systems
+   !> dynamics," Molecular Physics, 87(5), 1117-1157 (1996).
+   !> https://doi.org/10.1080/00268979600100761
    subroutine thermo_NHC_global(dt, M, ndim, natom, p, mass, beta, rNHC, pNHC, mNHC, thermE)
       implicit none
-      integer :: M, ndim, natom
-      real(8), dimension(ndim, natom) :: p
-      real(8), dimension(natom) :: mass
-      real(8) :: dt, beta, thermE
-      real(8), dimension(M) :: mNHC, rNHC, pNHC
-
-      real(8) :: akin, scale
-      integer :: iatom, idm, l, NTotDim
+      !> Number of thermostats in the chain.
+      integer, intent(in) :: M
+      !> Number of Cartesian components per particle.
+      integer, intent(in) :: ndim
+      !> Number of particles in the global thermostat group.
+      integer, intent(in) :: natom
+      !> Particle momenta, updated in place by the common chain scaling.
+      real(8), intent(inout), dimension(ndim, natom) :: p
+      !> Mass of each particle.
+      real(8), intent(in), dimension(natom) :: mass
+      !> timestep
+      real(8), intent(in) :: dt
+      !> Inverse temperature, \(1/(k_B T)\).
+      real(8), intent(in) :: beta
+      !> Extended thermostat energy, recomputed when particle masses are valid;
+      !> preserved when this routine returns early for a zero mass.
+      real(8), intent(inout) :: thermE
+      !> Masses of the Nose-Hoover chain thermostats.
+      real(8), intent(in), dimension(M) :: mNHC
+      !> Positions of the Nose-Hoover chain thermostats.
+      real(8), intent(inout), dimension(M) :: rNHC
+      !> Momenta of the Nose-Hoover chain thermostats.
+      real(8), intent(inout), dimension(M) :: pNHC
+      !> Twice the total particle kinetic energy, \(\sum_{a,\mu}p_{a\mu}^2/m_a\).
+      real(8) :: akin
+      !> Accumulated multiplicative scaling applied to all particle momenta.
+      real(8) :: scale
+      !> Index of the particle in the momentum and kinetic-energy sums.
+      integer :: iatom
+      !> Index of a Cartesian momentum component.
+      integer :: idm
+      !> Index of a chain thermostat used to accumulate chain energy.
+      integer :: l
+      !> Number of particle momentum components thermostatted globally.
+      integer :: NTotDim
 
       if (any(mass < 1.0d-15)) return !Do not thermostat if mass is zero
       akin = 0.0d0
@@ -335,39 +427,78 @@ contains
       end do
       NTotDim = ndim * natom
       call thermo_NHC_prop(dt, akin, beta, NTotDim, M, rNHC, pNHC, mNHC, scale)
-      !scale momenta
+      !Apply the same accumulated scaling to every particle momentum.
       p = p * scale
-      !Calculate thermostat energy
+      !Include the N-fold first-chain potential and the remaining chain
+      !potential and kinetic contributions in the extended thermostat energy.
       thermE = 0.0d0
-      !1st chain
       thermE = thermE + 0.5d0 * pNHC(1) * pNHC(1) / mNHC(1) + dble(NTotDim) * rNHC(1) / beta
       do l = 2, M
          thermE = thermE + 0.5d0 * pNHC(l) * pNHC(l) / mNHC(l) + rNHC(l) / beta
       end do
    end subroutine thermo_NHC_global
 
+   !> Advance the Nose-Hoover chain over dt and return the accumulated
+   !> factor used to scale the coupled particle momenta according to Eq (35)
+   !> in the paper.
+   !> Uses a reversible chain propagator with nc subcycles and a
+   !> five-stage Yoshida-Suzuki factorization.
+   !>
+   !> Reference: G. J. Martyna, M. E. Tuckerman, D. J. Tobias, and
+   !> M. L. Klein, "Explicit reversible integrators for extended systems
+   !> dynamics," Molecular Physics, 87(5), 1117-1157 (1996).
+   !> https://doi.org/10.1080/00268979600100761
    subroutine thermo_NHC_prop(dt, akin, beta, N, M, rNHC, pNHC, mNHC, scale)
-      !Propagates NHC variables from t to dt and scales momenta
       implicit none
-      integer :: N !Number of degrees of freedom
-      integer :: M !Length of chain
-      real(8) :: dt !Time step for this update (usually half of system timestep)
-      real(8) :: akin !twice system kinetic energy to which chain 1 is coupled
-      real(8) :: beta !Inverse temperature
-      real(8) :: scale !Scaling factor for system momenta
-      real(8), dimension(M) :: mNHC, rNHC, pNHC
+      !> Number of degrees of freedom coupled to the first chain thermostat.
+      integer, intent(in) :: N
+      !> Number of thermostats in the chain.
+      integer, intent(in) :: M
+      !> Duration of this thermostat propagation (usually half a system step).
+      real(8), intent(in) :: dt
+      !> Twice the kinetic energy of the degrees of freedom coupled to chain 1.
+      real(8), intent(in) :: akin
+      !> Inverse temperature, \(1/(k_B T)\).
+      real(8), intent(in) :: beta
+      !> Accumulated multiplicative scaling returned for system momenta.
+      real(8), intent(out) :: scale
+      !> Masses of the Nose-Hoover chain thermostats.
+      real(8), intent(in), dimension(M) :: mNHC
+      !> Positions of the Nose-Hoover chain thermostats, advanced in place.
+      real(8), intent(inout), dimension(M) :: rNHC
+      !> Momenta of the Nose-Hoover chain thermostats, advanced in place.
+      real(8), intent(inout), dimension(M) :: pNHC
 
-      !hard coded parameters. These have been tested and appear to be optimal, atleast
-      !for 100 bead harmonic oscillator with 4 NHC variables per mode
-      integer, parameter :: nc = 10 ! Number of Trotter Factorizations
+      !> Number of equal subcycles used to split the requested propagation.
+      integer, parameter :: nc = 10
+      !> Maximum number of stored Yoshida-Suzuki weights.
       integer, parameter :: nysmax = 7
-      integer, parameter :: nys = 5 !Order of Yoshida-Suzuki Integration
+      !> Number of Yoshida-Suzuki stages; five stages give a fourth-order
+      !> symmetric composition.
+      integer, parameter :: nys = 5
 
-      !local variables
-      real(8), dimension(M) :: G, mNHC_inv
+      !> Instantaneous generalized forces on the chain momenta.
+      real(8), dimension(M) :: G
+      !> Reciprocal masses of the chain thermostats.
+      real(8), dimension(M) :: mNHC_inv
+      !> Yoshida-Suzuki composition weights.
       real(8), dimension(nysmax) :: w
-      real(8) :: beta_inv, dt_nc, dts, AA, dNbeta_inv
-      integer :: j, k, l
+      !> Temperature in energy units, \(1/\beta\).
+      real(8) :: beta_inv
+      !> Duration of one of the nc equal integration subcycles.
+      real(8) :: dt_nc
+      !> Duration of the current weighted Yoshida-Suzuki stage.
+      real(8) :: dts
+      !> Exponential factor for a symmetric chain-momentum update or scaling.
+      real(8) :: AA
+      !> Target force contribution \(N/\beta\) for the first chain site.
+      real(8) :: dNbeta_inv
+      !> Index of the Yoshida-Suzuki stage.
+      integer :: j
+      !> Index of an equal propagation subcycle.
+      integer :: k
+      !> Index of a chain site in the update sweeps.
+      integer :: l
 
       scale = 1.0d0
       !If any NHC mass is zero, we disable NHC propagation
@@ -376,7 +507,7 @@ contains
          return
       end if
 
-      !Set up higher-order integration weights
+      !Set up the selected Yoshida-Suzuki composition weights.
       select case (nys)
       case (1)
          w(1) = 1.0d0
@@ -402,17 +533,15 @@ contains
          write (*, *) 'Error, nys=', nys, ' not coded'
       end select
 
-      !Some useful variables
       beta_inv = 1.0d0 / beta
       dt_nc = dt / dble(nc)
       mNHC_inv(1:M) = 1.0d0 / mNHC(1:M)
       dNbeta_inv = beta_inv * dble(N)
 
-      !Update NHC forces
+      !Initialize the generalized forces from the NHC equations of motion.
       G(1) = akin - dNbeta_inv
       G(2:M) = mNHC_inv(1:M - 1) * pNHC(1:M - 1) * pNHC(1:M - 1) - beta_inv
 
-      !Eqs.35 in Martyna et al. 1996 for the NHC propagator
       do k = 1, nc
          do j = 1, nys
             dts = w(j) * dt_nc

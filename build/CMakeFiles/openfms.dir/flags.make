@@ -8,5 +8,5 @@ Fortran_INCLUDES = -I/scratch/tl4521/nhc/openfms/src -I/scratch/tl4521/nhc/openf
 
 Fortran_FLAGS = -g -Jmodules -Wno-unused-dummy-argument -Wno-unused-function -Wno-maybe-uninitialized -Og -g -fcheck=all -ffpe-trap=zero,overflow -fimplicit-none
 
-# Custom defines: CMakeFiles/openfms.dir/generated/build_info.F90.o_DEFINES = OPENFMS_BUILD_DATE="2026-09-30 18:48:50 +0800"
+# Custom defines: CMakeFiles/openfms.dir/generated/build_info.F90.o_DEFINES = OPENFMS_BUILD_DATE="2026-10-05 18:01:11 +0800"
 

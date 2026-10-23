@@ -11,7 +11,7 @@ subroutine print_build_info(unit)
    character(len=*), parameter :: GIT_BRANCH = &
                                   "nhc"
    character(len=*), parameter :: GIT_REVISION = &
-                                  "07b1d8563483e8066d7aaed17adc5d08bb50e424"
+                                  "839a8b94f1bd6883f0a10e3bb44a1917db80931c"
    character(len=*), parameter :: GIT_DIRTY = &
                                   "+"
    character(len=*), parameter :: BUILD_SYSTEM = &
@@ -19,11 +19,11 @@ subroutine print_build_info(unit)
    character(len=*), parameter :: BUILD_TYPE = &
                                   "Debug"
    character(len=*), parameter :: FORTRAN_COMPILER = &
-                                  "/usr/bin/gfortran"
+                                  "/gpfsnyu/packages/gcc/12.2/bin/gfortran"
    character(len=*), parameter :: FORTRAN_COMPILER_ID = &
                                   "GNU"
    character(len=*), parameter :: FORTRAN_COMPILER_VERSION = &
-                                  "8.5.0"
+                                  "12.2.0"
    character(len=*), parameter :: FORTRAN_FLAGS = &
                                   "-Wno-unused-dummy-argument -Wno-unused-function -Wno-may"// &
                                   "be-uninitialized -Og -g -fcheck=all -ffpe-trap=zero,over"// &
@@ -50,7 +50,7 @@ subroutine print_version(unit)
    character(len=*), parameter :: FMS_VERSION = &
                                   "v0.1-alpha"
    character(len=*), parameter :: GIT_REVISION = &
-                                  "07b1d8563483e8066d7aaed17adc5d08bb50e424"
+                                  "839a8b94f1bd6883f0a10e3bb44a1917db80931c"
    character(len=*), parameter :: GIT_DIRTY = &
                                   "+"
 

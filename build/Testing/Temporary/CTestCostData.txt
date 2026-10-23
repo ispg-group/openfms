@@ -32,5 +32,6 @@ SSGAIMS 0 0
 STOP 0 0
 WIGNER 0 0
 WIGNER_T 0 0
-unit.ThermoModule 1 0.656604
+unit.ThermoModule 1 0
 ---
+unit.ThermoModule
