@@ -473,7 +473,7 @@ contains
       write (nf, 1) T1%Ms, ' / State Ms'
       write (nf, 1) T1%ParentID, ' / Parent ID'
       write (nf, 5) T1%CentID, ' / Centroid ID'
-      write (nf, 2) T1%UncoupledTime, ' / Dead time'
+      write (nf, 2) T1%UncoupledTime, ' / Uncoupled time'
       write (nf, 6) T1%zCent, ' / Centroid'
       write (nf, 6) T1%triplet, ' / Triplet'
       if (glzStoSwiss) then

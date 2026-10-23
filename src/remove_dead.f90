@@ -188,7 +188,7 @@ subroutine FMS_RemoveDead(B1)
             iDead = iDead + 1
             call BTemp%DeadTraj(B1%NumDeadTraj + iDead)%copy_from(B1%Trajectory(iTraj))
 
-            ! Set dead time of recently killed trajectory to be current time
+            ! Set uncoupled time of recently killed trajectory to be current time
             ! to make it easier for user to restart killed trajectories!
             BTemp%DeadTraj(B1%NumDeadTraj + iDead)%UncoupledTime = BTemp%CurrentTime
             ! Copy new hamiltonian elements into dead hamiltonian
