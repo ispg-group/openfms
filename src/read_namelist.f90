@@ -142,6 +142,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    real(kind=DefReal) :: TriangleA
    real(kind=DefReal) :: TriangleB
    real(kind=DefReal) :: TriangleC
+   real(kind=DefReal) :: TriangleD
    real(kind=DefReal) :: TriangleX02
    real(kind=DefReal) :: TriangleX12
 
@@ -287,7 +288,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
       ! Toy models
       , IzmOmegax, IzmOmegay, IzmXshift, IzmYshift, IzmDeltaE, IzmCoupC &
       , Grsigma &
-      , TriangleA, TriangleB, TriangleC, TriangleX02, TriangleX12 &
+      , TriangleA, TriangleB, TriangleC, TriangleD, TriangleX02, TriangleX12 &
       ! Backwards compat
       , Tunnel, EShellOnly, SpawnAdaptive, SteepestDescent &
       !TM
@@ -346,11 +347,12 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    IzmDeltaE = 0.01984d0
    IzmCoupC = 0.0006127d0
    Grsigma = 10.0d0
-   TriangleA = 0.008
-   TriangleB = 0.0015
-   TriangleC = 1.0
+   TriangleA = 0.003
+   TriangleB = 0.001
+   TriangleC = 0.0005
+   TriangleD = 1.0
    TriangleX02 = 1.0
-   TriangleX12 = 6.0
+   TriangleX12 = 5.0
    FullyCoupled = .true.
    Stochastic = .false.
    KinematicMomentum = .false.
@@ -575,7 +577,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    call izmaylov_params%initialize(W1=IzmOmegax, W2=IzmOmegay, XA=IzmXshift, YA=IzmYshift, &
                                    deltaE=IzmDeltaE, coupC=IzmCoupC)
    call GAIMS_model_params%initialize(r_sigma=Grsigma)
-   call triangle_params%initialize(A=TriangleA, B=TriangleB, C=TriangleC, &
+   call triangle_params%initialize(A=TriangleA, B=TriangleB, C=TriangleC, D=TriangleD, &
                                    X02=TriangleX02, X12=TriangleX12)
 
    glzKinematicMomentum = KinematicMomentum

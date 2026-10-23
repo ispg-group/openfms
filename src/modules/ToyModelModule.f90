@@ -95,9 +95,7 @@ module ToyModelModule
 !
 !-----------------------------------------------
    type :: t_triangle_params
-      real(kind=DefReal) :: A
-      real(kind=DefReal) :: B
-      real(kind=DefReal) :: C
+      real(kind=DefReal) :: A, B, C, D
       real(kind=DefReal) :: X02
       real(kind=DefReal) :: X12
    contains
@@ -130,12 +128,13 @@ contains
       self%r_sigma = r_sigma
    end subroutine initialize_gaims_model_params
 
-   subroutine initialize_triangle_params(self, A, B, C, X02, X12)
+   subroutine initialize_triangle_params(self, A, B, C, D, X02, X12)
       class(t_triangle_params), intent(inout) :: self
-      real(kind=DefReal), intent(in) :: A, B, C, X02, X12
+      real(kind=DefReal), intent(in) :: A, B, C, D, X02, X12
       self%A = A
       self%B = B
       self%C = C
+      self%D = D
       self%X02 = X02
       self%X12 = X12
    end subroutine initialize_triangle_params
@@ -511,19 +510,20 @@ contains
    subroutine triangle(x, H)
       real(kind=DefReal), intent(in) :: x
       real(kind=DefReal), intent(out) :: H(3, 3)
-      real(kind=DefReal) :: A, B, C, X02, X12
+      real(kind=DefReal) :: A, B, C, D, X02, X12
       A = triangle_params%A
       B = triangle_params%B
       C = triangle_params%C
+      D = triangle_params%D
       X02 = triangle_params%X02
       X12 = triangle_params%X12
 
       H(1, 1) = A * (1-x/X02)
       H(2, 2) = A * (1-x/X12)
       H(3, 3) = 0.0d0
-      H(1, 2) = B * exp(-C*x*x)
-      H(1, 3) = B * exp(-C*((x-X02)**2))
-      H(2, 3) = B * exp(-C*((x-X12)**2))
+      H(1, 2) = B * exp(-D*x*x)
+      H(1, 3) = B * exp(-D*((x-X02)**2))
+      H(2, 3) = C * exp(-D*((x-X12)**2))
       H(2, 1) = H(1, 2)
       H(3, 1) = H(1, 3)
       H(3, 2) = H(2, 3)
