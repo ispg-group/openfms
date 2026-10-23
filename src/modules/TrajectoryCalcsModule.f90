@@ -30,6 +30,7 @@ module TrajectoryCalcsModule
 
    private
    public :: FMS_Coupling, FMS_SOCoupling
+   public :: FMS_SecondOrderCoup_KM, FMS_SecondOrderCoup_KM_massless
    public :: FMS_CIVec, FMS_Orbitals, FMS_SetIgnoreError
    public :: FMS_PosDot, FMS_MomDot, FMS_CoupDotVel
    public :: Potential, FMS_PotentialT, FMS_MMPot
@@ -473,10 +474,11 @@ contains
       end if
 
 !WJG we can probably remove the following error seeing as all couplings can be stored
-      if (IState /= T1%StateID .and. JState /= T1%StateID) then
-         write (fmiOut, *) Istate, JState, T1%StateID
-         call FMS_DieError('FMS_Coupling: Cannot calculate coupling unless one state is current state of trajectory.')
-      end if
+!Removed for kinematic momentum
+!      if (IState /= T1%StateID .and. JState /= T1%StateID) then
+!         write (fmiOut, *) Istate, JState, T1%StateID
+!         call FMS_DieError('FMS_Coupling: Cannot calculate coupling unless one state is current state of trajectory.')
+!      end if
 
 !     If the coupling is not current, calculate it
       if (.not. T1%ESFlags%ZDerivCurrent(IState, JState)) then
@@ -513,6 +515,69 @@ contains
       dCouple = dot_product(T%get_vel(), FMS_Coupling(T, i, j))
 
    end function FMS_CoupDotVel
+!----------------------------------------------------------
+!>
+!    Calculate second-order coupling contribution in the 
+!     kinematic momentum representation
+!<
+!     Scope: public
+!---------------------------------------------------------
+   function FMS_SecondOrderCoup_KM(T_c, is, js) result(D)
+      type(T_Trajectory), intent(in) :: T_c
+      integer(kind=DefInt), intent(in) :: is, js ! state labels
+      real(kind=DefReal) :: F_ik(T_c%NumDimensions), F_kj(T_c%NumDimensions)
+      integer(kind=DefInt) :: k, n ! iterator variables
+      real(kind=DefReal) :: D
+
+      D = 0.0
+
+      do k = 1, T_c%NumStates
+         ! Relies on FMS_Coupling(T, i, j) returning 0 for i=k
+         F_ik = FMS_Coupling(T_c, is, k)
+         if (is == js) then
+            F_kj = -F_ik ! for diagonal BO correction
+         else 
+            F_kj = FMS_Coupling(T_c, k, js)
+         end if 
+           
+         do n = 0, T_c%NumParticles - 1
+            !write(fmiout,*) 'F_ik for particle', F_ik(3*n+1:3*(n+1)), n+1
+            D = D + dot_product(F_ik(3*n+1:3*(n+1)), F_kj(3*n+1:3*(n+1)))/T_c%get_mass(n+1)
+         end do
+      end do
+      D = 0.5d0 * D
+   end function FMS_SecondOrderCoup_KM
+
+   !----------------------------------------------------------
+!     Calculate second-order coupling in the kinematic momentum representation
+!     Does not include nuclear mass, i.e., this is a purely electronic quantity
+!
+!     Scope: public
+!---------------------------------------------------------
+   function FMS_SecondOrderCoup_KM_massless(T_c, is, js) result(D)
+      type(T_Trajectory), intent(in) :: T_c
+      integer(kind=DefInt), intent(in) :: is, js ! state labels
+      real(kind=DefReal) :: F_ik(T_c%NumDimensions), F_kj(T_c%NumDimensions)
+      integer(kind=DefInt) :: k ! iterator variable
+      real(kind=DefReal) :: D
+
+      D = 0.0
+
+      do k = 1, T_c%NumStates
+         ! Relies on FMS_Coupling(T, i, j) returning 0 for i=k
+         F_ik = FMS_Coupling(T_c, is, k)
+         if (is == js) then
+            F_kj = -F_ik ! for diagonal BO correction
+         else 
+            F_kj = FMS_Coupling(T_c, k, js)
+         end if 
+         
+         D = D + dot_product(F_ik, F_kj)
+         
+      end do
+      D = 0.5d0 * D
+   end function FMS_SecondOrderCoup_KM_massless
+
 
    ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    function FMS_SOCoupling_func(T1, IState, JState, Msi, Msj) result(SOME)
