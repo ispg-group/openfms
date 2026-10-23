@@ -1,0 +1,9 @@
+# The fortran modules provided by this target.
+provides
+ test_bundle.mod
+ test_overlap.mod
+ test_particle.mod
+ test_thermo.mod
+ test_trajectory.mod
+ testdrive.mod
+ testutils.mod

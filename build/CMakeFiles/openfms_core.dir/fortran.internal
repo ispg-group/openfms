@@ -1,0 +1,31 @@
+# The fortran modules provided by this target.
+provides
+ bundlecalcsmodule.mod
+ bundleiomodule.mod
+ bundlemodule.mod
+ eispackmodule.mod
+ elecstrucmodule.mod
+ fmsmodule.mod
+ globalmodule.mod
+ initialmodule.mod
+ minsearchmodule.mod
+ overlapmodule.mod
+ particlemodule.mod
+ propagationmodule.mod
+ qm_mm_module.mod
+ quanticsmodule.mod
+ randommodule.mod
+ rattlemodule.mod
+ restartmodule.mod
+ samplingmodule.mod
+ selectionmodule.mod
+ smdmodule.mod
+ spawnmodule.mod
+ templatemodule.mod
+ terachemmodule.mod
+ thermomodule.mod
+ toymodelmodule.mod
+ trajectorycalcsmodule.mod
+ trajectoryiomodule.mod
+ trajectorymodule.mod
+ verletmodule.mod
