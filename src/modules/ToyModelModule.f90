@@ -409,16 +409,16 @@ contains
 
          ! first-order NAC between states 1 and 2
          EVecTemp = (EvecPlus(2,:)-EvecMinus(2,:))/(2.d0 * dx)
-         T1%ElecStruc%DerivMat(2, 1, 1) = dot_product(Evec(1,:),EVecTemp)
-         T1%ElecStruc%DerivMat(1, 2, 1) = -T1%ElecStruc%DerivMat(2, 1, 1)
+         T1%ElecStruc%DerivMat(1, 2, 1) = dot_product(Evec(1,:),EVecTemp)
+         T1%ElecStruc%DerivMat(2, 1, 1) = -T1%ElecStruc%DerivMat(1, 2, 1)
          ! first-order NAC between states 1 and 3
          EVecTemp = (EvecPlus(3,:)-EvecMinus(3,:))/(2.d0 * dx)
-         T1%ElecStruc%DerivMat(3, 1, 1) = dot_product(Evec(1,:),EVecTemp)
-         T1%ElecStruc%DerivMat(1, 3, 1) = -T1%ElecStruc%DerivMat(3, 1, 1)
+         T1%ElecStruc%DerivMat(1, 3, 1) = dot_product(Evec(1,:),EVecTemp)
+         T1%ElecStruc%DerivMat(3, 1, 1) = -T1%ElecStruc%DerivMat(1, 3, 1)
          ! first-order NAC between states 2 and 3
          !EVecTemp = (EvecPlus(3,:)-EvecMinus(3,:))/(2.d0 * dx)
-         T1%ElecStruc%DerivMat(3, 2, 1) = dot_product(Evec(2,:),EVecTemp)
-         T1%ElecStruc%DerivMat(2, 3, 1) = -T1%ElecStruc%DerivMat(3, 2, 1)
+         T1%ElecStruc%DerivMat(2, 3, 1) = dot_product(Evec(2,:),EVecTemp)
+         T1%ElecStruc%DerivMat(3, 2, 1) = -T1%ElecStruc%DerivMat(2, 3, 1)
 
          ! update flag for calc at current position
          T1%ESFlags%zDerivCurrent(:, :) = .true.
