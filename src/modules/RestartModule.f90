@@ -221,8 +221,8 @@ contains
                call Btemp%Trajectory(1)%copy_from(B%DeadTraj(ITraj))
             end if
          end do
-!Set the current time to the trajectory's deadtime
-         Btemp%CurrentTime = Btemp%Trajectory(1)%DeadTime
+!Set the current time to the trajectory's uncoupledtime
+         Btemp%CurrentTime = Btemp%Trajectory(1)%UncoupledTime
 !Reset ES flags, if not using restarted ES
          if (zRedoRestartES) then
             Btemp%Trajectory(1)%ESFlags%zPotEnCurrent = .false.
@@ -473,7 +473,7 @@ contains
       write (nf, 1) T1%Ms, ' / State Ms'
       write (nf, 1) T1%ParentID, ' / Parent ID'
       write (nf, 5) T1%CentID, ' / Centroid ID'
-      write (nf, 2) T1%DeadTime, ' / Dead time'
+      write (nf, 2) T1%UncoupledTime, ' / Dead time'
       write (nf, 6) T1%zCent, ' / Centroid'
       write (nf, 6) T1%triplet, ' / Triplet'
       if (glzStoSwiss) then
@@ -569,7 +569,7 @@ contains
       read (nf, *) T1%Ms
       read (nf, *) T1%ParentID
       read (nf, *) T1%CentID
-      read (nf, *) T1%DeadTime
+      read (nf, *) T1%UncoupledTime
       read (nf, *) T1%zCent
       read (nf, *) T1%triplet
       if (glzStoSwiss) then
