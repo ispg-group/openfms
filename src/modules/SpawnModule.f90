@@ -8,7 +8,8 @@ module SpawnModule
    use GlobalModule
    use TrajectoryModule
    use TrajectoryCalcsModule, only: FMS_KineticClass, FMS_PotentialT, &
-                                    FMS_Coupling, FMS_SOCoupling, FMS_ClassEnergy
+                                    FMS_Coupling, FMS_SOCoupling, FMS_ClassEnergy, &
+                                    FMS_SecondOrderCoup_KM, FMS_SecondOrderCoup_KM_massless
    use TrajectoryIOModule, only: FMS_WriteFXYZ
    use BundleModule
    use BundleCalcsModule, only: FMS_UpdateMulliken
@@ -409,6 +410,7 @@ contains
 !GAIMS end added
 
       real(kind=DefReal), dimension(T1%NumDimensions) :: vec
+      real(kind=DefReal) :: SecondOrderCoup
 
       au2invcm = 0.00000455633528
       Dcouple = 0.d0
@@ -456,12 +458,23 @@ contains
       else
 
          vec = FMS_Coupling(T1, js, is)
+         
 
-         ! Return either coupling .dot. velocity or norm of coupling
-         if (spawn_params%SpawnCoupV) then
-            DCouple = abs(dot_product(T1%get_vel(), vec))
-         else
-            DCouple = sqrt(dot_product(vec, vec))
+         ! Return appropriate coupling according to flags
+         if (spawn_params%SpawnCoupV) then !norm of coupling
+            DCouple = abs(dot_product(T1%get_vel(), vec)) 
+            if (glzKinematicMomentum .and. glzSpawnSecondOrderCoup ) then
+               ! add abs of mass-weighted second-order coupling
+               SecondOrderCoup = FMS_SecondOrderCoup_KM(T1, js, is)
+               DCouple = DCouple + dabs(SecondOrderCoup) 
+            end if
+         else !coupling .dot. velocity
+            DCouple = sqrt(dot_product(vec, vec)) 
+            if (glzKinematicMomentum .and. glzSpawnSecondOrderCoup ) then
+               ! add abs of (purely-electronic) second-order coupling
+               SecondOrderCoup = FMS_SecondOrderCoup_KM_massless(T1, js, is)
+               DCouple = DCouple + dabs(SecondOrderCoup) 
+            end if
          end if
 
       end if
