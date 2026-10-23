@@ -133,7 +133,7 @@ module GlobalModule
    logical :: glzAvH !< Propagate classical trajectories on averaged Hamiltonian?
    integer(kind=DefInt) :: gliAvHNStates !< Number of states to average over?
    integer(kind=DefInt) :: gliAvHStates(100) !< List of states to average Hamiltonian over (defaults to all states)
-   real(kind=DefReal) :: gldDecoherenceTime !< Kill useless trajectories after this amount of time
+   real(kind=DefReal) :: gldTimeLeftToDeath !< Kill useless trajectories after this amount of time
    integer(kind=DefInt) :: gliForceKill(50) !< User option to force-kill trajectories
 
    ! A unit for an open 'Control.dat',

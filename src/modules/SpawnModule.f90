@@ -563,7 +563,8 @@ contains
       end if
 
       call parent_f%set_time(curr_time)
-      parent_f%DeadTime = curr_time !This is necessary to prevent parent trajectory from being killed during long spawning event.
+      ! This is necessary to prevent parent trajectory from being killed during long spawning event.
+      parent_f%UncoupledTime = curr_time
       nstep = nstep + 1
 
       child_s%LastSpawn(ps) = curr_time
@@ -737,7 +738,7 @@ contains
          curr_time = curr_time + TimeStep
          call parent_f%set_time(curr_time)
          ! This is necessary to prevent parent trajectory from being killed during long spawning event.
-         parent_f%DeadTime = curr_time
+         parent_f%UncoupledTime = curr_time
          nstep = nstep + 1
       end do
 
