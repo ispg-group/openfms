@@ -919,14 +919,14 @@ contains
       !  Then taking the gradient of chi_i with respect to the nuclear configuration
       !  space variable R (not the parameter!) we get
       !
-      !  ∇_R χ_i = [ α (R - R_i) + i P_i ] χ_i
+      !  ∇_R χ_i = [-2α (R - R_i) + i P_i ] χ_i 
       !
       ! while if we take the gradient with respect to the parameter
       ! R_i (the center of the Gaussian) we get
       !
-      !  ∇_{R_i} χ_i = [- α (R - R_i) - i P_i ] χ_i
+      !  ∇_{R_i} χ_i = [ 2α (R - R_i) - i P_i ] χ_i 
       !
-      !  Thus it follows that ∇_R χ_i = - ∇_{R_i} χ_i
+      !  Thus it follows that ∇_R χ_i = - ∇_{R_i} χ_i 
       S_dot = (-dot_product(T2%get_vel(), &
                             overlap_dx_trajectory(T1, T2, S_ij)) &
                + dot_product(FMS_Forces(T2), &
