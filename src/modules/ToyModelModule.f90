@@ -235,9 +235,6 @@ contains
          EVecTemp = (EDisplace2 - EDisplace1) / (2.d0 * dx)
          Coupling(1, 4) = dot_product(Evec1, EVecTemp)
 
-         if (T1%StateID == 2) then
-            Coupling = -Coupling
-         end if
          T1%ElecStruc%DerivMat(1, 2, :) = Coupling(1, :)
          T1%ElecStruc%DerivMat(2, 1, :) = -Coupling(1, :)
 
@@ -315,9 +312,6 @@ contains
                           ((v11 - v22)**2 + 4.d0 * v12 * v12)
          Coupling(1, 4) = ((v11 - v22) * dv12dy - v12 * (dv11dy - dv22dy)) / &
                           ((v11 - v22)**2 + 4.d0 * v12 * v12)
-         if (T1%StateID == 2) then
-            Coupling = -Coupling
-         end if
 
          T1%ElecStruc%DerivMat(1, 2, :) = Coupling(1, :)
          T1%ElecStruc%DerivMat(2, 1, :) = -Coupling(1, :)
