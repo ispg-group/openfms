@@ -6,7 +6,7 @@ module OverlapModule
    use TrajectoryModule
    use TrajectoryCalcsModule, only: FMS_Forces, FMS_PotentialT, FMS_KineticT, &
                                     FMS_Coupling, FMS_SOCoupling, FMS_Dipole, FMS_PhaseDot, FMS_TransDipoleIJxf, &
-                                    FMS_SetIgnoreError
+                                    FMS_SetIgnoreError, FMS_SecondOrderCoup_KM
    implicit none
 
    private
@@ -502,12 +502,17 @@ contains
 !
 ! A. energy of a trajectory (i=i, I=I)
 !     < X_i^I | V | X_i^I > = V(X_i)
+!    In the kinematic momentum representation, V includes the diagonal Born--Oppenheimer correction
 !
 ! B. energy between two distinct trajectories ( i!=j. I=J )
 !  < X_i^I | V | X_j^I > = V(X_c) < X_i^I |X_j^I >
+!    In the kinematic momentum representation, V includes the diagonal Born--Oppenheimer correction
 !
 ! C. coupling between trajectories on different states ( i!=j, I!=J )
 !  < X_i^I | V | X_j^J > = F_x^{I,J}(X_c) .x. < X_i^I | P/M | X_j^I >
+!    In the kinematic momentum representation
+!  < X_i^I | V | X_j^J > = F_x^{I,J}(X_c) .x. < X_i^I | P/M | X_j^I > 
+!                          + 0.5 .x. SUM_{k} F_x^{I,k}(X_c)F_x^{k,J}(X_c)
 !
 ! ###########################################################################
 !
@@ -580,6 +585,9 @@ contains
       type(T_Trajectory), intent(in), optional :: T_j, T_c
       complex(kind=DefComp), intent(in), optional :: S_ij_precalc
       complex(kind=DefComp) :: V
+      
+!     Diagonal BO correction and off-diagonal 2nd-order coupling contribution
+      real(kind=DefReal) :: DBOC, F_2  
 ! enumerated type for cases
       integer :: mode
       integer, parameter :: &
@@ -711,6 +719,16 @@ contains
       case (A)
          V = FMS_PotentialT(T_i)
 
+         if (glzKinematicMomentum) then
+            if (glzCentroids) then
+               DBOC = -FMS_SecondOrderCoup_KM(T_i, T_i%StateID, T_i%StateID)
+               V = V + DBOC
+            else
+               call FMS_DieError('Kinematic momentum currently only implemented with SPA0.&
+            &Please set CentroidApprox to .true.')
+            end if
+         end if
+         
          if (glzSPA1_SOC_model) then
             V = V + SPA1_SOC_model(T_i, T_i, S_ij)
          end if
@@ -736,9 +754,20 @@ contains
 !bfec
          if (glzCentroids) then
             V = S_ij * FMS_PotentialT(T_c)
+
+            if (glzKinematicMomentum) then
+               DBOC = -FMS_SecondOrderCoup_KM(T_c, T_c%StateID, T_c%StateID)
+               V = V + S_ij * DBOC
+            end if
+         
          else
             V = S_ij * 0.5d0 * (FMS_PotentialT(T_i) + FMS_PotentialT(T_j, is))
             write (fmiout, *) 'Using LI approximation for matrix elements.'
+            
+            if (glzKinematicMomentum) then
+               call FMS_DieError('Kinematic momentum currently only implemented with SPA0.&
+            &Please set CentroidApprox to .true.')
+            end if 
          end if
 
          if (glzxfaims) then
@@ -762,8 +791,23 @@ contains
       case (C)
 !bfec
          if (glzCentroids) then
+            !write(fmiout, *) 'Momentum of ',is,'=',overlap_dx_trajectory(T_i,T_i)
+            !write(fmiout, *) 'Momentum of ',js,'=',overlap_dx_trajectory(T_j,T_j)
             F_ij = FMS_Coupling(T_c, is, js)
             V = dot_product(F_ij, overlap_dx_M_trajectory(T_i, T_j, S_ij))
+            !This is the correct sign. Does not matter for the 2-state case, but for 3 or more it is critical 
+            V = -V 
+            !write (fmiout, *) 'F_ij', F_ij
+            !write (fmiout, *) 'F_ij.v', V
+
+!            if (glzKinematicMomentum .and. .false. ) then
+            if (glzKinematicMomentum) then
+               F_2 = FMS_SecondOrderCoup_KM(T_c, is, js)
+            !   write (fmiout, *) 'F_2', F_2
+               V = V - S_ij * F_2
+               !V = -V
+            end if
+            write(fmiout,*) 'Off-diag coupling ',is,' ',js,V
          else
             CVec1 = FMS_Coupling(T_i, is, js)
             CVec2 = FMS_Coupling(T_j, is, js)
