@@ -281,6 +281,7 @@ contains
    !> Draw independent Maxwell-Boltzmann momenta for the Nose-Hoover chain.
    !> Each chain momentum is sampled with variance \(m_i/\beta\), and
    !> thermE is initialized to the kinetic energy of the sampled chain.
+   !> Chain masses smaller than 1.0d-15 are rejected.
    !> This is the canonical momentum distribution used with the NHC
    !> extended-system dynamics of Martyna et al. (1996).
    !>
@@ -294,7 +295,7 @@ contains
       !> Inverse temperature, \(1/(k_B T)\).
       real(8), intent(in) :: beta
       !> Chain kinetic energy, initialized and accumulated by this routine.
-      real(8), intent(out) :: thermE
+      real(8), intent(inout) :: thermE
       !> Thermostat masses, one for each chain degree of freedom.
       real(8), intent(in), dimension(M) :: mNHC
       !> Sampled momenta of the Nose-Hoover chain.
@@ -304,6 +305,11 @@ contains
       real(8) :: sigma
       !> Index of the chain thermostat being initialized.
       integer :: i
+
+      if (any(mNHC < 1.0d-15)) then
+         call FMS_DieError('thermo_NHC_MBDist: chain mass must be at least 1.0d-15')
+         return
+      end if
 
       thermE = 0.0d0
       do i = 1, M
@@ -322,6 +328,7 @@ contains
    !> plus chain potential energy. The reversible NHC propagator follows
    !> Eq. (35) of Martyna et al. (1996); see thermo_NHC_prop for the
    !> update equations.
+   !> Particle and chain masses smaller than 1.0d-15 are rejected.
 
    !> Reference: G. J. Martyna, M. E. Tuckerman, D. J. Tobias, and
    !> M. L. Klein, "Explicit reversible integrators for extended systems
@@ -340,7 +347,7 @@ contains
       !> Inverse temperature, \(1/(k_B T)\).
       real(8), intent(in) :: beta
       !> Extended thermostat energy, overwritten with the current chain energy.
-      real(8), intent(out) :: thermE
+      real(8), intent(inout) :: thermE
       !> Masses of the Nose-Hoover chain thermostats.
       real(8), intent(in), dimension(M) :: mNHC
       !> Positions of the Nose-Hoover chain thermostats.
@@ -353,6 +360,15 @@ contains
       real(8) :: scale
       !> Index of the chain thermostat used to accumulate its energy.
       integer :: l
+
+      if (mass < 1.0d-15) then
+         call FMS_DieError('thermo_NHC_local: particle mass must be at least 1.0d-15')
+         return
+      end if
+      if (any(mNHC < 1.0d-15)) then
+         call FMS_DieError('thermo_NHC_local: chain mass must be at least 1.0d-15')
+         return
+      end if
 
       akin = p * p / mass
       call thermo_NHC_prop(dt, akin, beta, 1, M, rNHC, pNHC, mNHC, scale)
@@ -374,7 +390,8 @@ contains
    !> common momentum scaling follow Eq. (35) of Martyna et al. (1996);
    !> see thermo_NHC_prop for the update equations and full citation.
    !> If any particle mass is effectively zero, this routine returns
-   !> without changing the inputs.
+   !> without changing the inputs. Chain masses smaller than 1.0d-15
+   !> are rejected.
 
    !> Reference: G. J. Martyna, M. E. Tuckerman, D. J. Tobias, and
    !> M. L. Klein, "Explicit reversible integrators for extended systems
@@ -418,6 +435,10 @@ contains
       !> Number of particle momentum components thermostatted globally.
       integer :: NTotDim
 
+      if (any(mNHC < 1.0d-15)) then
+         call FMS_DieError('thermo_NHC_global: chain mass must be at least 1.0d-15')
+         return
+      end if
       if (any(mass < 1.0d-15)) return !Do not thermostat if mass is zero
       akin = 0.0d0
       do iatom = 1, natom
@@ -501,11 +522,6 @@ contains
       integer :: l
 
       scale = 1.0d0
-      !If any NHC mass is zero, we disable NHC propagation
-      if (any(mNHC < 1.0d-15)) then
-         write (6, *) 'mNHC is zero'
-         return
-      end if
 
       !Set up the selected Yoshida-Suzuki composition weights.
       select case (nys)

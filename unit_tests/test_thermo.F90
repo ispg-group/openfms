@@ -26,7 +26,6 @@ contains
       real(8) :: thermostat_energy
       real(8) :: force, max_position_error, max_momentum_error, max_thermostat_energy_error
       integer :: chain_index, step
-      logical :: finite_state
 
       real(8), parameter :: ref_position(number_of_steps + 1) = [1.0d0, &
                                                                  1.0049750312109134d0, 1.0099003120142305d0, &
@@ -58,7 +57,6 @@ contains
       max_position_error = abs(position - ref_position(1))
       max_momentum_error = abs(momentum - ref_momentum(1))
       max_thermostat_energy_error = abs(thermostat_energy - ref_thermostat_energy(1))
-      finite_state = .true.
 
       do step = 1, number_of_steps
 
@@ -86,7 +84,6 @@ contains
 
       end do
 
-      call check(error, finite_state, 'NHC oscillator state became non-finite')
       if (allocated(error)) return
       call check(error, max_position_error < reference_tolerance, &
                  'NHC position does not match reference values')
