@@ -26,7 +26,7 @@
 module TrajectoryModule
 
    use GlobalModule, only: D2, Pi, DefInt, DefReal, DefComp, fmiOut, FPZero, &
-                           glzStoSwiss, gldDecoherenceTime, FMS_DieError
+                           glzStoSwiss, gldTimeLeftToDeath, FMS_DieError
    use ParticleModule
    use QM_MM_Module, only: qczQMMM
    implicit none
@@ -155,8 +155,7 @@ module TrajectoryModule
 
       real(kind=DefReal), private :: CurrentTime !< Time
 
-      real(DefReal) :: DeadTime !< Time that the trajectory became uncoupled
-      !< and is marked for death
+      real(DefReal) :: UncoupledTime !< Time that the trajectory became uncoupled
       logical :: zCent !< .true. for centroids, false otherwise
 
 ! logical for triplet states
@@ -330,7 +329,7 @@ contains
       call T1%set_time(0.d0)
       T1%Amplitude = 0.d0
       T1%Phase = 0.d0
-      T1%DeadTime = 0.d0
+      T1%UncoupledTime = 0.d0
 
       call FMS_CreateElectronicStructure(T1%ElecStruc, NumStates, NumParticles)
 
@@ -517,7 +516,7 @@ contains
       T1%Amplitude = T2%Amplitude
       T1%Phase = T2%Phase
       T1%Pop = T2%Pop
-      T1%DeadTime = T2%DeadTime
+      T1%UncoupledTime = T2%UncoupledTime
 
       call T1%set_time(T2%get_time())
 
@@ -1156,12 +1155,12 @@ contains
       ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       class(T_Trajectory), intent(in) :: T
 
-      real(DefReal) :: CurrentTime, DeadTime
+      real(DefReal) :: CurrentTime, UncoupledTime
 
       CurrentTime = T%get_time()
-      DeadTime = T%DeadTime
+      UncoupledTime = T%UncoupledTime
 
-      is_dead = .not. T%zCent .and. ((CurrentTime - DeadTime) > (gldDecoherenceTime + FPZero))
+      is_dead = .not. T%zCent .and. ((CurrentTime - UncoupledTime) > (gldTimeLeftToDeath + FPZero))
    end function is_dead
 
 !     Private routine to flip flags

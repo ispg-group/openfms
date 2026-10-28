@@ -26,7 +26,7 @@ contains
 
          write (fmiOut, *) 'Stochastic selection: Running in AIMSWISS mode!'
 
-         write (fmiOut, *) 'SWISS mode sets DecoherenceTime to ', gldDecoherenceTime
+         write (fmiOut, *) 'SWISS mode sets TimeLeftToDeath to ', gldTimeLeftToDeath
          write (fmiOut, '(a,i0)') ' and IgnoreState to ', glIgnoreState
          write (fmiOut, *) 'so that Trajectories are only killed when they cannot spawn anymore.'
 

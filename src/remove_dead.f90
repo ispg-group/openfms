@@ -80,7 +80,7 @@ subroutine FMS_RemoveDead(B1)
          OverSpawnThresh = OverSpawnThresh .or. spawn_couple(B1%Trajectory(i), n) > spawn_params%CFThresh
       end do
 
-      ! Update DeadTime for those who will not be killed
+      ! Update UncoupledTime for those who will not be killed
       NotCoupled = all(Coupled(:, i) == 0)
       OnIgnoreState = (StateID == glIgnoreState)
       PopBelowThresh = (Population(i) < spawn_params%PopToSpawn)
@@ -98,13 +98,13 @@ subroutine FMS_RemoveDead(B1)
                       .or. (PopBelowThresh .and. NotCoupled))
       ForceDead = any(gliForceKill(:) == TrajID)
       if (ForceDead) then
-         B1%Trajectory(i)%DeadTime = -9999.0d0
+         B1%Trajectory(i)%UncoupledTime = -9999.0d0
       end if
 
       MarkForDeath = (MarkForDeath .or. ForceDead)
 
       if (.not. MarkForDeath) then
-         B1%Trajectory(i)%DeadTime = B1%CurrentTime
+         B1%Trajectory(i)%UncoupledTime = B1%CurrentTime
       else
          write (fmiOut, '(a,i0,a)') 'Traj ', TrajID, ' was marked for death'
       end if
@@ -188,9 +188,9 @@ subroutine FMS_RemoveDead(B1)
             iDead = iDead + 1
             call BTemp%DeadTraj(B1%NumDeadTraj + iDead)%copy_from(B1%Trajectory(iTraj))
 
-            ! Set dead time of recently killed trajectory to be current time
+            ! Set uncoupled time of recently killed trajectory to be current time
             ! to make it easier for user to restart killed trajectories!
-            BTemp%DeadTraj(B1%NumDeadTraj + iDead)%DeadTime = BTemp%CurrentTime
+            BTemp%DeadTraj(B1%NumDeadTraj + iDead)%UncoupledTime = BTemp%CurrentTime
             ! Copy new hamiltonian elements into dead hamiltonian
             jDead = 0
             do jTraj = 1, iTraj

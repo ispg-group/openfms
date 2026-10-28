@@ -60,7 +60,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    real(kind=DefReal) :: NumGradStep
    real(kind=DefReal) :: PopToSpawn
    real(kind=DefReal) :: RegThresh
-   real(kind=DefReal) :: DecoherenceTime
+   real(kind=DefReal) :: TimeLeftToDeath
 !bfec
    real(kind=DefReal) :: StochasticThresh
    ! Switch on AIMSWISS?
@@ -258,7 +258,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
       , EnergyCons, EnergyStepCons, CoupTimeStep, Timesteprejection &
       , DieOnMinStep, RejectAllStateFlip, tStepThresh, WriteEveryStep &
       , MinTimeStep, OLapThresh, nEquiStepPrint, NumGradStep, CentNGrad &
-      , IgnoreState, QuenchToler, zAmpFile, zMMFile, DecoherenceTime &
+      , IgnoreState, QuenchToler, zAmpFile, zMMFile, TimeLeftToDeath &
       , AvH, AvHNStates, AvHStates &
       ! xf added
       , freq_xfr, t0_xfr, CEP_xfr, sigma_xfr, onespawnonly_xfr &
@@ -282,7 +282,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    IRestartTraj(:) = 0
    RestartTime = -100.d0
    RestartStep = 2147483647
-   DecoherenceTime = 200.d0
+   TimeLeftToDeath = 200.d0
    QuenchToler = 1.d-5
    NumGradStep = 0.05
    CentNGrad = .true.
@@ -522,7 +522,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    end select
 
    NumTraj = NumInitBasis
-   gldDecoherenceTime = DecoherenceTime
+   gldTimeLeftToDeath = TimeLeftToDeath
    glzTimeStepRejection = TimeStepRejection
    glzDieOnMinStep = DieOnMinStep
    glzMinSearch = MinSearch
@@ -556,7 +556,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    glzStoSwiss = StochasticSwiss
    glzStoStateSpecific = StochasticStateSpecific
    if (glzStoSwiss) then
-      gldDecoherenceTime = 10000.d0
+      gldTimeLeftToDeath = 10000.d0
       IgnoreState = 0
    end if
    gldMaxEDiff = MaxEDiff
