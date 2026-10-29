@@ -6,7 +6,8 @@ program tester
    use test_particle, only: collect_particle_suite
    use test_trajectory, only: collect_trajectory_suite
    use test_bundle, only: collect_bundle_suite
-   use test_overlap, only: collect_overlap_suite
+   use test_thermo, only: collect_thermo_suite
+   use test_ring, only: collect_ring_suite
    use GlobalModule, only: set_error_handler
    implicit none
    integer :: num_failed_tests, is, num_args, selected_suite_index
@@ -37,30 +38,26 @@ program tester
    end if
 #endif
 
-   testsuites = [ &
-                new_testsuite('ParticleModule', collect_particle_suite), &
-                new_testsuite('TrajectoryModule', collect_trajectory_suite), &
-                new_testsuite('BundleModule', collect_bundle_suite), &
-                new_testsuite('OverlapModule', collect_overlap_suite) &
+   allocate(testsuites(5))
+   testsuites(:) = [ &
+                new_testsuite("ParticleModule", collect_particle_suite), &
+                new_testsuite("TrajectoryModule", collect_trajectory_suite), &
+                new_testsuite("BundleModule", collect_bundle_suite), &
+                new_testsuite("ThermoModule",collect_thermo_suite), &
+                new_testsuite("RingModule",  collect_ring_suite) &
                 ]
 
    ! Swap the default FMS_DieError handler for a unit-test friendly
    ! error handler defined in testutils.F90.
    call set_error_handler(unit_test_error_handler)
 
-   if (num_args == 1) then
-      selected_suite_index = find_suite(testsuites, selected_suite)
-      if (selected_suite_index == 0) then
-         call print_available_suites(testsuites, selected_suite)
-         stop 1
-      end if
-
-      call run_suite(testsuites(selected_suite_index), num_failed_tests)
-   else
-      do is = 1, size(testsuites)
-         call run_suite(testsuites(is), num_failed_tests)
-      end do
-   end if
+   do is = 1, size(testsuites)
+      write (error_unit, fmt) "Testing:", testsuites(is)%name
+      call run_testsuite(testsuites(is)%collect, error_unit, num_failed_tests, parallel=.false.)
+      ! Make sure FMS_DieError was not called unexpectedly.
+      call check_dieerror_not_called()
+      write (error_unit, *)
+   end do
 
    write (error_unit, '(a)') trim(get_final_message(num_failed_tests))
 
