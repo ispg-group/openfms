@@ -11,6 +11,9 @@
 !!      (gliModel==4) GAIMS Model 1D 2-state SOC
 !!            Granucci et al, J CP 137, 22A501 (2012).
 !!
+!!      (gliModel==5) XFAIMS Model 1D 2-state CH3I
+!!            Developed by J. Janos, not published yet
+!!
 !!    All dimensions higher than required for the model potential
 !!    are ignored, and their forces and derivative coupling set to 0
 !!
@@ -110,6 +113,10 @@ contains
 
          call GAIMS_model(T)
 
+      case (5)
+
+         call CH3I_model(T)
+
       case default
          write (errmsg, '(a, i0)') 'Invalid iMethod value: ', gliMethod
          call FMS_DieError(errmsg)
@@ -161,6 +168,64 @@ contains
 
       T%ESFlags%zSOMCurrent = .true.
    end subroutine GAIMS_model
+
+   subroutine CH3I_model(T)
+      type(T_Trajectory), intent(inout) :: T
+
+      real(kind=DefReal) :: x
+      integer(kind=DefInt) :: state_id
+
+      ! Parameters of the one-dimensional CH3I model.
+      ! State 1: S_0 Morse potential => d * (1 - exp(-a * (x - x0))) ** 2
+      real(kind=DefReal), parameter :: gs_d = 0.10797762d0
+      real(kind=DefReal), parameter :: gs_a = 0.44143377d0
+      real(kind=DefReal), parameter :: gs_x0 = 0.03984253d0
+
+      ! State 2: 3Q_0 exponential potential => d * exp(-a * (x - x0)) + e0
+      real(kind=DefReal), parameter :: ex_d = 0.69575666d0
+      real(kind=DefReal), parameter :: ex_a = 0.84386515d0
+      real(kind=DefReal), parameter :: ex_x0 = -3.05562874d0
+      real(kind=DefReal), parameter :: ex_e0 = 0.12220106d0
+
+      ! Constant S_0 -> 3Q_0 transition dipole, polarized along x
+      real(kind=DefReal), parameter :: tdm_x = 0.1289d0
+
+      x = T%Particle(1)%get_pos(1)
+      state_id = T%StateID
+
+      ! Potential energies
+      T%ElecStruc%PotEn(1) = gs_d * (1.d0 - exp(-gs_a * (x - gs_x0)))**2
+      T%ElecStruc%PotEn(2) = ex_d * exp(-ex_a * (x - ex_x0)) + ex_e0
+
+      T%ESFlags%ZPotEnCurrent = .true.
+
+      ! Energy gradients. All nonadiabatic derivative couplings are zero.
+      T%ElecStruc%DerivMat = 0.d0
+      if (state_id == 1) then
+         T%ElecStruc%DerivMat(1, 1, 1) = &
+            2.d0 * gs_d * gs_a * &
+            (1.d0 - exp(-gs_a * (x - gs_x0))) * &
+            exp(-gs_a * (x - gs_x0))
+      else if (state_id == 2) then
+         T%ElecStruc%DerivMat(2, 2, 1) = &
+            -ex_a * ex_d * exp(-ex_a * (x - ex_x0))
+      end if
+      T%ESFlags%ZDerivCurrent = .true.
+
+      ! Permanent dipole moments
+      T%ElecStruc%Dipole(state_id, :) = 0.d0
+      T%ESFlags%ZDipolesCurrent = .true.
+
+      ! Transition dipole used by XFAIMS. The fourth component stores the
+      ! time at which the transition dipole was evaluated.
+      T%ElecStruc%TransDipolexf(1:3) = [tdm_x, 0.d0, 0.d0]
+      T%ElecStruc%TransDipolexf(4) = T%get_time()
+      T%ESFlags%ZTransDipsCurrentxf = .true.
+
+      ! Standard transition dipole retained for non-XFAIMS consumers.
+      T%ElecStruc%TransDipole(state_id, :) = [tdm_x, 0.d0, 0.d0]
+      T%ESFlags%ZTransDipsCurrent = .true.
+   end subroutine CH3I_model
 
    subroutine persico_model(T)
       type(T_Trajectory), intent(inout) :: T

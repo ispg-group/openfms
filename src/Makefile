@@ -55,7 +55,8 @@ MODFILES = modules/globalmodule.mod modules/fmsmodule.mod modules/eispackmodule.
 	modules/qm_mm_module.mod modules/terachemmodule.mod modules/verletmodule.mod \
 	modules/quanticsmodule.mod modules/rattlemodule.mod modules/thermomodule.mod \
 	modules/smdmodule.mod modules/constraintmodule.mod modules/propagationmodule.mod \
-	modules/minsearchmodule.mod modules/selectionmodule.mod modules/overlapmodule.mod
+	modules/minsearchmodule.mod modules/selectionmodule.mod modules/overlapmodule.mod \
+	modules/xfaimsmodule.mod
 
 #################################
 #  Module dependencies          #
