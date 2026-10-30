@@ -26,6 +26,9 @@ PROGRAM		= $(PROGBASE).$(ESP)
 TARGET		= bin/$(PROGRAM)
 MAKEFILE	= Makefile
 
+#stdlib
+STDLIB_LIBS = -Wl,--start-group $(wildcard $(STDLIB_LIBDIR)/*.a) -Wl,--end-group
+
 # Decide what to compile
 ifeq ($(ESP),zero)
    all:	$(TARGET)
@@ -50,13 +53,14 @@ ifeq ($(ESP),quantics)
    LIBS += ${QUANTICS_OBJ}/libblas.a
    LIBS += ${QUANTICS_OBJ}/libomp.a
 endif
+ifneq ($(STDLIB_LIBDIR),)
+   FFLAGS += -DSTDLIB
+endif
+FFLAGS += -cpp
 
 .PHONY: FORCE test testclean updatetestref clean veryclean list
 
 MODULEDIR=Modules/
-
-#stdlib
-STDLIB_LIBS = -Wl,--start-group $(wildcard $(STDLIB_LIBDIR)/*.a) -Wl,--end-group
 
 SUFFIXES=.f .c .F
 
