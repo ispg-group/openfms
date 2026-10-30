@@ -95,7 +95,7 @@ module ToyModelModule
 !
 !-----------------------------------------------
    type :: t_triangle_params
-      real(kind=DefReal) :: A, B, C, D
+      real(kind=DefReal) :: A, B, del01, del02, del12
       real(kind=DefReal) :: X02
       real(kind=DefReal) :: X12
    contains
@@ -128,13 +128,14 @@ contains
       self%r_sigma = r_sigma
    end subroutine initialize_gaims_model_params
 
-   subroutine initialize_triangle_params(self, A, B, C, D, X02, X12)
+   subroutine initialize_triangle_params(self, A, del01, del02, del12, B, x02, x12)
       class(t_triangle_params), intent(inout) :: self
-      real(kind=DefReal), intent(in) :: A, B, C, D, X02, X12
+      real(kind=DefReal), intent(in) :: A, del01, del02, del12, B, x02, x12
       self%A = A
       self%B = B
-      self%C = C
-      self%D = D
+      self%del01 = del01
+      self%del02 = del02
+      self%del12 = del12
       self%X02 = X02
       self%X12 = X12
    end subroutine initialize_triangle_params
@@ -159,7 +160,6 @@ contains
       real(kind=DefReal) :: MASSY, MASSX
       real(kind=DefReal) :: sigma_G
       real(kind=DefReal) :: W1, W2, XA, YA, coupC
-      real(kind=DefReal) :: A, B, C, X02, X12
 
       select case (gliMethod)
 
@@ -360,11 +360,11 @@ contains
  
       case (5) ! Three-state triangle model
 
-         A = triangle_params%A
-         B = triangle_params%B
-         C = triangle_params%C
-         X02 = triangle_params%X02
-         X12 = triangle_params%X12
+         !A = triangle_params%A
+         !B = triangle_params%B
+         !C = triangle_params%C
+         !X02 = triangle_params%X02
+         !X12 = triangle_params%X12
 
          ! Adiabatic energy
          x = T1%Particle(1)%get_pos(1)
@@ -504,20 +504,21 @@ contains
    subroutine triangle(x, H)
       real(kind=DefReal), intent(in) :: x
       real(kind=DefReal), intent(out) :: H(3, 3)
-      real(kind=DefReal) :: A, B, C, D, X02, X12
+      real(kind=DefReal) :: A, del01, del02, del12, B, x02, x12
       A = triangle_params%A
       B = triangle_params%B
-      C = triangle_params%C
-      D = triangle_params%D
+      del01 = triangle_params%del01
+      del02 = triangle_params%del02
+      del12 = triangle_params%del12
       X02 = triangle_params%X02
       X12 = triangle_params%X12
 
       H(1, 1) = A * (1-x/X02)
       H(2, 2) = A * (1-x/X12)
       H(3, 3) = 0.0d0
-      H(1, 2) = B * exp(-D*x*x)
-      H(1, 3) = B * exp(-D*((x-X02)**2))
-      H(2, 3) = C * exp(-D*((x-X12)**2))
+      H(1, 2) = del01 * exp(-B*x*x)
+      H(1, 3) = del02 * exp(-B*((x-X02)**2))
+      H(2, 3) = del12 * exp(-B*((x-X12)**2))
       H(2, 1) = H(1, 2)
       H(3, 1) = H(1, 3)
       H(3, 2) = H(2, 3)

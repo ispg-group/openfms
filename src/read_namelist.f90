@@ -141,8 +141,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
 
    real(kind=DefReal) :: TriangleA
    real(kind=DefReal) :: TriangleB
-   real(kind=DefReal) :: TriangleC
-   real(kind=DefReal) :: TriangleD
+   real(kind=DefReal) :: Triangledel01, Triangledel02, Triangledel12
    real(kind=DefReal) :: TriangleX02
    real(kind=DefReal) :: TriangleX12
 
@@ -288,7 +287,8 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
       ! Toy models
       , IzmOmegax, IzmOmegay, IzmXshift, IzmYshift, IzmDeltaE, IzmCoupC &
       , Grsigma &
-      , TriangleA, TriangleB, TriangleC, TriangleD, TriangleX02, TriangleX12 &
+      , TriangleA, TriangleB, Triangledel01, Triangledel02, Triangledel12 &
+      , TriangleX02, TriangleX12 &
       ! Backwards compat
       , Tunnel, EShellOnly, SpawnAdaptive, SteepestDescent &
       !TM
@@ -348,9 +348,10 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    IzmCoupC = 0.0006127d0
    Grsigma = 10.0d0
    TriangleA = 0.003
-   TriangleB = 0.001
-   TriangleC = 0.0005
-   TriangleD = 1.0
+   TriangleB = 1.0
+   Triangledel01 = 0.0001
+   Triangledel02 = 0.0001
+   Triangledel12 = 0.0001
    TriangleX02 = 1.0
    TriangleX12 = 5.0
    FullyCoupled = .true.
@@ -577,8 +578,9 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    call izmaylov_params%initialize(W1=IzmOmegax, W2=IzmOmegay, XA=IzmXshift, YA=IzmYshift, &
                                    deltaE=IzmDeltaE, coupC=IzmCoupC)
    call GAIMS_model_params%initialize(r_sigma=Grsigma)
-   call triangle_params%initialize(A=TriangleA, B=TriangleB, C=TriangleC, D=TriangleD, &
-                                   X02=TriangleX02, X12=TriangleX12)
+   call triangle_params%initialize(A=TriangleA, del01=Triangledel01, del02=Triangledel02,  &
+                                 del12=Triangledel12, B=TriangleB, X02=TriangleX02, &
+                                 X12=TriangleX12)
 
    glzKinematicMomentum = KinematicMomentum
    glzSpawnSecondOrderCoup = SpawnSecondOrderCoup
