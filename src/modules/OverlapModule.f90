@@ -794,7 +794,7 @@ contains
             !write(fmiout, *) 'Momentum of ',is,'=',overlap_dx_trajectory(T_i,T_i)
             !write(fmiout, *) 'Momentum of ',js,'=',overlap_dx_trajectory(T_j,T_j)
             F_ij = FMS_Coupling(T_c, is, js)
-            V = dot_product(F_ij, overlap_dx_M_trajectory(T_i, T_j, S_ij))
+            V = -dot_product(F_ij, overlap_dx_M_trajectory(T_i, T_j, S_ij))
             !write (fmiout, *) 'F_ij', F_ij
             !write (fmiout, *) 'F_ij.v', V
 
@@ -802,7 +802,7 @@ contains
             if (glzKinematicMomentum) then
                F_2 = FMS_SecondOrderCoup_KM(T_c, is, js)
             !   write (fmiout, *) 'F_2', F_2
-               V = V + S_ij * F_2
+               V = V - S_ij * F_2
                !V = -V
             end if
             write(fmiout,*) 'Off-diag coupling ',is,' ',js,V
@@ -812,10 +812,8 @@ contains
 ! phase should be ok, need to be checked for FMS/TC with CASSCF.
             F_ij = 0.5d0 * (CVec1 + CVec2)
             write (fmiout, *) 'Using LI approximation for matrix elements.'
-            V = dot_product(F_ij, overlap_dx_M_trajectory(T_i, T_j, S_ij))
+            V = -dot_product(F_ij, overlap_dx_M_trajectory(T_i, T_j, S_ij))
          end if
-         !This is the correct sign. Does not matter for the 2-state case, but for 3 or more it is critical 
-         V = -V 
 
          if (glzxfaims) then
             TDipxf(:) = FMS_TransDipoleIJxf(T_c)
