@@ -4,6 +4,11 @@
 # Currently, only the MPI-based interface to TeraChem is available.
 # By default, we only compile with the model potentials ('zero').
 
+# The second parameter to this script specifies the location of the stdlib libraries (optional).
+# Unfortunately, this means that if you need to specify the location of the stdlib libraries, you also need to 
+# specify the type of electronic-structure interface. Use 'zero' for this if you do not want any interface 
+# and only models potentials.
+
 # Output file name
 VARS=CONFIGFMS
 
