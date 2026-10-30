@@ -487,7 +487,8 @@ contains
 
       type(T_Trajectory) :: child_a ! attempt at a spawn
 
-      complex(kind=DefComp) :: S
+      complex(kind=DefComp) :: S_fa
+      complex(kind=DefComp) :: S_ff
       real(kind=DefReal) :: coup_max, coup, curr_time, &
                             coup_prev(3), time_tmp1, time_tmp2
       integer(kind=DefInt) :: nstep, &
@@ -534,7 +535,7 @@ contains
 
       if (child_adjusted) then
          ! check the overlap with the parent, it must be big enough
-         S = overlap(parent_f, child_a)
+         S_fa = overlap(parent_f, child_a)
 
          success = .true.
          child_created = .true.
@@ -554,11 +555,11 @@ contains
       ! write out the coupling and the overlap
       if (child_created) then
 
-         S = overlap(parent_f, child_f)
-         write (fmiOut, '(f8.2,1x,f8.4,1x,f5.3,1x,a)') parent_f%get_time(), coup, abs(S), created_this_step
+         S_ff = overlap(parent_f, child_f)
+         write (fmiOut, '(f8.2,1x,f8.4,1x,f5.3,1x,a)') parent_f%get_time(), coup, abs(S_ff), created_this_step
 
       else
-         write (fmiOut, '(f8.2,1x,f8.4,1x,a)') parent_f%get_time(), coup, '  NA '
+         write (fmiOut, '(f8.2,1x,f8.4,1x,a)') parent_f%get_time(), coup, abs(S_fa)
 
       end if
 
@@ -598,7 +599,8 @@ contains
 
       type(T_Trajectory) :: child_a ! attempt at a spawn
 
-      complex(kind=DefComp) :: S
+      complex(kind=DefComp) :: S_fa
+      complex(kind=DefComp) :: S_ff
       real(kind=DefReal) :: coup_max, coup, curr_time, &
                             coup_prev(3), time_tmp1, time_tmp2
       integer(kind=DefInt) :: nstep, &
@@ -670,9 +672,9 @@ contains
 
             if (child_adjusted) then
                ! check the overlap with the parent, it must be big enough
-               S = overlap(parent_f, child_a)
+               S_fa = overlap(parent_f, child_a)
 
-               if (abs(S) > spawn_params%OMin_parent) then
+               if (abs(S_fa) > spawn_params%OMin_parent) then
                   success = .true.
                   child_created = .true.
                   success = .true.
@@ -722,14 +724,14 @@ contains
 ! xf changed end
 
          ! write out the coupling and the overlap
-         S = overlap(parent_f, child_f)
+         S_ff = overlap(parent_f, child_f)
          if (child_created) then
 
-            write (fmiOut, '(f8.2,1x,f8.4,1x,f5.3,1x,a)') parent_f%get_time(), coup, abs(S), created_this_step
+            write (fmiOut, '(f8.2,1x,f8.4,1x,f5.3,1x,a)') parent_f%get_time(), coup, abs(S_ff), created_this_step
 
          else
 
-            write (fmiOut, '(f8.2,1x,f8.4,1x,f5.3)') parent_f%get_time(), coup, abs(S)
+            write (fmiOut, '(f8.2,1x,f8.4,1x,f5.3)') parent_f%get_time(), coup, abs(S_fa)
 
          end if
 
