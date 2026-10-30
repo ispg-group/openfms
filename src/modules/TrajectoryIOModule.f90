@@ -771,11 +771,11 @@ contains
       ! intentional?
 
       do k = 1, t%numStates
-         write (unit=iunit, fmt='(f11.6)', advance='no') &
+         write (T%get_time(), unit=iunit, fmt='(f11.6)', advance='no') &
             sqrt(sum(FMS_Dipole(t, k)**2))
       end do
       do k = 1, t%numStates
-         write (unit=iunit, fmt='(3(f11.6))', advance='no') &
+         write (T%get_time(), unit=iunit, fmt='(3(f11.6))', advance='no') &
             FMS_Dipole(t, k)
       end do
       write (unit=iunit, fmt=*) ! end of data line
