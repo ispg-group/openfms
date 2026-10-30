@@ -12,6 +12,7 @@ module OverlapModule
    private
    public :: overlap, overlap_KE, overlap_V, overlap_S_dot
    public :: overlap_dx_M_trajectory
+   public :: generate_bessel_number_row
 
    interface overlap
       module procedure overlap_trajectory
@@ -165,6 +166,72 @@ contains
       end if
 
    end function overlap_d2x_CG
+
+   subroutine generate_bessel_number_row(n, n_rows, T)
+      !> Generates nth row of Bessel number triangle,
+      !> for the very beautiful math behind these numbers see
+      !> https://oeis.org/A100861
+      integer(kind=DefInt), intent(in) :: n
+      integer(kind=DefInt), intent(in) :: n_rows
+      integer(kind=DefInt), allocatable, intent(inout) :: T(:)
+      integer(kind=DefInt) :: T_old(n_rows)
+      integer(kind=DefInt) :: m, k
+
+      T = 0
+      T_old = 0
+      T_old(1) = 1
+
+      if (n == 1) then
+         T = T_old
+      else
+         do m = 2, n
+            do k = 2, n_rows
+               T(k) = T_old(k - 1) * (m - 1 - 2 * (k - 2)) + T_old(k)
+            end do
+            T(1) = 1
+            T_old = T
+         end do
+      end if
+   end subroutine generate_bessel_number_row
+
+   function overlap_xn_CG(x_i, p_i, alpha_i, &
+                          x_j, p_j, alpha_j, &
+                          n, prefactor) result(xn_S_ij)
+      real(kind=DefReal), intent(in) :: x_i, p_i, alpha_i, &
+                                        x_j, p_j, alpha_j
+      integer(kind=DefInt), intent(in) :: n
+      logical, intent(in), optional :: prefactor ! pre calculated overlap
+      complex(kind=DefComp) :: xn_S_ij
+      complex(kind=DefComp) :: summand, z_ij
+      integer(kind=DefInt) :: k, n_rows
+      integer(kind=DefInt), allocatable :: factor(:)
+      real(kind=DefReal) :: A, x_cent, delta_p_ji
+
+      delta_p_ji = p_j - x_i
+      A = alpha_i + alpha_j
+      x_cent = (alpha_i * x_i + alpha_j * x_j) / A
+      z_ij = cmplx(x_cent, 0.5d0 * delta_p_ji / (alpha_i + alpha_j))
+      xn_S_ij = 0.d0
+      n_rows = 1 + floor(n / 2.d0)
+
+      allocate (factor(n_rows))
+      call generate_bessel_number_row(n, n_rows, factor)
+      do k = 1, n_rows
+         summand = factor(k) * z_ij**(n - 2 * (k - 1)) / ((2.0d0 * A)**(k - 1))
+         xn_S_ij = xn_S_ij + summand
+      end do
+      deallocate (factor)
+
+      if (present(prefactor)) then
+         if (.not. prefactor) then
+            xn_S_ij = xn_S_ij * overlap_CG(x_i, p_i, alpha_i, &
+                                           x_j, p_j, alpha_j)
+         end if
+      else
+         xn_S_ij = xn_S_ij * overlap_CG(x_i, p_i, alpha_i, &
+                                        x_j, p_j, alpha_j)
+      end if
+   end function overlap_xn_CG
 
 ! . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 !               Particles
