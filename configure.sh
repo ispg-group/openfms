@@ -4,6 +4,11 @@
 # Currently, only the MPI-based interface to TeraChem is available.
 # By default, we only compile with the model potentials ('zero').
 
+# The second parameter to this script specifies the location of the stdlib libraries (optional).
+# Unfortunately, this means that if you need to specify the location of the stdlib libraries, you also need to 
+# specify the type of electronic-structure interface. Use 'zero' for this if you do not want any interface 
+# and only models potentials.
+
 # Output file name
 VARS=CONFIGFMS
 
@@ -13,6 +18,18 @@ if [[ $ESP != "tc" && $ESP != "zero" && $ESP != "quantics" ]]; then
     echo "ERROR: Unsupported interface target '$ESP'"
     echo "Supported targets: 'zero', 'tc'"
     exit 1
+fi
+
+# Fortran's STDLIB package
+STDLIB_LIBDIR=${2-none}
+STDLIB_MODULEDIR=${3-none}
+if [[ $STDLIB_LIBDIR != "none" && $STDLIB_MODULEDIR = "none" ]]; then
+	echo "ERROR: Please provide location of the STDLIB module directory"
+	exit 1
+fi
+if [[ $STDLIB_LIBDIR = "none" ]]; then
+	STDLIB_LIBDIR=""
+	STDLIB_MODULEDIR=""
 fi
 
 if [[ -z $FC ]]; then
@@ -71,6 +88,8 @@ cat << EOF > $VARS
 ESP = $ESP
 FC = $FC
 LD = $FC
+STDLIB_LIBDIR = $STDLIB_LIBDIR
+STDLIB_MODULEDIR = $STDLIB_MODULEDIR
 FCTYPE = $FCTYPE
 FFLAGS = $FFLAGS
 KERNEL = $(uname -s)
