@@ -9,9 +9,9 @@ VARS=CONFIGFMS
 
 # Electronic structure interface
 ESP=${1-zero}
-if [[ $ESP != "tc" && $ESP != "zero" && $ESP != "quantics" ]]; then
+if [[ $ESP != "tc" && $ESP != "zero" && $ESP != "quantics" && $ESP != "qml" ]]; then
     echo "ERROR: Unsupported interface target '$ESP'"
-    echo "Supported targets: 'zero', 'tc'"
+    echo "Supported targets: 'zero', 'tc', 'quantics', 'qml'"
     exit 1
 fi
 

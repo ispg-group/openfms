@@ -23,6 +23,7 @@ PROGBASE	= openfms
 PROGRAM		= $(PROGBASE).$(ESP)
 TARGET		= bin/$(PROGRAM)
 MAKEFILE	= Makefile
+QML_path := $(CURDIR)/QuantumModelLib
 
 # Decide what to compile
 ifeq ($(ESP),zero)
@@ -48,7 +49,12 @@ ifeq ($(ESP),quantics)
    LIBS += ${QUANTICS_OBJ}/libblas.a
    LIBS += ${QUANTICS_OBJ}/libomp.a
 endif
-
+ifeq ($(ESP),qml)
+   all: $(TARGET)
+   FFLAGS += -DQuantumModelLib
+   FFLAGS += -I$(QML_path)/OBJ/obj_gfortran_opt1_omp1_lapack1_int4_real64
+   LIBS += $(QML_path)/libQMLFull.a
+endif
 .PHONY: FORCE test testclean updatetestref clean veryclean list
 
 MODULEDIR=Modules/
