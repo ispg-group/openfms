@@ -105,6 +105,14 @@ bin/$(PROGBASE).quantics: $(FMSLIB) $(MAIN) $(MAKEFILE)
 		@ln -s $(PROGRAM) bin/$(PROGBASE)
 		@echo "done"
 
+# OpenFMS with QuantumModelLib interface
+bin/$(PROGBASE).qml: $(FMSLIB) $(MAIN) $(MAKEFILE)
+		@rm -f bin/$(PROGBASE)
+		@echo;echo "Linking $(PROGRAM) ..."
+		$(LD) $(MAIN) $(FMSLIB) -o $(TARGET) $(LIBS) -llapack -lblas -fopenmp $(LDFLAGS)
+		@ln -s $(PROGRAM) bin/$(PROGBASE)
+		@echo "done"
+
 # End-To-End tests
 test: ${TARGET}
 	tests/test.sh "${TARGET}" "$(TEST)" test
