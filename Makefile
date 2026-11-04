@@ -73,7 +73,9 @@ $(MAIN): $(FMSLIB)
 # https://stackoverflow.com/a/60706372/3682277
 $(FMSLIB): CONFIGFMS FORCE bin
 	@cd src; $(MAKE) -r
-
+ifeq ($(ESP),qml)
+	@cd $(QML_path); $(MAKE) -r
+endif
 ####################
 # Linking the executable
 ####################
@@ -127,7 +129,9 @@ list:
 
 clean:
 	@cd src; make clean
-
+ifeq ($(ESP),qml)
+	@cd $(QML_path); make clean
+endif
 veryclean: clean
 	rm bin/*
 	rm CONFIGFMS
