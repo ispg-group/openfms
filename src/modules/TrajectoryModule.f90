@@ -4,7 +4,7 @@
 !                                                                     !
 !---------------------------------------------------------------------!
 !>
-!> @brief Trajectory class specification and related methods
+!> Trajectory class specification and related methods
 !>
 !> This module specifies the trajectory type, and all related
 !> methods. A given instance of a trajectory object contains the

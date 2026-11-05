@@ -2,7 +2,7 @@
 !!    Steered Molecular Dynamics for Mechanochemistry Simulation
 !!    \author Mitchell Ong and Todd J. Martinez
 !>
-!!    @brief Parameters for steered molecular dynamics
+!!    Parameters for steered molecular dynamics
 !<
 module SMDModule
    use GlobalModule, only: DefReal, DefInt, FMS_DieError

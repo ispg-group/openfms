@@ -7,7 +7,7 @@ module RandomModule
 
 contains
 !>
-!!    @brief Random number generator
+!!    Random number generator
 !! \param IXT if <> 0, generator is reseeded.  To get further numbers in
 !!     a pseudo-random sequence, ixt should be set to zero.
 !!    @ingroup numerics

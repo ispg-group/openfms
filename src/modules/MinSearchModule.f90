@@ -1,6 +1,6 @@
 !     Copyright Todd J. Martinez and Raphael D. Levine, 1994
 !>
-!!    @brief Parameters and methods for energy minimizations
+!!    Parameters and methods for energy minimizations
 !!
 !!    For computational efficiency, all evaluations during the minimum
 !!    search should be done using a single trajectory. We'll pass MSTraj

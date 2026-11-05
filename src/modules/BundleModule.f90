@@ -1,21 +1,21 @@
 !     Copyright Todd J. Martinez and Raphael D. Levine, 1994
 !>
-!!    Specification of the "Bundle" datatype and methods.
-!!
-!!    The T_TrajectoryBundle datatype contains a specification of the
-!!    full nuclear/electronic wavefunction at a given instant in
-!!    time. The data-type itself is composed of several trajectory basis
-!!    functions, and also holds representations of quantum mechanical
-!!    operators (i.e. the Hamiltonian and overlap matrix) in this
-!!    trajectory basis.
-!!
-!!    These operators are held in the protected BundleMatrices datatype;
-!!    analogously to the T_Trajectory type, they must be retreived using
-!!    publicly scoped accessor routines.
-!!
-!!    Methods in this class are centered around building, storing, and
-!!    retrieving these operators.
-!<
+!>    Specification of the "Bundle" datatype and methods.
+!>
+!>    The T_TrajectoryBundle datatype contains a specification of the
+!>    full nuclear/electronic wavefunction at a given instant in
+!>    time. The data-type itself is composed of several trajectory basis
+!>    functions, and also holds representations of quantum mechanical
+!>    operators (i.e. the Hamiltonian and overlap matrix) in this
+!>    trajectory basis.
+!>
+!>    These operators are held in the protected BundleMatrices datatype;
+!>    analogously to the T_Trajectory type, they must be retreived using
+!>    publicly scoped accessor routines.
+!>
+!>    Methods in this class are centered around building, storing, and
+!>    retrieving these operators.
+!>
 module BundleModule
    use GlobalModule
    use TrajectoryModule

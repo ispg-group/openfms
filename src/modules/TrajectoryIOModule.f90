@@ -1,6 +1,6 @@
 !  Copyright Todd J. Martinez and Raphael D. Levine, 1994
 !>
-!! @brief Trajectory class IO methods.
+!! Trajectory class IO methods.
 !<
 module TrajectoryIOModule
 
