@@ -23,6 +23,7 @@ PROGBASE	= openfms
 PROGRAM		= $(PROGBASE).$(ESP)
 TARGET		= bin/$(PROGRAM)
 MAKEFILE	= Makefile
+QML_path := $(CURDIR)/QuantumModelLib
 
 # Decide what to compile
 ifeq ($(ESP),zero)
@@ -48,7 +49,12 @@ ifeq ($(ESP),quantics)
    LIBS += ${QUANTICS_OBJ}/libblas.a
    LIBS += ${QUANTICS_OBJ}/libomp.a
 endif
-
+ifeq ($(ESP),qml)
+   all: $(TARGET)
+   FFLAGS += -DQuantumModelLib
+   FFLAGS += -I$(QML_path)/OBJ/obj_gfortran_opt1_omp1_lapack1_int4_real64
+   LIBS += $(QML_path)/libQMLFull.a
+endif
 .PHONY: FORCE test testclean updatetestref clean veryclean list
 
 MODULEDIR=Modules/
@@ -67,7 +73,9 @@ $(MAIN): $(FMSLIB)
 # https://stackoverflow.com/a/60706372/3682277
 $(FMSLIB): CONFIGFMS FORCE bin
 	@cd src; $(MAKE) -r
-
+ifeq ($(ESP),qml)
+	@cd $(QML_path); $(MAKE) -r
+endif
 ####################
 # Linking the executable
 ####################
@@ -97,6 +105,14 @@ bin/$(PROGBASE).quantics: $(FMSLIB) $(MAIN) $(MAKEFILE)
 		@ln -s $(PROGRAM) bin/$(PROGBASE)
 		@echo "done"
 
+# OpenFMS with QuantumModelLib interface
+bin/$(PROGBASE).qml: $(FMSLIB) $(MAIN) $(MAKEFILE)
+		@rm -f bin/$(PROGBASE)
+		@echo;echo "Linking $(PROGRAM) ..."
+		$(LD) $(MAIN) $(FMSLIB) -o $(TARGET) $(LIBS) -llapack -lblas -fopenmp $(LDFLAGS)
+		@ln -s $(PROGRAM) bin/$(PROGBASE)
+		@echo "done"
+
 # End-To-End tests
 test: ${TARGET}
 	tests/test.sh "${TARGET}" "$(TEST)" test
@@ -121,7 +137,9 @@ list:
 
 clean:
 	@cd src; make clean
-
+ifeq ($(ESP),qml)
+	@cd $(QML_path); make clean
+endif
 veryclean: clean
 	rm bin/*
 	rm CONFIGFMS
