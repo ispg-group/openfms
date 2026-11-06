@@ -122,7 +122,7 @@ contains
       if (T1%is_dead()) then
          write (fmiOut, *) T1%TrajID
          write (fmiOut, *) T1%ParentID
-         write (fmiOut, *) T1%DeadTime
+         write (fmiOut, *) T1%UncoupledTime
          call T1%print_id()
          write (fmiOut, *) 'Warning in UpdatePES: called with dead trajectory.'
       end if
