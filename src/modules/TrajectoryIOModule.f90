@@ -770,6 +770,8 @@ contains
       ! This was writing the square of the dipole, was that
       ! intentional?
 
+      write (unit=iunit, fmt='(f10.2)', advance='no') T%get_time()
+
       do k = 1, t%numStates
          write (unit=iunit, fmt='(f11.6)', advance='no') &
             sqrt(sum(FMS_Dipole(t, k)**2))
@@ -778,7 +780,7 @@ contains
          write (unit=iunit, fmt='(3(f11.6))', advance='no') &
             FMS_Dipole(t, k)
       end do
-      write (unit=iunit, fmt=*) ! end of data line
+      write (unit=iunit, fmt=*)
 
       close (IUnit)
 
