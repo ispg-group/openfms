@@ -1,6 +1,6 @@
 !     Copyright Todd J. Martinez and Raphael D. Levine, 1994
 !>
-!!    @brief Stores parameters pertaining to the electronic wavefunction
+!!    Stores parameters pertaining to the electronic wavefunction
 !!
 !!    ElecStrucModule holds variables describing the electronic wavefunction.
 !!    Specifically, it contains a set of flags specifying the ESP's

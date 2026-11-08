@@ -1,6 +1,6 @@
 !  Copyright Todd J. Martinez and Raphael D. Levine, 1994
 !>
-!! @brief Parameters and data for generating initial conditions
+!! Parameters and data for generating initial conditions
 !<
 module InitialModule
    use GlobalModule, only: DefInt, DefReal, DefInt4, fmiOut

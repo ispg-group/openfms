@@ -1,5 +1,5 @@
 !  Copyright Todd J. Martinez and Raphael D. Levine, 1994
-!> @brief General simulation-defining paramaters and general access function
+!> General simulation-defining paramaters and general access function
 !!
 !! This module contains hard-coded global parameters for every
 !! program run, and a run-time namelist set of parameters that

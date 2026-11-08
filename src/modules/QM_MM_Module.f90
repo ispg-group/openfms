@@ -1,6 +1,6 @@
 ! Copyright Todd J. Martinez and Raphael D. Levine, 1994
 !>
-!!   @brief Stores parameters related to QM/MM simulations
+!!   Stores parameters related to QM/MM simulations
 !!   @note Module code: qc
 !<
 module QM_MM_Module
