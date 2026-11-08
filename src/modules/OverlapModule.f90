@@ -16,7 +16,7 @@ module OverlapModule
    private
    public :: overlap, overlap_KE, overlap_V, overlap_S_dot
    public :: overlap_dx_M_trajectory
-   public :: generate_bessel_number_row
+   public :: generate_bessel_number_row ! Made public because it is unit tested
 
    interface overlap
       module procedure overlap_trajectory
@@ -177,6 +177,9 @@ contains
       !! the following [OEIS entry](https://oeis.org/A100861)
       !! and a derivation of the recursion relation implemented
       !! [here](../../docs/Bessel_Numbers.pdf)
+      !! @note
+      !! Made public because it is unit tested
+      !! @endnote
       integer(kind=DefInt), intent(in) :: n
       integer(kind=DefInt), intent(in) :: n_rows
       integer(kind=DefInt), allocatable, intent(inout) :: T(:)
