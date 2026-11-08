@@ -1,5 +1,9 @@
 ! Copyright Todd J. Martinez and Raphael D. Levine, 1994
 module OverlapModule
+   !! display: public
+   !!          private
+   !!
+   !! Overlap Module documentation
    use GlobalModule
    use ToyModelModule, only: GAIMS_model_params
    use ParticleModule
@@ -168,9 +172,11 @@ contains
    end function overlap_d2x_CG
 
    subroutine generate_bessel_number_row(n, n_rows, T)
-      !> Generates nth row of Bessel number triangle,
-      !> for the very beautiful math behind these numbers see
-      !> https://oeis.org/A100861
+      !! Generates nth row of Bessel number triangle,
+      !! for the very beautiful math behind these numbers see
+      !! the following [OEIS entry](https://oeis.org/A100861)
+      !! and a derivation of the recursion relation implemented
+      !! [here](../../docs/Bessel_Numbers.pdf)
       integer(kind=DefInt), intent(in) :: n
       integer(kind=DefInt), intent(in) :: n_rows
       integer(kind=DefInt), allocatable, intent(inout) :: T(:)
@@ -197,6 +203,27 @@ contains
    function overlap_xn_CG(x_i, p_i, alpha_i, &
                           x_j, p_j, alpha_j, &
                           n, prefactor) result(xn_S_ij)
+      !! To understand what the implemented functions are doing, note that
+      !!
+      !! $$
+      !!    \begin{aligned}
+      !!    \langle r^n \rangle
+      !!    &= \int \mathrm{d}r\, \chi_i^*(r)\chi_j(r)r^n\\
+      !!    &= P \int \mathrm{d}r\,
+      !!    \exp\left\{-(a_i+a_j)(r-R_{ij})^2
+      !!    +ir\Delta p_{ji}\right\}r^n\\
+      !!    &= P \int \mathrm{d}r\,
+      !!    \frac{\partial^n}{\partial(i\Delta p_{ji})^n}
+      !!    \exp\left\{-(a_i+a_j)(r-R_{ij})^2
+      !!    +ir\Delta p_{ji}\right\}\\
+      !!    &= \frac{\partial^n}{\partial(i\Delta p_{ji})^n}S_{ij}
+      !!    \end{aligned}
+      !! $$
+      !! Or in words: the matrix element of the n-th moment is proportional to the n-th
+      !! derivative of the overlap matrix with respect to the momentum difference between
+      !! the two Gaussians for which the matrix element is calculated. The Bessel numbers
+      !! appear as coefficients of the polynomial that results from writing down explicit
+      !! form of this n-th derivative (for more info see [here](../../docs/Bessel_Numbers.pdf))
       real(kind=DefReal), intent(in) :: x_i, p_i, alpha_i, &
                                         x_j, p_j, alpha_j
       integer(kind=DefInt), intent(in) :: n
