@@ -5,6 +5,7 @@ display: public
          protected
          private
 output_dir: ./developer_docs
+doxygen: True
 ---
 
 Auto-generated developer documentation for OpenFMS 
