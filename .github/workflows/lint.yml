@@ -22,8 +22,7 @@ jobs:
     - uses: actions/checkout@v6
 
     - name: Install prek
-      # Configargparse is needed for the fprettify autoformatter
-      run: pip install prek configargparse
+      run: pip install prek
 
     - name: Run prek hooks
       run: prek run --all-files --show-diff-on-failure --color always
