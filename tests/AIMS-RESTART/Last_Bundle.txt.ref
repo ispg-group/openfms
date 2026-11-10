@@ -26,7 +26,7 @@
      2                                   / State Ms
      0                                   / Parent ID
       -1      -1                         / Centroid ID
-     31.0000                             / Dead time
+     31.0000                             / Uncoupled time
  F                                       / Centroid
  F                                       / Triplet
  # Last spawn
@@ -70,7 +70,7 @@
      2                                   / State Ms
      1                                   / Parent ID
       -1      -1                         / Centroid ID
-     31.0000                             / Dead time
+     31.0000                             / Uncoupled time
  F                                       / Centroid
  F                                       / Triplet
  # Last spawn
@@ -114,7 +114,7 @@
      2                                   / State Ms
      1                                   / Parent ID
        2       1                         / Centroid ID
-     29.7500                             / Dead time
+     29.7500                             / Uncoupled time
  T                                       / Centroid
  F                                       / Triplet
  # Last spawn
