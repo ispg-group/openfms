@@ -52,7 +52,6 @@ endif
 ifeq ($(ESP),qml)
    all: $(TARGET)
    FFLAGS += -DQuantumModelLib
-   FFLAGS += -I$(QML_path)/OBJ/obj_gfortran_opt1_omp1_lapack1_int4_real64
    LIBS += $(QML_path)/libQMLFull.a
 endif
 .PHONY: FORCE test testclean updatetestref clean veryclean list
@@ -71,11 +70,11 @@ MAIN = src/openfms.o src/build_info.o
 $(MAIN): $(FMSLIB)
 # NOTE: It's important to use $(MAKE) for working parallel compilation!
 # https://stackoverflow.com/a/60706372/3682277
+ifeq ($(ESP),qml)
+	@cd $(QML_path); $(MAKE) -r LAPACK=0 OPT=1 OMP=1 REAL=64 INT=4
+endif
 $(FMSLIB): CONFIGFMS FORCE bin
 	@cd src; $(MAKE) -r
-ifeq ($(ESP),qml)
-	@cd $(QML_path); $(MAKE) -r
-endif
 ####################
 # Linking the executable
 ####################
@@ -109,7 +108,7 @@ bin/$(PROGBASE).quantics: $(FMSLIB) $(MAIN) $(MAKEFILE)
 bin/$(PROGBASE).qml: $(FMSLIB) $(MAIN) $(MAKEFILE)
 		@rm -f bin/$(PROGBASE)
 		@echo;echo "Linking $(PROGRAM) ..."
-		$(LD) $(MAIN) $(FMSLIB) -o $(TARGET) $(LIBS) -llapack -lblas -fopenmp $(LDFLAGS)
+		$(LD) $(MAIN) $(FMSLIB) -o $(TARGET) $(LIBS) -fopenmp $(LDFLAGS)
 		@ln -s $(PROGRAM) bin/$(PROGBASE)
 		@echo "done"
 
