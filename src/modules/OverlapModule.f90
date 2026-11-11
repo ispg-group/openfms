@@ -509,10 +509,10 @@ contains
 !    In the kinematic momentum representation, V includes the diagonal Born--Oppenheimer correction
 !
 ! C. coupling between trajectories on different states ( i!=j, I!=J )
-!  < X_i^I | V | X_j^J > = F_x^{I,J}(X_c) .x. < X_i^I | P/M | X_j^I >
+!  < X_i^I | V | X_j^J > = -F_x^{I,J}(X_c) .x. < X_i^I | P/M | X_j^I >
 !    In the kinematic momentum representation
-!  < X_i^I | V | X_j^J > = F_x^{I,J}(X_c) .x. < X_i^I | P/M | X_j^I > 
-!                          + 0.5 .x. SUM_{k} F_x^{I,k}(X_c)F_x^{k,J}(X_c)
+!  < X_i^I | V | X_j^J > = -F_x^{I,J}(X_c) .x. < X_i^I | P/M | X_j^I > 
+!                          - 0.5 .x. SUM_{k} F_x^{I,k}(X_c)F_x^{k,J}(X_c)
 !
 ! ###########################################################################
 !
