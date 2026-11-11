@@ -21,7 +21,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    implicit none
    ! Newline character
    character(len=*), parameter :: NL = new_line('A')
-   character(len=*), parameter :: AVAILABLE_MODELS = 'TOY, TC, QUANTICS'
+   character(len=*), parameter :: AVAILABLE_MODELS = 'TOY, TC'
 
    integer(kind=DefInt), intent(inout) :: NumParticles, NumStates, NumTraj
    real(kind=DefReal), intent(inout) :: SimulationTime
@@ -489,13 +489,13 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
          NL//'Available models:'//NL//'  '//AVAILABLE_MODELS
       zFatal = .true.
    case ('template')
-      gliModel = TEMPLATE
+      gliModel = glModelType%TEMPLATE
    case ('zero', 'toy')
-      gliModel = FMSZERO
+      gliModel = glModelType%TOY
    case ('quantics')
-      gliModel = 13
+      gliModel = glModelType%QUANTICS
    case ('tc')
-      gliModel = 14
+      gliModel = glModelType%TC
    case default
       write (error_unit, *) 'ERROR in Control.dat: Unknown model "' &
          //trim(Model)//'"'//NL//'Available models:'//NL &
