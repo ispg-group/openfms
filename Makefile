@@ -56,7 +56,6 @@ endif
 ifneq ($(STDLIB_LIBDIR),)
    FFLAGS += -DSTDLIB
 endif
-FFLAGS += -cpp
 
 .PHONY: FORCE test testclean updatetestref clean veryclean list
 
