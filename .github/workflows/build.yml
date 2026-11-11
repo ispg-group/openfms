@@ -193,3 +193,34 @@ jobs:
 
     - name: End-to-end tests
       run: make test
+
+
+  qml_build:
+    name: QML build (${{ matrix.toolchain.compiler }}-${{ matrix.toolchain.version }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain:
+          - {compiler: gcc, version: 15}
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - uses: fortran-lang/setup-fortran@v1
+      id: setup-fortran
+      with:
+        compiler: ${{ matrix.toolchain.compiler }}
+        version: ${{ matrix.toolchain.version }}
+
+    - name: Configure with QML interface
+      run: ./configure.sh qml
+
+    - name: Build
+      run: make
+
+    - name: Unit tests
+      run: make unittest
+
+    - name: End-to-end tests
+      run: make test

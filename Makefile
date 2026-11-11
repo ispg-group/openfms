@@ -70,10 +70,10 @@ MAIN = src/openfms.o src/build_info.o
 $(MAIN): $(FMSLIB)
 # NOTE: It's important to use $(MAKE) for working parallel compilation!
 # https://stackoverflow.com/a/60706372/3682277
+$(FMSLIB): CONFIGFMS FORCE bin
 ifeq ($(ESP),qml)
 	@cd $(QML_path); $(MAKE) -r LAPACK=0 OPT=1 OMP=1 REAL=64 INT=4
 endif
-$(FMSLIB): CONFIGFMS FORCE bin
 	@cd src; $(MAKE) -r
 ####################
 # Linking the executable
