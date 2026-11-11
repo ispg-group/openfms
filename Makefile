@@ -26,8 +26,9 @@ PROGRAM		= $(PROGBASE).$(ESP)
 TARGET		= bin/$(PROGRAM)
 MAKEFILE	= Makefile
 
-#stdlib
-STDLIB_LIBS = -Wl,--start-group $(wildcard $(STDLIB_LIBDIR)/*.a) -Wl,--end-group
+ifneq ($(STDLIB_LIBDIR),)
+    STDLIB_LIBS = -Wl,--start-group $(wildcard $(STDLIB_LIBDIR)/*.a) -Wl,--end-group
+endif
 
 # Decide what to compile
 ifeq ($(ESP),zero)
