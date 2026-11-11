@@ -17,7 +17,7 @@ DESCRIPTION
 USAGE
    configure [--interface] [--stdlib-lib path/to/stdlib-lib] [--stdlib-module path/to/stdlib-module]
 OPTIONS
-   --interface   Define electronic-structure interface with which openfms is compiled. Valid options are: 'tc' for TeraChem; 'quantics' for Quantics; 'zero' for no interface, i.e., only compile with model systems. Default: 'zero'
+   --interface   Define electronic-structure interface with which OpenFMS is compiled. Valid options are: 'tc' for TeraChem;  'zero' for no interface, i.e., only compile with model systems. Default: 'zero'
    --stdlib-lib  location of STDLIB libraries
    --stdlib-module location of STDLIB modules
 "
