@@ -280,8 +280,6 @@ contains
       select case (gliModel)
       case (glModelType%TOY)
          write (fmiOut, *) '     FMSZero: analytical potential'
-      case (glModelType%TEMPLATE)
-         write (fmiOut, *) '     System call template interface'
       case (glModelType%QUANTICS)
          write (fmiOut, *) '     Quantics interface     '
       case default
@@ -330,14 +328,11 @@ contains
 
    subroutine initialize_interface(NumParticles, NumStates, tc_port_name)
       use GlobalModule, only: gliModel, glModelType
-      use TemplateModule, only: FMS_TemplateInit
       use TerachemModule, only: InitTerachem
       integer, intent(in) :: NumParticles, NumStates
       character(len=:), allocatable, intent(inout) :: tc_port_name
 
       select case (gliModel)
-      case (glModelType%TEMPLATE)
-         call FMS_TemplateInit()
       case (glModelType%TC)
          call InitTerachem(NumParticles, NumStates, tc_port_name)
       case default

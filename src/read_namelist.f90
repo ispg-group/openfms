@@ -488,8 +488,6 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
       write (error_unit, *) '"Model" must be defined in Control.dat'// &
          NL//'Available models:'//NL//'  '//AVAILABLE_MODELS
       zFatal = .true.
-   case ('template')
-      gliModel = glModelType%TEMPLATE
    case ('zero', 'toy')
       gliModel = glModelType%TOY
    case ('quantics')
