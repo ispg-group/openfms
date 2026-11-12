@@ -44,7 +44,7 @@ contains
 
    end subroutine print_stochastic_selection_params
 
-!!    @brief Main driver for stochastic selection algorithm
+!!    Main driver for stochastic selection algorithm
 !!
 !!    This subroutine is the public facing interface to the stochastic selection
 !!    algorithm, independent of which variant of stochastic selection is used.
@@ -381,7 +381,7 @@ contains
 
    end subroutine FMS_StochasticCollapse
 
-!!    @brief Implements stochastic selection algorithm
+!!    Implements stochastic selection algorithm
 !!
 !!    Partition nuclear trajectory basis functions into uncoupled blocks
 !!    then stochastically collapse the wavefunction onto a single block.

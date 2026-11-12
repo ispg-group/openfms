@@ -82,7 +82,7 @@ TrajectoryModule.o: TrajectoryModule.f90 ParticleModule.o QM_MM_Module.o \
 TrajectoryCalcsModule.o: TrajectoryCalcsModule.f90 TrajectoryModule.o \
 			ParticleModule.o QM_MM_Module.o ElecStrucModule.o \
 			GlobalModule.o SMDModule.o \
-			TemplateModule.o TerachemModule.o ToyModelModule.o QuanticsModule.o
+			TerachemModule.o ToyModelModule.o QuanticsModule.o
 
 TrajectoryIOModule.o: TrajectoryIOModule.f90 TrajectoryModule.o TrajectoryCalcsModule.o \
 			ParticleModule.o QM_MM_Module.o \
@@ -111,8 +111,6 @@ QM_MM_Module.o: QM_MM_Module.f90 GlobalModule.o
 
 FMSModule.o: FMSModule.f90 $(INTERFACES) GlobalModule.o \
 		ParticleModule.o TrajectoryModule.o BundleModule.o
-
-TemplateModule.o: TemplateModule.f90 GlobalModule.o ElecStrucModule.o
 
 SMDModule.o: SMDModule.f90 GlobalModule.o TrajectoryModule.o
 

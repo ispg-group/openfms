@@ -1,6 +1,6 @@
 !     Copyright Todd J. Martinez and Raphael D. Levine, 1994
 !>
-!! @brief Subroutines for (velocity) Verlet integration
+!! Subroutines for (velocity) Verlet integration
 !!
 !! NOTE: These subroutines cannot live in PropagationModule since they
 !! would introduce cyclic dependency between SpawnModule and PropagationModule.
