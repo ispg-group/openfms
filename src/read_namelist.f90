@@ -531,7 +531,6 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    gliSaddle = ISaddle
    glzIterInv = IterInv
 
-   glRestartTime = RestartTime
    gldTimeStep = TimeStep
    gldCoupTimeStep = CoupTimeStep
    gldMinTimeStep = MinTimeStep
@@ -560,8 +559,6 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    glzRejectAllStateFlip = RejectAllStateFlip
    glzConstrain = constrain
    glzAnalysisMode = AnalysisMode
-   gldSimulationTime = SimulationTime
-   gldNormThresh = NormThresh
    gldNormCons = NormCons
    gldNormStepCons = NormStepCons
    gldEnergyCons = EnergyCons
@@ -590,7 +587,6 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    fmzMMFile = zMMFile
    fmzNDatFile = zNDatFile
    fmzEdatFile = zEdatFile
-   fmzCIVecFile = zCIVecFile
    fmzBundMatFile = zBundMatFile
    fmzCoupFile = zCoupFile
    fmzForce = zForce
