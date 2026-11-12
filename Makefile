@@ -72,7 +72,7 @@ $(MAIN): $(FMSLIB)
 # https://stackoverflow.com/a/60706372/3682277
 $(FMSLIB): CONFIGFMS FORCE bin
 ifeq ($(ESP),qml)
-	@cd $(QML_path); $(MAKE) -r LAPACK=0 OPT=1 OMP=1 REAL=64 INT=4
+	@cd $(QML_path); $(MAKE) -r LAPACK=0 OPT=0 OMP=1 REAL=64 INT=4
 endif
 	@cd src; $(MAKE) -r
 ####################
