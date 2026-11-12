@@ -270,7 +270,7 @@ contains
       use BundleModule
       use TrajectoryCalcsModule, only: FMS_Weight
       use SelectionModule, only: print_stochastic_selection_params
-      use SpawnModule, only: print_spawning_parameters
+      use SpawnModule, only: spawn_params
       use RestartModule, only: iniRestart
 
       type(T_TrajectoryBundle), intent(in) :: Bundle
@@ -290,7 +290,7 @@ contains
       write (fmiOut, *)
       write (fmiOut, *)
 
-      call print_spawning_parameters(fmiOut)
+      call spawn_params%print(fmiOut)
 
       if (glzStochastic) then
          call print_stochastic_selection_params()

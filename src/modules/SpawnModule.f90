@@ -63,13 +63,13 @@ module SpawnModule
       real(kind=DefReal) :: SOCThresh = 0.0d0
    contains
       procedure, public :: set => set_spawn_params
+      procedure, public :: print => print_spawn_params
    end type t_spawn_params
 
    ! Initialize spawn parameters to their default values.
-   type(t_spawn_params) :: spawn_params = t_spawn_params()
+   type(t_spawn_params), public :: spawn_params = t_spawn_params()
 
    private
-   public :: spawn_params, print_spawning_parameters
    public :: FMS_Spawn, spawn_couple, FMS_SpawnDCouple
    public :: FMS_AdjustEnergy
 
@@ -95,17 +95,18 @@ contains
       self%SpawnCoupV = SpawnCoupV
    end subroutine set_spawn_params
 
-   subroutine print_spawning_parameters(unit)
+   subroutine print_spawn_params(self, unit)
+      class(t_spawn_params), intent(inout) :: self
       integer, intent(in) :: unit
       write (unit, '(a30)') 'SPAWNING PARAMETERS'
-      write (unit, '(a14,i7  ,a)') 'maxTraj:    ', spawn_params%MaxTraj, ' (Max number of Trajectories)'
-      write (unit, '(a14,f7.4,a)') 'OMin_parent:', spawn_params%OMin_parent, ' (Min parent-child overlap to spawn)'
-      write (unit, '(a14,f7.4,a)') 'OMax_inter: ', spawn_params%OMax_inter, ' (Max overlap between parent and existing TBFs)'
-      write (unit, '(a14,f7.4,a)') 'OMax_intra: ', spawn_params%Omax_intra, ' (Max overlap between child and existing TBFs)'
-      write (unit, '(a14,f7.4,a)') 'CSThresh:   ', spawn_params%CSThresh, ' (Coupling threshold to enter spawning region)'
-      write (unit, '(a14,f7.4,a)') 'CFThresh:   ', spawn_params%CFThresh, ' (Coupling threshold to exit spawning region)'
-      write (unit, '(a14,f7.4,a)') 'PopToSpawn: ', spawn_params%PopToSpawn, ' (Min population to Spawn)'
-   end subroutine print_spawning_parameters
+      write (unit, '(a14,i7  ,a)') 'maxTraj:    ', self%MaxTraj, ' (Max number of Trajectories)'
+      write (unit, '(a14,f7.4,a)') 'OMin_parent:', self%OMin_parent, ' (Min parent-child overlap to spawn)'
+      write (unit, '(a14,f7.4,a)') 'OMax_inter: ', self%OMax_inter, ' (Max overlap between parent and existing TBFs)'
+      write (unit, '(a14,f7.4,a)') 'OMax_intra: ', self%Omax_intra, ' (Max overlap between child and existing TBFs)'
+      write (unit, '(a14,f7.4,a)') 'CSThresh:   ', self%CSThresh, ' (Coupling threshold to enter spawning region)'
+      write (unit, '(a14,f7.4,a)') 'CFThresh:   ', self%CFThresh, ' (Coupling threshold to exit spawning region)'
+      write (unit, '(a14,f7.4,a)') 'PopToSpawn: ', self%PopToSpawn, ' (Min population to Spawn)'
+   end subroutine print_spawn_params
 
    !> Main driver for the spawning algorithm
    !>
