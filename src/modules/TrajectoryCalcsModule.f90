@@ -1,7 +1,7 @@
 !  Copyright Todd J. Martinez and Raphael D. Levine, 1994
 !>
-!! @brief Trajectory class methods that related to electronic structure
-!!         and related calculations.
+!! Trajectory class methods that related to electronic structure
+!! and related calculations.
 !!
 !! Methods for the trajectory class involve communication with the
 !! electronic structure package, and retrieval of electronic structure
@@ -14,7 +14,6 @@
 !! calculated at the current molecular configuration, UpdatePES is
 !! called. This, in turn, calls the appropriate interface to the ESP,
 !! which triggers an electronic structure calculation.
-!! \image latex "../sources/TrajModule.png"
 !<
 module TrajectoryCalcsModule
 
@@ -1292,7 +1291,8 @@ contains
 !?>      T1%ESFlags%zIgnoreErrors=.false.
 !?>
 !?>??endif
-!!      end function FMS_CorrectPhaseMolpro
+!      end function FMS_CorrectPhaseMolpro
+
 !>
 !!     Finite difference to get gradient - either forward
 !!     (not recommended for dynamics!) or central.

@@ -1,6 +1,6 @@
 !     Copyright Todd J. Martinez and Raphael D. Levine, 1994
 
-!!    @brief Spawning parameters are stored in this module
+!!    Spawning parameters are stored in this module
 !!    \see ReadNameList for description of parameters
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 module SpawnModule
@@ -107,7 +107,7 @@ contains
       write (unit, '(a14,f7.4,a)') 'PopToSpawn: ', spawn_params%PopToSpawn, ' (Min population to Spawn)'
    end subroutine print_spawning_parameters
 
-!!    @brief Driver for spawning algorithm
+!!    Driver for spawning algorithm
 !!
 !!    Determines if a spawn is required.  If so, this routine will
 !!    perform all the necessary logic to tile the phase space with

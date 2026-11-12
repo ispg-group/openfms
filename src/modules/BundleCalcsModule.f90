@@ -1,9 +1,11 @@
-!     Copyright Todd J. Martinez and Raphael D. Levine, 1994
+! Copyright Todd J. Martinez and Raphael D. Levine, 1994
+
+!> Procedures for calculations on the TrajectoryBundle
 !>
-!!    @brief Procedured for calculations on the Bundle
-!<
+!> This module contains various subroutines for calculation of
+!> quantities over the whole TrajectoryBundle, such as kinetic and potential energies.
+!> Most notably, FMS_BuildHS is the main driver for building the Hamiltonian matrix.
 module BundleCalcsModule
-   !--------------------------------------------------------------------------------
    use GlobalModule
    use TrajectoryModule
    use TrajectoryCalcsModule, only: FMS_Weight, FMS_WeightC, FMS_KineticT, FMS_IsBundleCurrent, &

@@ -1,5 +1,5 @@
 !  Copyright Todd J. Martinez and Raphael D. Levine, 1994
-!> @brief Parameters and methods for the template-driven electronic
+!> Parameters and methods for the template-driven electronic
 !!  structure interface
 !!
 !! The template interface allows FMS to interface with arbitrary
