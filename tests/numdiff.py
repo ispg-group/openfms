@@ -100,7 +100,7 @@ def compare_lines(numbers1, numbers2, absolute_tolerance):
 
 
 def parse_diff(fname, absolute_tolerance):
-    with open(fname, encoding="locale") as f:
+    with open(fname, encoding="utf-8") as f:
         # If the file is empty something is wrong
         # (e.g. file for comparison was not even generated)
         if len(f.read()) == 0:
