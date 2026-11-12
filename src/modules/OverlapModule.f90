@@ -580,18 +580,21 @@ contains
       type(T_Trajectory), intent(in), optional :: T_j, T_c
       complex(kind=DefComp), intent(in), optional :: S_ij_precalc
       complex(kind=DefComp) :: V
-! enumerated type for cases
+
+      ! enumerated type for cases
       integer :: mode
-      integer, parameter :: &
-         A = 1, &
-         B = 2, &
-         C = 3, &
-         D = 4, &
-         E = 5, &
-         F = 6, &
-         G = 7, &
-         H = 8, &
-         I = 9
+      type t_coup_mode
+         integer :: A = 1
+         integer :: B = 2
+         integer :: C = 3
+         integer :: D = 4
+         integer :: E = 5
+         integer :: F = 6
+         integer :: G = 7
+         integer :: H = 8
+         integer :: I = 9
+      end type t_coup_mode
+      type(t_coup_mode), parameter :: modes = t_coup_mode()
 
       integer(kind=DefInt) :: it, jt, & ! label of trajectories
                               ic, jc, & ! centroid's labels
@@ -599,29 +602,26 @@ contains
 
       logical :: cent_match
 
-!bfec
       real(kind=DefReal) :: CVec1(T_i%NumDimensions), CVec2(T_i%NumDimensions)
 
       real(kind=DefReal) :: F_ij(T_i%NumDimensions), time_tmp1, time_tmp2
 
       complex(kind=DefComp) :: S_ij ! overlap between trajectories
 
-! xf added
+      ! XFAIMS variables
       integer(kind=DefInt) :: bmis
       real(kind=DefReal) :: dipole(3), TDipxf(4), ft_xf(3)
       complex(kind=DefComp) :: dip_nuc_xf(3)
-! xf end added
 
-! GAIMS added
+      ! GAIMS variables
       integer(kind=DefInt) :: Msi, Msj, & ! multiplicities
                               CBFi, CBFj ! CBF label
       complex(kind=DefComp) :: SOC_ij ! SOCoupling
-! GAIMS end added
 
       call cpu_time(time_tmp1)
 ! work out what we are doing
       if (.not. present(T_j)) then
-         mode = A ! case(A) is equal to case(E), so only one of them is called
+         mode = modes%A ! case(A) is equal to case(E), so only one of them is called
       else
 ! GAIMS changed
          it = T_i%TrajID; jt = T_j%TrajID
@@ -636,25 +636,25 @@ contains
 
          if ((T_i%triplet .eqv. .false.) .and. (T_j%triplet .eqv. .false.)) then ! (1)
             if (is == js) then
-               mode = B
+               mode = modes%B
             else
-               mode = C
+               mode = modes%C
             end if
          else if (.not. (T_i%triplet .and. T_j%triplet)) then ! (2)
-            mode = D
+            mode = modes%D
          else ! (3)
 !    if( CBFi /= CBFj ) then
             if (is == js) then
                if (CBFi == CBFj) then
-                  mode = F
+                  mode = modes%F
                else
-                  mode = G
+                  mode = modes%G
                end if
             else
                if (Msi == Msj) then
-                  mode = H
+                  mode = modes%H
                else
-                  mode = I
+                  mode = modes%I
                end if
             end if
          end if
@@ -667,7 +667,7 @@ contains
 
 ! check the centroid
       select case (mode)
-      case (B, C, D, G, H, I)
+      case (modes%B, modes%C, modes%D, modes%G, modes%H, modes%I)
 !bfec
          if (glzCentroids) then
             if (.not. present(T_c)) then
@@ -708,7 +708,7 @@ contains
       end select
 
       select case (mode)
-      case (A)
+      case (modes%A)
          V = FMS_PotentialT(T_i)
 
          if (glzSPA1_SOC_model) then
@@ -732,7 +732,7 @@ contains
                 - (dipole(3) + dip_nuc_xf(3)) * ft_xf(3)
          end if
 
-      case (B)
+      case (modes%B)
 !bfec
          if (glzCentroids) then
             V = S_ij * FMS_PotentialT(T_c)
@@ -759,7 +759,7 @@ contains
 !   write(fmiOut,*) FMS_PotentialT( T_C )
 !   write(fmiOut,*) '###############################'
 
-      case (C)
+      case (modes%C)
 !bfec
          if (glzCentroids) then
             F_ij = FMS_Coupling(T_c, is, js)
@@ -789,7 +789,7 @@ contains
 
          end if
 
-      case (D)
+      case (modes%D)
          SOC_ij = FMS_SOCoupling(T_c, is, js, Msi, Msj)
          V = S_ij * SOC_ij
 
@@ -804,14 +804,14 @@ contains
 !   write(fmiOut,*) FMS_PotentialT( T_i ),FMS_PotentialT( T_j, is )
 !   write(fmiOut,*) '#########################'
 
-      case (F)
+      case (modes%F)
          V = (0.d0, 0.d0)
 
          if (glzSPA1_SOC_model) then
             V = V + SPA1_SOC_model(T_i, T_j, S_ij)
          end if
 
-      case (G)
+      case (modes%G)
          if (Msi /= Msj) then
             V = (0.d0, 0.d0)
          else
@@ -824,7 +824,7 @@ contains
 !   write(fmiOut,*) S_ij,V
 !   write(fmiOut,*) '#########################'
 
-      case (H)
+      case (modes%H)
          if (CBFi == CBFj) then
             V = (0.d0, 0.d0)
          else
@@ -837,7 +837,7 @@ contains
 !   write(fmiOut,*) F_ij,V
 !   write(fmiOut,*) '#########################'
 
-      case (I)
+      case (modes%I)
          if (abs(Msi - Msj) > 1) then
             V = (0.d0, 0.d0)
          else if (CBFi == CBFj) then
