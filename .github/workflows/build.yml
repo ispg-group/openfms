@@ -208,7 +208,7 @@ jobs:
     steps:
     - uses: actions/checkout@v7
       with:
-        submodule: true
+        submodules: true
 
     - uses: fortran-lang/setup-fortran@v1
       id: setup-fortran
