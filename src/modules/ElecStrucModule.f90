@@ -98,8 +98,7 @@ contains
 !!    @ingroup ESP
 !<
    subroutine FMS_ESInit(NumParticles, NumStates)
-      use GlobalModule, only: gliModel, gliMethod, &
-                              FMSZERO, QUANTICS, TC, TEMPLATE, FMS_DieError
+      use GlobalModule, only: gliModel, gliMethod, glModelType, FMS_DieError
 
       integer(kind=DefInt), intent(in) :: NumParticles
       integer(kind=DefInt), intent(inout) :: NumStates
@@ -126,7 +125,7 @@ contains
 !
 !     FMSZero: fake electronic structure
 !
-      case (FMSZERO)
+      case (glModelType%TOY)
          write (fmiOut, *) 'FMSZero: Using toy potentials in adiabatic basis.'
          eszAnalyticForces = .true.
          eszNACoupVec = .true.
@@ -172,13 +171,13 @@ contains
 !     end of fmszero initialization
 
 !
-!     FMSTemplate: write electronic structure input decks with templates
+!     FMSTemplate (deprecated): write electronic structure input decks with templates
 !
-      case (TEMPLATE)
+      case (glModelType%TEMPLATE)
          write (fmiOut, *) 'FMSTemplate: system call ES interface.'
          if (eslCIVec > 0) esnElecPhase = NumStates
 
-      case (TC)
+      case (glModelType%TC)
          eszAnalyticForces = .true.
          eszNACoupVec = .true.
          esnOrbs = esNBasis
@@ -187,7 +186,7 @@ contains
          eszDipoleMoment = .true.
          eszPartialCharges = .true.
 
-      case (QUANTICS)
+      case (glModelType%QUANTICS)
          eszAnalyticForces = .true.
          eszNACoupVec = .true.
          esnOrbs = esNBasis
