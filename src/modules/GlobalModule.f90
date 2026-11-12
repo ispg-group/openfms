@@ -68,7 +68,6 @@ module GlobalModule
 !----------------------------------------------------------------
 !     TIMERS
 !----------------------------------------------------------------
-   real(kind=DefReal) :: glRestartTime
    real(kind=DefReal) :: ftime = 0.0d0
    real(kind=DefReal) :: btime = 0.0d0
    real(kind=DefReal) :: cgtime = 0.0d0
@@ -76,11 +75,9 @@ module GlobalModule
    real(kind=DEfReal) :: bhstime = 0.0d0
    real(kind=DefReal) :: olaptime = 0.0d0
    real(kind=DefReal) :: pottime = 0.0d0
-   real(kind=DefReal) :: kintime = 0.0d0
    real(kind=DefReal) :: estime = 0.0d0
    real(kind=DefReal) :: timei = 0.0d0
    real(kind=DefReal) :: timef = 0.0d0
-   real(kind=DefReal) :: sdottime = 0.0d0
    integer :: glNESCalls = 0
    integer(kind=DefInt) :: glnStepsRejected = 0
 
@@ -128,8 +125,6 @@ module GlobalModule
    real(kind=DefReal) :: gldOLapThresh
    logical :: glzConstrain !< Use constraints for propagation?
    logical :: glzAnalysisMode
-   real(kind=DefReal) :: gldSimulationTime
-   real(kind=DefReal) :: gldNormThresh !< Threshold for norm convergence for VV propagation
    real(kind=DefReal) :: gldNGradStep !< Step size for numerical gradient
    logical :: glzCentNGrad !< Central numerical gradient? (if false, just forward)
    integer(kind=DefInt) :: glIgnoreState !< Ignore energy conservation problems on this state
@@ -170,12 +165,10 @@ module GlobalModule
 !---------------------------------------------------------------------------
    integer, private, parameter :: MaxGeometry = 100
    integer(kind=DefInt) :: fmNStepToPrint !print output every n steps
-   logical :: fmzPrintDipole
    logical :: fmzTrajFile
    logical :: fmzPotEnFile
    logical :: fmzNDatFile
    logical :: fmzEdatFile
-   logical :: fmzCIVecFile
    logical :: fmzBundMatFile
    logical :: fmzCoupFile
    logical :: fmzChargeFile
