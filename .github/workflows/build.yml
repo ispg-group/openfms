@@ -40,7 +40,7 @@ jobs:
             toolchain: {compiler: gcc, version: '9'}
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 2
 
@@ -94,7 +94,7 @@ jobs:
          os: [ubuntu-24.04]
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - uses: fortran-lang/setup-fortran@v1
       id: setup-fortran
@@ -124,7 +124,7 @@ jobs:
           - {compiler: intel, version: latest}
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - uses: fortran-lang/setup-fortran@v1
       id: setup-fortran
@@ -153,7 +153,7 @@ jobs:
       matrix:
          mpi: [intelmpi, mpich]
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Setup MPI
       if: matrix.mpi != 'mpich'
@@ -197,15 +197,16 @@ jobs:
 
   qml_build:
     name: QML build (${{ matrix.toolchain.compiler }}-${{ matrix.toolchain.version }})
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-24.04, macos-26]
         toolchain:
           - {compiler: gcc, version: 15}
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - uses: fortran-lang/setup-fortran@v1
       id: setup-fortran
@@ -217,7 +218,7 @@ jobs:
       run: ./configure.sh qml
 
     - name: Build
-      run: make
+      run: make -j
 
     - name: Unit tests
       run: make unittest
