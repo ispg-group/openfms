@@ -45,6 +45,7 @@ module TerachemModule
       subroutine MPI_Recv(buf, count, datatype, source, tag, comm, status, ierr)
          import MPI_STATUS_SIZE
          implicit none
+         ! allow(assumed-size-character-intent)
          type(*), dimension(*), intent(inout) :: buf
          integer, intent(in) :: count, datatype, source, comm, tag
          integer, intent(inout) :: ierr

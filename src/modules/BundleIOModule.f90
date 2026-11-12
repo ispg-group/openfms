@@ -1,7 +1,6 @@
-!     Copyright Todd J. Martinez and Raphael D. Levine, 1994
-!>
-!!    @brief IO Methods for the "Bundle" datatype.
-!<
+! Copyright Todd J. Martinez and Raphael D. Levine, 1994
+
+!> IO Methods for the "Bundle" datatype.
 module BundleIOModule
    use GlobalModule, only: DefInt, DefReal, DefComp, FMSWorkingDir, FMS_DieError, &
                            fmzwriteeverystep, fmzndatfile, fmzbundmatfile, fmzcorrfile, fmzedatfile, fmzalltext, &
@@ -21,13 +20,9 @@ module BundleIOModule
    public :: FMS_Output
 
 contains
-!>
-!!    Writes Formatted Branching Ratios
-!!    @ingroup output
-!<
-   ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+   !> Writes Formatted Branching Ratios
    subroutine FMS_WriteFBranching(B1)
-      ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       type(T_TrajectoryBundle), intent(in) :: B1
       integer(kind=DefInt) :: nstate, i
       real(kind=DefReal) :: Prob(B1%NumStates)
@@ -61,13 +56,8 @@ contains
 
    end subroutine FMS_WriteFBranching
 
-!>
-!!    Writes formatted potential, kinetic, and total energies.
-!!    @ingroup output
-!<
-   ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   !> Writes formatted potential, kinetic, and total energies.
    subroutine FMS_WriteFEnergy(B1)
-      ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       type(T_TrajectoryBundle), intent(in) :: B1
 
       real(kind=DefReal) :: PotQM, KinQM, PotCl, KinCl
@@ -104,12 +94,9 @@ contains
 
    end subroutine FMS_WriteFEnergy
 
-!>
-!!    Write bundle matrices out to file
-!!    \param FileName Name of file to output
-!!          Valid values are 'H.dat', 'S.dat' and 'Sdot.dat'
-!!    @ingroup output
-!<
+   !> Write bundle matrices out to file
+   !> \param FileName Name of file to output
+   !>          Valid values are 'H.dat', 'S.dat' and 'Sdot.dat'
    subroutine FMS_WriteFMatrix(B1, FileName)
       type(T_TrajectoryBundle), intent(in) :: B1
       character(len=*), intent(in) :: FileName
@@ -146,10 +133,7 @@ contains
 
    end subroutine FMS_WriteFMatrix
 
-!>
-!!    Writes formatted autocorrelation function \f$ <\Psi(0)|\Psi(t)> \f$
-!!    @ingroup output
-!<
+   !> Writes formatted autocorrelation function \( <\Psi(0)|\Psi(t)> \)
    subroutine FMS_WriteFCorr(B1)
       type(T_TrajectoryBundle), intent(in) :: B1
       type(T_TrajectoryBundle), save :: B_init
@@ -204,12 +188,8 @@ contains
       end function overlap_bundle
 
    end subroutine FMS_WriteFCorr
-!>
-!!    Writes formatted parent child overlap
-!!    @ingroup output
-!<
-   ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   ! - - - - - - - -
+
+   !> Write formatted parent child overlap
    subroutine FMS_WriteFParentChildOlap(T1, T2, filename, firsttime)
       ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       type(T_Trajectory), intent(in) :: T1, T2
@@ -255,10 +235,7 @@ contains
 
    end subroutine FMS_WriteFParentChildOlap
 
-!>
-!!    Writes SOME for centroid position
-!!    @ingroup output
-!<
+   !> Writes SOME for centroid position
    subroutine FMS_WriteFSOME(T1, T2, Tc, filename, firsttime)
       type(T_Trajectory), intent(in) :: T1, T2, Tc
       character(len=*), intent(in) :: filename
@@ -296,15 +273,8 @@ contains
 
    end subroutine FMS_WriteFSOME
 
-!>
-!!    Writes SOCeff
-!!    @ingroup output
-!<
-   ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-   ! - - - - - - - -
+   !> Writes SOCeff
    subroutine FMS_WriteFSOCeff(T1, T2, js, filename, firsttime)
-      ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      ! - - - - - - - -
       use SpawnModule, only: spawn_couple
       type(T_Trajectory), intent(in) :: T1, T2
       integer(DefInt), intent(in) :: js
@@ -343,10 +313,8 @@ contains
 
    end subroutine FMS_WriteFSOCeff
 
-!>
-!!    Read H, S and SDot in from a file. Useful for analysis mode.
-!!    NOTE: Currently not used anywhere
-!<
+   !> Read H, S and SDot in from a file. Useful for analysis mode.
+   !> NOTE: Currently not used anywhere
    subroutine FMS_ReadFBundle(B1, IUnitH, iUnitS, iUnitSDot)
       type(T_TrajectoryBundle), intent(inout) :: B1
       integer(kind=DefInt), intent(in) :: IUnitH, iUnitS, iUnitSDot
@@ -393,11 +361,7 @@ contains
 
    end subroutine FMS_ReadFBundle
 
-!>
-!!    Driver for all output during propagation
-!!
-!!    @ingroup output
-!<
+   !> Driver for all output during propagation
    subroutine FMS_Output(B1, FirstTime)
       use SMDModule, only: SMD_Print
       type(t_trajectoryBundle), intent(in) :: B1

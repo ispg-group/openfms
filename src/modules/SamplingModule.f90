@@ -1,7 +1,6 @@
 !  Copyright Todd J. Martinez and Raphael D. Levine, 1994
-!>
-!! @brief Ground state sampling routines, including sampling Wigner, Husimi and Boltzmann distributions.
-!<
+
+!> Ground state sampling routines, including sampling Wigner, Husimi and Boltzmann distributions.
 module SamplingModule
    use GlobalModule
    use TrajectoryModule
@@ -13,7 +12,7 @@ module SamplingModule
    public :: FMS_InitialWigner, FMS_InitialHusimi, FMS_InitialConstT
    public :: FMS_InitialSwarm, FMS_InitialQuasi, FMS_InitialColdWig
 
-!     Integer parameter definitions:
+   ! Integer parameter definitions:
    integer(kind=DefInt), public, parameter :: &
       NOSAMPLE = 0, &
       WIGNER = 1, &
@@ -23,44 +22,48 @@ module SamplingModule
       SWARM = 5, &
       HUSIMI = 6
 
-!>    System temperature
+   !> System temperature
    real(kind=DefReal), public :: indTemperature
 
-!>    Determines ground state sampling method
+   !> Determines ground state sampling method
    integer(kind=DefInt), public :: inInitialCond
 
    logical, public :: inzFirstGauss
 
-!> For ConstT initial conditions, number of special modes
+   !> For ConstT initial conditions, number of special modes
    integer(kind=DefInt), public :: inNTemp
-!> For ConstT initial conditions, index of each special mode
+   !> For ConstT initial conditions, index of each special mode
    integer(kind=DefInt), public :: inIModeSharp(100)
-!> For ConstT initial conditions, temperature for each of the special modes
+   !> For ConstT initial conditions, temperature for each of the special modes
    real(kind=DefReal), public :: indFModeSharp(100)
 
-!> For quasiclassical initial conditions, number of modes with extra quanta
+   !> For quasiclassical initial conditions, number of modes with extra quanta
    integer(kind=DefInt), public :: inNAddQuanta
-!> For quasiclassical initial conditions, modes with extra quanta
+   !> For quasiclassical initial conditions, modes with extra quanta
    integer(kind=DefInt), public :: inIAddQuanta(100)
 
 contains
 
 !>
-!!    @brief This routine samples initial conditions from a Wigner Distribution.
+!!    This routine samples initial conditions from a Wigner Distribution.
+!!
 !!    For each Normal mode we sample from:
-!!    \f[
-!!    \rho(x,p)=\exp\left[ -2\alpha_x(x-x0)^2 -\frac{(p-p_0)^2}{2*\alpha_x} \right]
-!!    \f]
-!!    where x, and p are the normal mode position and momentum, respectively.
-!!    The width \f$\alpha_x\f$ is Mass*Freq/2 [Heller JCP vol 80 p 5038 (1984)]
-!!    But Normal modes have units of sqrt[mass]*Length and therefore
-!!    \f$\alpha_x=Freq/2\f$.
-!!    If indTemperature /=0 then the width is defined as
-!!    AlphaX=Freq/2*Tanh(Beta*Freq/2) where Beta=1/(KbT)
-!!    See Heller JCP, vol, 65, pp. 1289 (1976)
-!!    This is the result for a Wigner at finite temperature
-!!    @see FMS_InitialColdWig
-!!    @ingroup initial
+!!    $$
+!!    \rho(x,p)=\exp\left[ -2\alpha_x(x-x0)^2 -\frac{(p-p_0)^2}{2\alpha_x} \right]
+!!    $$
+!!    where *x*, and *p* are the normal mode position and momentum, respectively.
+!!
+!!    The width \(\alpha_x = m * f / 2 \) per [Heller JCP vol 80 p 5038 (1984)](https://doi.org/10.1063/1.446571)
+!!
+!!    But normal modes have units of \(\sqrt{m}\) * Length and therefore
+!!    \( \alpha_x=f/2 \)
+!!
+!!    For non-zero temperature the width is defined as
+!!    $$
+!!    \alpha_x = f / 2 * \tanh(\beta*f/2)
+!!    $$
+!!    This is the result for a Wigner at finite temperature.
+!!    See [Heller J. Chem. Phys., vol 65, pp. 1289 (1976)](https://doi.org/10.1063/1.433238)
 !<
    subroutine FMS_InitialWigner(T1, IDNum)
       type(T_Trajectory), intent(inout) :: T1
@@ -140,13 +143,14 @@ contains
 
             PosVec(I) = Sigx * x1
             Momvec(I) = Sigp * x2
-! For debugging purpose calculate Kinetic energy
+            ! For debugging purpose calculate Kinetic energy
             Ekin = Ekin + Momvec(i) * Momvec(I)
          end do
       end if
-! Kinetic energy in Normal-Modes
+      ! Kinetic energy in Normal-Modes
       Ekin = Ekin * dp5
-!     multiply by U (transform to mass-weighted Cartesian--position/momentum)
+
+      ! multiply by U (transform to mass-weighted Cartesian--position/momentum)
       L = 0
       do I = 1, natoms
          do J = 1, 3
@@ -238,7 +242,6 @@ contains
 
 !>
 !!    Samples initial conditions from a Boltzmann distribution at a constant Temperature
-!!    @ingroup initial
 !<
    subroutine FMS_InitialConstT(T1)
       type(T_Trajectory), intent(inout) :: T1
@@ -387,21 +390,29 @@ contains
 
    end subroutine FMS_InitialConstT
 !>
-!!    The subrouinte is written as comparison to 'InitialWigner.f'
-!!    @brief This routine samples initial conditions from a Husimi Distribution.
+!!    This routine samples initial conditions from a Husimi Distribution.
+!!
 !!    For each Normal mode we sample from:
-!!    rho(x,p)=exp[ {- Freq^2*(x-x0)^2 - (p-p_0)^2 } / {2*alpha_x}]
-!!    where x, and p are the normal mode position and momentum, respectively.
-!!    The width alpha_x = Freq  for zero temperature
-!!    Note that Normal modes have units of sqrt[mass]*Length
-!!    If indTemperature /=0 then the width is defined as
-!!    Alpha_X=Freq/2*[1+1/Tanh(Beta*Freq/2)] where Beta=1/(Kb*T)
-!!    See [ Liu and Miller, JCP vol 134, Article 104101 (2011) ]
-!!    This is the result for the Husimi distribution at finite temperature
+!!    $$
+!!    \rho(x,p) = \exp\left[ \frac{-f^2*(x-x0)^2 - (p-p_0)^2}{2\alpha_x} \right]
+!!    $$
+!!    where *x* and *p* are the normal mode position and momentum and *f* is frequency.
+!!    The width \(\alpha_x = f \)  for zero temperature.
+!!    Note that normal modes have units of \( \sqrt{m} * \) length
+!!
+!!    For non-zero temperature the width is defined as
+!!
+!!    $$
+!!    \alpha_x = \frac{f}{2} \left( 1 + \frac{1}{\tanh(f\beta/2)} \right)
+!!    $$
+!!
+!!    This is the result for the Husimi distribution at finite temperature.
+!!    See [Liu J. and Miller W. H., JCP, 134, 104101 (2011)](https://doi.org/10.1063/1.3555273)
+!!
 !!    For imaginary frequency problem occured in some molecules or more often
-!!     in clusters and solution, the code needs to be modified with the
-!!     local Gaussian approximation. See [Liu and Miller, JCP vol 131, 074113 (2009)]
-!!    @ingroup initial
+!!    in clusters and solution, the code needs to be modified with the
+!!    local Gaussian approximation.
+!!    See [Liu and Miller, JCP vol 131, 074113 (2009)](https://doi.org/10.1063/1.3202438)
 !<
    subroutine FMS_InitialHusimi(T1, IDNum)
       type(T_Trajectory), intent(inout) :: T1
@@ -425,12 +436,12 @@ contains
       integer(kind=DefInt) :: I, J, K, L, natoms, nfreq, IDim, IParticle
       real(kind=DefReal) :: ZPE, Ekin
 
-!     Read initial positions
+      ! Read initial positions
       do i = 1, qcNumQM
          atomcen(i, 1:3) = T1%Particle(i)%get_pos()
       end do
 
-!     now we can allocate memory
+      ! now we can allocate memory
       natoms = qcNumQM
 
       do i = 1, natoms
@@ -438,15 +449,15 @@ contains
       end do
       call read_frequencies(natoms, Mass, nfreq, freq, Umat)
 
-!     Finally start sampling
+      ! Finally start sampling
       Ekin = 0.0d0
-!     If this is the first trajectory and inzFirstGauss is true place the
-!     basis function at the origin.  It will be shifted to atomcen/atvel below.
+      ! If this is the first trajectory and inzFirstGauss is true place the
+      ! basis function at the origin.  It will be shifted to atomcen/atvel below.
       if (inzFirstGauss .and. IDNum == 1) then
          PosVec = 0.0d0
          Momvec = 0.0d0
       else
-!        Sample from a Gaussian distribution
+         ! Sample from a Gaussian distribution
          rhototal = 1.0d0
          do I = 1, nfreq
             Alphax = freq(i)
@@ -466,21 +477,24 @@ contains
             fac = sqrt(-2.d0 * log(rsq) / rsq)
             x1 = dx1 * fac
             x2 = dx2 * fac
-! Each Normal mode is in Equilibrium in both position and
-! mometum, i.e., x0 and p0 are zero so we just need to "stretch"
-! the random numbers using the proper Sigma.
-! Note that p is the momentum but the normal modes have a unit mass
-! so we do not need to divide by the mass when we go to velocity
+
+            ! Each Normal mode is in Equilibrium in both position and
+            ! mometum, i.e., x0 and p0 are zero so we just need to "stretch"
+            ! the random numbers using the proper Sigma.
+            ! Note that p is the momentum but the normal modes have a unit mass
+            ! so we do not need to divide by the mass when we go to velocity
 
             PosVec(I) = Sigx * x1
             Momvec(I) = Sigp * x2
-! For debugging purpose calculate Kinetic energy
+            ! For debugging purpose calculate Kinetic energy
             Ekin = Ekin + Momvec(i) * Momvec(I)
          end do
       end if
-! Kinetic energy in Normal-Modes
+
+      ! Kinetic energy in Normal-Modes
       Ekin = Ekin * dp5
-!     multiply by U (transform to mass-weighted Cartesian--position/momentum)
+
+      ! multiply by U (transform to mass-weighted Cartesian--position/momentum)
       L = 0
       do I = 1, natoms
          do J = 1, 3
@@ -513,13 +527,13 @@ contains
          end do
       end do
 
-! make sure that COM is at origin and remove COM velocity
+      ! make sure that COM is at origin and remove COM velocity
 
       RCM = d0
       VelCM = d0
       TotMass = d0
 
-! compute the c.o.m and its velocity
+      ! compute the c.o.m and its velocity
       do i = 1, natoms
          TotMass = TotMass + T1%Particle(i)%Mass
          do j = 1, 3
@@ -575,15 +589,17 @@ contains
 
 !>
 !!    Samples initial conditions from a Wigner distribution using a randomly chosen unit vector.
-!!    @note The resulting  distribution seems to be too cold!
+!!
 !!    This version is general and allows for sampling at finite indTemp.
 !!    In this case the width of the Wigner distribution is given by:
+!!    $$
 !!    \f[ \alpha_x = Freq/2*\tanh(\beta*Freq/2) \f] where \f$ \beta=1/(K_bT) \f$
-!!    See Heller JCP, vol, 65, pp. 1289 (1976)
-!!    If indTemperature=0 then \f$ \alpha_x=Freq/2\f$ which is the known result (Note
-!!    that the normal modes have unit mass)
-!!    \see FMS_InitialWigner
-!!    @ingroup initial
+!!    $$
+!!    See [Heller E. J. J. Chem. Phys., vol. 65, pp. 1289-1298 (1976)](https://doi.org/10.1063/1.433238)
+!!    If `indTemperature=0` then \( \alpha_x=\frac{freq}{2}} \)
+!!    which is the known result (Note that the normal modes have unit mass)
+!!
+!!    @warning The resulting  distribution seems to be too cold!
 !<
    subroutine FMS_InitialColdWig(T1, IDNum)
       use EispackModule, only: FMS_ch
@@ -759,7 +775,7 @@ contains
          end do
       end if
 
-! Compute the probability of this Initial condition
+      ! Compute the probability of this Initial condition
       Prob = d1
       do I = 1, nfreq
          Alphax = freq(i) / 2.d0
@@ -768,7 +784,7 @@ contains
       end do
       write (fmiOut, *) 'Probability of These Initial Conditions: ', Prob
       flush (fmiOut)
-!!    transform to mass weighted cartesian coordinates
+      ! Transform to mass weighted cartesian coordinates
       L = 0
       do I = 1, natoms
          do J = 1, 3
@@ -782,8 +798,7 @@ contains
          end do
       end do
 
-! un-mass weight, position and momentum
-
+      ! un-mass weight, position and momentum
       do i = 1, natoms
          do j = 1, 3
             r(i, j) = r(i, j) / sqrt(T1%Particle(I)%Mass)
@@ -791,9 +806,8 @@ contains
          end do
       end do
 
-!    Adding the displacments to the Equilibrium structure
-!    Determine Velocity from Momentum
-
+      ! Adding the displacements to the Equilibrium structure
+      ! Determine Velocity from Momentum
       do i = 1, natoms
          do j = 1, 3
             R(I, J) = atcen(I, J) + R(I, J)
@@ -801,13 +815,13 @@ contains
          end do
       end do
 
-! make sure that COM is at origin and remove COM velocity
+      ! make sure that COM is at origin and remove COM velocity
 
       RCM = d0
       VelCM = d0
       TotMass = d0
 
-! compute the c.o.m and its velocity
+      ! compute the c.o.m and its velocity
       do i = 1, natoms
          TotMass = TotMass + T1%Particle(i)%Mass
          do j = 1, 3
@@ -817,10 +831,10 @@ contains
       end do
       RCM = RCM / TotMass
       VelCM = VelCM / TotMass
-!     amv: Do not remove COM - it interferes with QM/MM
+      ! amv: Do not remove COM - it interferes with QM/MM
       do i = 1, natoms
          do j = 1, 3
-!            R(i,j)=R(i,j)-rcm(j)
+            ! R(i,j)=R(i,j)-rcm(j)
             vel(i, j) = vel(i, j) - velcm(j)
             P(i, j) = vel(i, j) * T1%Particle(i)%Mass
          end do
@@ -856,7 +870,6 @@ contains
 !>
 !!    Samples initial conditions from a quasiclassical
 !!    distribution (I.e. using action-angle variables)
-!!    @ingroup initial
 !<
    subroutine FMS_InitialQuasi(T1)
       type(T_Trajectory), intent(inout) :: T1
@@ -1024,7 +1037,6 @@ contains
 
    !>
    !!    Reads in Frequencies from whatever file format is present
-   !!    @ingroup initial
    !<
    subroutine read_frequencies(natoms, mass, nfreq, freq, Umat)
       use EispackModule, only: FMS_rs

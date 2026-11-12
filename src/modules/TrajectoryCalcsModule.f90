@@ -1,7 +1,7 @@
 !  Copyright Todd J. Martinez and Raphael D. Levine, 1994
 !>
-!! @brief Trajectory class methods that related to electronic structure
-!!         and related calculations.
+!! Trajectory class methods that related to electronic structure
+!! and related calculations.
 !!
 !! Methods for the trajectory class involve communication with the
 !! electronic structure package, and retrieval of electronic structure
@@ -14,7 +14,6 @@
 !! calculated at the current molecular configuration, UpdatePES is
 !! called. This, in turn, calls the appropriate interface to the ESP,
 !! which triggers an electronic structure calculation.
-!! \image latex "../sources/TrajModule.png"
 !<
 module TrajectoryCalcsModule
 
@@ -198,18 +197,15 @@ contains
 !     Do the calculations
 !
 
-      select case (glIModel)
+      select case (gliModel)
 
-      case (TOY)
+      case (glModelType%TOY)
          call FMS_ToyModel(T1)
 
-      case (TEMPLATE)
-         call FMS_InterfaceTemplate(T1)
-
-      case (TC)
+      case (glModelType%TC)
          call RunTerachem(T1, iCalcState, jCalcState, zCalcCoup)
 
-      case (QUANTICS)
+      case (glModelType%QUANTICS)
          call RunQuantics(T1, iCalcState, jCalcState, zCalcCoup)
       case default
          call FMS_DieError('Invalid iModel variable')
@@ -1292,7 +1288,8 @@ contains
 !?>      T1%ESFlags%zIgnoreErrors=.false.
 !?>
 !?>??endif
-!!      end function FMS_CorrectPhaseMolpro
+!      end function FMS_CorrectPhaseMolpro
+
 !>
 !!     Finite difference to get gradient - either forward
 !!     (not recommended for dynamics!) or central.
@@ -1446,165 +1443,6 @@ contains
       end do
 
    end subroutine FMS_QMPCharge
-!>
-!! Run calculation using provided templates
-!<
-   subroutine FMS_InterfaceTemplate(T1)
-      use TemplateModule, only: FMS_RunCommand, tpiGradSign, FMS_WriteInput, FMS_ReadOutput, FMS_TemplateClean
-      use ElecStrucModule, only: esnBasis, eslCIVec, eszAnalyticForces, eszNACoupVec
-      type(T_Trajectory) :: T1
-      integer(kind=DefInt) :: iState, jState, iUnit
-
-      real(kind=DefReal), allocatable, save :: Geom(:), NACV(:)
-      real(kind=DefReal), allocatable, save :: CIVecAll(:), CIVecs(:, :)
-      real(kind=DefReal), allocatable, save :: Orbitals(:, :)
-      integer(kind=DefInt) :: iDim, jDim, iPtcle
-
-!     Copy geometry and write input
-      if (.not. allocated(Geom)) allocate (Geom(T1%NumDimensions))
-      jDim = 0
-      do iPtcle = 1, T1%NumParticles
-         do iDim = 1, T1%Particle(iPtcle)%NumDimensions
-            jDim = jDim + 1
-            Geom(jDim) = T1%Particle(iPtcle)%get_pos(iDim)
-         end do
-      end do
-      if (esnBasis > 0 .and. .not. T1%ESFlags%zESExists) then
-         call FMS_WriteInput(Geom, T1%StateID, 'template.genorb.write')
-      else if (esnBasis > 0) then
-         call FMS_WriteInput(Geom, T1%StateID, 'template.write', &
-                             Orb=T1%ElecStruc%OldOrbitals, CIVec=T1%ElecStruc%OldCIVecs)
-      else
-         call FMS_WriteInput(geom, T1%StateID, 'template.write')
-      end if
-
-!     Call electronic structure routine
-      call FMS_RunCommand(T1%StateID)
-
-!     Get energies
-      call FMS_ReadOutput(T1%ElecStruc%PotEn, T1%StateID, 'template.poten.read')
-      T1%ElecStruc%PotEn = T1%ElecStruc%PotEn + gldEShift
-      T1%ESFlags%zPotEnCurrent = .true.
-
-!     Get forces
-      if (eszAnalyticForces) then
-         call FMS_ReadOutput(T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, :), T1%StateID, 'template.grad.read')
-         ! minus sign because DerivMat stores -force
-         T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, :) = -tpigradsign * T1%ElecStruc%DerivMat(T1%StateID, T1%StateID, :)
-         T1%ESFlags%zDerivCurrent(T1%StateID, T1%StateID) = .true.
-      end if
-
-!     Get non-adiabatic coupling vectors
-      if (eszNACoupVec) then
-!     allocate to read in all ci vecs at once
-         if (.not. allocated(NACV)) allocate (NACV(T1%NumDimensions * (T1%NumStates - 1)))
-         call FMS_ReadOutput(NACV, T1%StateID, 'template.coup.read')
-
-         jState = 0
-         do iState = 1, T1%NumStates
-            if (iState == T1%StateID) cycle
-            jState = jState + 1
-            T1%ElecStruc%DerivMat(T1%StateID, IState, :) = &
-               NACV((jState - 1) * T1%NumDimensions + 1:jState * T1%NumParticles)
-            !Anti-Hermitian
-            T1%ElecStruc%DerivMat(IState, T1%StateID, :) = -T1%ElecStruc%DerivMat(T1%StateID, IState, :)
-            T1%ESFlags%zDerivCurrent(T1%StateID, iState) = .true.
-            T1%ESFlags%zDerivCurrent(iState, T1%StateID) = .true.
-         end do
-      end if
-
-!    Get CI vector
-      if (.not. allocated(CIVecAll)) allocate (CIVecAll(eslCIVec * T1%NumStates))
-      if (.not. allocated(CIVecs)) allocate (CIVecs(T1%NumStates, eslCIVec))
-      call FMS_ReadOutput(CIVecAll, T1%StateID, 'template.civec.read')
-      do iState = 1, T1%NumStates
-         CIVecs(iState, :) = CIVecAll((iState - 1) * eslCIVec + 1:iState * eslCIVec)
-      end do
-
-!     Read orbitals from dump file
-      if (esnBasis > 0) then
-         if (.not. allocated(Orbitals)) then
-            allocate (Orbitals(esnBasis, esnBasis))
-         end if
-         open (file=trim(FMSWorkingDir)//'basis.dat', status='old', newunit=iUnit)
-         if (esnBasis * esnBasis > 99999) then
-            call FMS_DieError('Them are some big orbitals.')
-         end if
-         read (iUnit, *) T1%ElecStruc%OldOrbitals
-         close (iUnit, status='delete')
-      end if
-
-!c$$$!     Read sao matrix from dump file
-!c$$$      if(esnBasis>0 .and. esnCASOrbs>0 .and. nActiveOrbs>0) then
-!c$$$         if(.not. allocated(SAO)) allocate(SAO(esnBasis,esnBasis))
-!c$$$         open(file=trim(FMSWorkingDir)//'SAO.dat',status='old',
-!c$$$     $        newunit=iUnit)
-!c$$$         if(esnBasis*esnBasis > 99999) call FMS_DieError(
-!c$$$     $        'Them are some big orbitals.')
-!c$$$         read(iUnit,*) SAO
-!c$$$         close(iUnit,status='delete')
-!c$$$
-!c$$$!     Re-order orbitals
-!c$$$         do iorbs=esNOrbs-esNCasOrbs+1, esNOrbs
-!c$$$            do jorbs=esNOrbs-esNCasOrbs+1,esNOrbs
-!c$$$               i=iorbs-esNOrbs+esNCasOrbs
-!c$$$               j=jorbs-esNOrbs+esNCasOrbs
-!c$$$               TmpDotP(i,j)=0.0d0
-!c$$$               do ibasis=1,esNBasis
-!c$$$                  do jbasis=1,esNBasis
-!c$$$                     TmpDotP(i,j)=TmpDotP(i,j)+
-!c$$$     $                    Orbitals(iorbs,ibasis)*
-!c$$$     $                    T1%ElecStruc%OldOrbitals(jorbs,
-!c$$$     $                    jbasis)*SAO(ibasis,jbasis)
-!c$$$                  enddo
-!c$$$               enddo
-!c$$$            enddo
-!c$$$         enddo
-!c$$$      do i=1,esNCasOrbs
-!c$$$          ITmp=0
-!c$$$         Tmp=0.0d0
-!c$$$         do j=1,esNCasOrbs
-!c$$$            if (abs(TmpDotP(i,j)).gt.Tmp) then
-!c$$$               ITmp=j
-!c$$$               Tmp=abs(TmpDotP(i,j))
-!c$$$            endif
-!c$$$         enddo
-!c$$$         if ((ITmp.ne.i).and.(Tmp.gt.0.7d0)) then
-!c$$$            Success=.false.
-!c$$$            write(fmiOut,1999)
-!c$$$            write(fmiOut,2000)
-!c$$$            call T1%print_id()
-!c$$$            write(fmiOut,2002) i, iTmp
-!c$$$            do iorbs=1,esNCasOrbs
-!c$$$               write(fmiOut,*) (TmpDotP(iorbs,j),j=1,esNCasOrbs)
-!c$$$            enddo
-!c$$$            write(fmiOut,1999)
-!c$$$            return
-!c$$$         endif
-!c$$$         if (TmpDotP(i,i).lt.0.0d0) then
-!c$$$            Success=.false.
-!c$$$            write(fmiOut,1999)
-!c$$$            write(fmiOut,2000)
-!c$$$            call T1%print_id()
-!c$$$            write(fmiOut,2001) i
-!c$$$            do iorbs=1,esNCasOrbs
-!c$$$               write(fmiOut,*) (TmpDotP(iorbs,j),j=1,esNCasOrbs)
-!c$$$            enddo
-!c$$$            write(fmiOut,1999)
-!c$$$            return
-!c$$$         endif
-!c$$$      enddo
-!c$$$
-!c$$$      endif
-      call FMS_CheckCIVector(T1, CIVecs, T1%ElecStruc%OldCIVecs, T1%NumStates, esLCiVec)
-      T1%ElecStruc%OldCIVecs = CIVecs
-      T1%ESFlags%zESExists = .true.
-      T1%ESFlags%zIgnoreErrors = .false.
-
-!     Clean up template files
-      call FMS_TemplateClean()
-
-   end subroutine FMS_InterfaceTemplate
 
    subroutine FMS_DummySetPosition(Points, NumQM, NumDummy, Weight)
 !-----------------------------------------------------------------------

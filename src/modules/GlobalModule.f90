@@ -1,5 +1,5 @@
 !  Copyright Todd J. Martinez and Raphael D. Levine, 1994
-!> @brief General simulation-defining paramaters and general access function
+!> General simulation-defining paramaters and general access function
 !!
 !! This module contains hard-coded global parameters for every
 !! program run, and a run-time namelist set of parameters that
@@ -47,12 +47,18 @@ module GlobalModule
    integer(kind=DefInt4), parameter :: i4zero = 0 !< 4 byte Integer zero (used to call fms_ranb)
    complex(kind=DefComp), parameter :: c1i = (0.0, 1.0) !< Complex imaginary unit
    integer(kind=DefInt), parameter :: MaxParticles = 1000 !< Maximum number of particles
-! Model integers
-   integer, parameter :: FMSZERO = 0, &
-                         TOY = 0, &
-                         TEMPLATE = 1, &
-                         QUANTICS = 13, &
-                         TC = 14
+
+   !> Enum type for different ways how to get electronic structure
+   type t_ModelType
+      !> Toy analytical potentials, implemented in ToyModule
+      integer(DefInt) :: TOY = 0
+      !> Interface to TeraChem
+      integer(DefInt) :: TC = 1
+      !> Interface to Quantics (currently not implemented)
+      integer(DefInt) :: QUANTICS = 2
+   end type t_ModelType
+
+   type(t_ModelType), parameter :: glModelType = t_ModelType()
 !------------------------------------------------------------
 !     FILE IDENTIFIERS
 !------------------------------------------------------------
@@ -81,13 +87,10 @@ module GlobalModule
 !---------------------------------------------------------------------------
 !                           NAMELIST PARAMETERS
 !---------------------------------------------------------------------------
-!>
-!! \var integer (kind=DefInt) :: GlIModel
-!! Program for calculating electronic structure
-!! -  0 - Fake electronic structure
-!! - 14 - TeraChem
-!<
-   integer(kind=DefInt) :: GlIModel
+
+   !> Specifies how the model / electronic structure
+   !> The available values are specified in glModelType
+   integer(kind=DefInt) :: gliModel
 
 !> \var integer (kind=DefInt) :: GlIMethod
 !! Method for calulating electronic structure.
@@ -447,7 +450,7 @@ contains
          write (fmiOut, '(a)') 'ERROR: '//trim(message)
          flush (fmiOut)
       end if
-      if (gliModel == TC .and. associated(tc_finalize)) then
+      if (gliModel == glModelType%TC .and. associated(tc_finalize)) then
          call tc_finalize()
       end if
       stop 1

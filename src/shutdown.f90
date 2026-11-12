@@ -23,7 +23,7 @@ subroutine FMS_Shutdown(B1, T1, terminate)
    if (present(T1)) call T1%destroy()
 
 !     End MPI Comm
-   if (gliModel == TC .and. associated(tc_finalize)) then
+   if (gliModel == glModelType%TC .and. associated(tc_finalize)) then
       call tc_finalize()
    end if
 
