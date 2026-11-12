@@ -17,6 +17,7 @@
 !> Procedures in this module are not currently hooked up
 !> into the rest of the code.
 module ThermoModule
+   use GlobalModule, only: FMS_DieError
    implicit none
    private
    public :: thermo_init, thermo, thermo_bussi_global, thermo_bussi_local, thermo_NormDist, thermo_MBDist, &
