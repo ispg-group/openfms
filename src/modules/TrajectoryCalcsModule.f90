@@ -197,18 +197,18 @@ contains
 !     Do the calculations
 !
 
-      select case (glIModel)
+      select case (gliModel)
 
-      case (TOY)
+      case (glModelType%TOY)
          call FMS_ToyModel(T1)
 
-      case (TEMPLATE)
+      case (glModelType%TEMPLATE)
          call FMS_InterfaceTemplate(T1)
 
-      case (TC)
+      case (glModelType%TC)
          call RunTerachem(T1, iCalcState, jCalcState, zCalcCoup)
 
-      case (QUANTICS)
+      case (glModelType%QUANTICS)
          call RunQuantics(T1, iCalcState, jCalcState, zCalcCoup)
       case default
          call FMS_DieError('Invalid iModel variable')
