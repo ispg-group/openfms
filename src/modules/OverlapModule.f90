@@ -643,7 +643,6 @@ contains
          else if (.not. (T_i%triplet .and. T_j%triplet)) then ! (2)
             mode = modes%D
          else ! (3)
-!    if( CBFi /= CBFj ) then
             if (is == js) then
                if (CBFi == CBFj) then
                   mode = modes%F
@@ -658,33 +657,26 @@ contains
                end if
             end if
          end if
-!  endif
       end if
 
 !write(fmiOut,*) "Mode =", mode
 !write(fmiOut,*) "Trajectory ",it, " on state ",is," coupled to"
 !write(fmiOut,*) "Trajectory ",jt, " on state ",js," via mode",mode
 
-! check the centroid
       select case (mode)
       case (modes%B, modes%C, modes%D, modes%G, modes%H, modes%I)
-!bfec
+         ! check that the correct centroid was passed
+         ! TODO: We should have a helper function for this
          if (glzCentroids) then
             if (.not. present(T_c)) then
                call FMS_DieError('overlap_V_trajectory :: no centroid passed')
             end if
 
-            ! check that the correct centroid was passed
-!    cent_match = (it==ic .and. jt==jc) .or. (jt==ic .and. it==jc)
             cent_match = (CBFi == ic .and. CBFj == jc) .or. (CBFj == ic .and. CBFi == jc)
-!    cent_match = (i==ic .and. j==jc) .or. (j==ic .and. i==jc)
             if (.not. cent_match) then
                call FMS_DieError('overlap_V_trajectory :: centroids dont match')
             end if
          end if
-
-!WJG - replaced below with UpdateCentroid within PropQCVV
-!   call FMS_InitCentroid( T_i, T_j, T_c )
 
          ! See if the overlap passed
          if (present(S_ij_precalc)) then
@@ -696,7 +688,7 @@ contains
          ! if the overlap is small, set V to 0
          if (abs(S_ij) < gldOLapThresh) then
             V = 0.d0
-!bfec
+
             if (glzCentroids) then
                call FMS_SetIgnoreError(T_c, .true.)
             end if
@@ -715,11 +707,6 @@ contains
             V = V + SPA1_SOC_model(T_i, T_i, S_ij)
          end if
 
-!   write(fmiOut,*) '#########AAAAAAAAAAA###########'
-!   write(fmiOut,*) T_i%TrajID,T_i%StateID
-!   write(fmiOut,*) FMS_PotentialT( T_i )
-!   write(fmiOut,*) '###############################'
-
          if (glzxfaims) then
             bmis = T_i%StateID
             dipole(:) = FMS_Dipole(T_i, bmis)
@@ -733,12 +720,11 @@ contains
          end if
 
       case (modes%B)
-!bfec
+
          if (glzCentroids) then
             V = S_ij * FMS_PotentialT(T_c)
          else
             V = S_ij * 0.5d0 * (FMS_PotentialT(T_i) + FMS_PotentialT(T_j, is))
-            write (fmiout, *) 'Using LI approximation for matrix elements.'
          end if
 
          if (glzxfaims) then
@@ -753,23 +739,16 @@ contains
                 - (dipole(3) + dip_nuc_xf(3)) * ft_xf(3) * S_ij
          end if
 
-!   write(fmiOut,*) '#########BBBBBBBBBBB###########'
-!   write(fmiOut,*) T_i%TrajID,T_i%StateID
-!   write(fmiOut,*) T_j%TrajID,T_j%StateID
-!   write(fmiOut,*) FMS_PotentialT( T_C )
-!   write(fmiOut,*) '###############################'
-
       case (modes%C)
-!bfec
+
          if (glzCentroids) then
             F_ij = FMS_Coupling(T_c, is, js)
             V = -dot_product(F_ij, overlap_dx_M_trajectory(T_i, T_j, S_ij))
          else
             CVec1 = FMS_Coupling(T_i, is, js)
             CVec2 = FMS_Coupling(T_j, is, js)
-! phase should be ok, need to be checked for FMS/TC with CASSCF.
+            ! phase should be ok, need to be checked for FMS/TC with CASSCF.
             F_ij = 0.5d0 * (CVec1 + CVec2)
-            write (fmiout, *) 'Using LI approximation for matrix elements.'
             V = -dot_product(F_ij, overlap_dx_M_trajectory(T_i, T_j, S_ij))
          end if
 
@@ -796,13 +775,6 @@ contains
          if (glzSPA1_SOC_model) then
             V = V + SPA1_SOC_model(T_i, T_j, S_ij)
          end if
-!   write(fmiOut,*) '########DDDD#############'
-!   write(fmiOut,*) 'd',T_i%TrajID,T_j%TrajID,T_i%StateID,T_j%StateID
-!   write(fmiOut,*) Msi,Msj
-!   write(fmiOut,*) 'SOCc',SOC_ij
-!   write(fmiOut,*) S_ij,V
-!   write(fmiOut,*) FMS_PotentialT( T_i ),FMS_PotentialT( T_j, is )
-!   write(fmiOut,*) '#########################'
 
       case (modes%F)
          V = (0.d0, 0.d0)
@@ -817,12 +789,6 @@ contains
          else
             V = S_ij * FMS_PotentialT(T_c)
          end if
-!   write(fmiOut,*) '#########GGGG############'
-!   write(fmiOut,*) 'f',T_i%TrajID,T_j%TrajID,T_i%StateID,T_j%StateID
-!   write(fmiOut,*) FMS_PotentialT( T_c )
-!   write(fmiOut,*) FMS_PotentialT( T_i ),FMS_PotentialT( T_j, is )
-!   write(fmiOut,*) S_ij,V
-!   write(fmiOut,*) '#########################'
 
       case (modes%H)
          if (CBFi == CBFj) then
@@ -832,10 +798,6 @@ contains
             ! Careful here, dot_product( A,B ) = sum( conjg(A)*B )
             V = dot_product(F_ij, overlap_dx_M_trajectory(T_i, T_j, S_ij))
          end if
-!   write(fmiOut,*) '##########HHHH###########'
-!   write(fmiOut,*) 'i',T_i%TrajID,T_j%TrajID,T_i%StateID,T_j%StateID
-!   write(fmiOut,*) F_ij,V
-!   write(fmiOut,*) '#########################'
 
       case (modes%I)
          if (abs(Msi - Msj) > 1) then
@@ -846,12 +808,6 @@ contains
             SOC_ij = FMS_SOCoupling(T_c, is, js, Msi, Msj)
             V = S_ij * SOC_ij
          end if
-!   write(fmiOut,*) '#########IIII############'
-!   write(fmiOut,*) 'j',T_i%TrajID,T_j%TrajID,T_i%StateID,T_j%StateID
-!   write(fmiOut,*) Msi,Msj,CBFi,CBFj
-!   write(fmiOut,*) 'SOCc',SOC_ij
-!   write(fmiOut,*) S_ij,V
-!   write(fmiOut,*) '#########################'
 
       case default
          call FMS_DieError('Invalid mode in overlap_V_trajectory')
