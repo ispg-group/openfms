@@ -1,0 +1,302 @@
+\documentclass[a4paper, 11pt]{scrartcl}
+\usepackage[ngerman, english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+
+\usepackage[top=2cm, bottom=2cm, left=1.5cm, right=1.5cm]{geometry}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[singlespacing]{setspace} 
+\usepackage{achemso}
+
+
+\usepackage{tabulary}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{float} 
+\usepackage{amsmath}
+\usepackage{amstext}
+\usepackage{amssymb}
+\usepackage{cases}
+\usepackage{eulervm}
+\usepackage{newpxtext}
+\usepackage[amsmath,thmmarks]{ntheorem}
+
+\newcommand{\textoverline}[1]{$\overline{\mbox{#1}}$}
+\newcommand{\pfracderiv}[2]{\frac{\partial #1}{\partial #2}}
+\newcommand{\downderiv}[1]{\partial_{#1}}
+\newcommand{\upderiv}[1]{\partial^{#1}}
+\newcommand{\ptderiv}{\partial_t}
+\newcommand{\Ptderiv}[1]{\frac{\partial #1}{\partial t}}
+\newcommand{\tderiv}[1]{\dot{#1}}
+\newcommand{\Tderiv}[1]{\frac{\mathrm{d} #1}{\mathrm{d} t}}
+\newcommand{\derivR}{\nabla_\mathbf{R}}
+\newcommand{\derivRsq}{\derivR^2}
+\newcommand{\parenths}[1]{\left(#1\right)}
+\newcommand{\sqbrackets}[1]{\left[#1\right]}
+\newcommand{\brackets}[1]{\left\{#1\right\}}
+\newcommand{\magnitude}[1]{\left|#1\right|}
+\newcommand{\sqmagnitude}[1]{\left|#1\right|^2}
+\newcommand{\cmplxconj}[1]{#1^*}
+\newcommand{\pow}[2]{ #1^{ #2 } }
+\newcommand{\hrmtnconj}[1]{#1^\dagger}
+\newcommand{\braketl}[2]{\left\langle\left. #1 \right| #2 \right\rangle}
+\newcommand{\braketr}[2]{\left\langle #1 \left| #2 \right.\right\rangle}
+\newcommand{\braketei}[3]{\left\langle #1 \right|\left. #2 \left| #3 \right.\right\rangle}
+\newcommand{\braketeo}[3]{\left\langle #1 \left| #2 \right| #3 \right\rangle}
+\newcommand{\bigbrakete}[3]{\big\langle #1 \big| #2 \big| #3 \big\rangle}
+\newcommand{\Bigbrakete}[3]{\Big\langle #1 \Big| #2 \Big| #3 \Big\rangle}
+\newcommand{\biggbrakete}[3]{\bigg\langle #1 \bigg| #2 \bigg| #3 \bigg\rangle}
+\newcommand{\Biggbrakete}[3]{\Bigg\langle #1 \Bigg| #2 \Bigg| #3 \Bigg\rangle}
+\newcommand{\ket}[1]{\left|#1\right\rangle}
+\newcommand{\bfket}[1]{\left|\mathbf{#1}\right\rangle}
+\newcommand{\bra}[1]{\left\langle #1\right|}
+\newcommand{\bfbra}[1]{\left\langle \mathbf{#1}\right|}
+\newcommand{\ds}[1]{\mathrm{d}#1}
+\newcommand{\dv}[1]{\mathrm{d}\mathbf{#1}}
+\newcommand{\tIm}{\mathrm{Im}}
+\newcommand{\tRe}{\mathrm{Re}}
+\newcommand{\adiablbl}[2]{ #1 ( \mathbf{ #2 } ) }
+\newcommand{\adiabst}[2]{\ket{ #1 ( \mathbf{ #2 } ) } }
+\newcommand{\adiabwf}[2]{\phi_{ #1 } ( \mathbf{ r } \, | \, \mathbf{ #2 } ) }
+\newcommand{\dladiabst}[2]{\bra{ #1 ( \mathbf{ #2 } ) } }
+\newcommand{\dladiabwf}[2]{\cmplxconj{ \phi_{ #1 } } ( \mathbf{ r } \, | \, \mathbf{ #2 } ) }
+\newcommand{\nucamp}[2]{\Omega_{ #1 } ( \mathbf{ #2 }, t ) }
+\newcommand{\pes}[2]{ E_{ \mathrm{ el }, #1 } ( \mathbf{ #2 } ) }
+\newcommand{\hbo}[1]{ \hat{H}_\mathrm{ BO } ( \mathbf{ #1 } ) }
+\newcommand{\nucconf}[1]{ \ket{ \mathbf{ #1 } } }
+\newcommand{\phasefactor}[1]{ S ( \mathbf{ #1 }, t ) }
+\newcommand{\nucdens}[1]{ \rho_\mathrm{ nuc } ( \mathbf{ #1 }, t ) }
+\newcommand{\bhnucdens}[1]{ \sum_k | \nucamp{ k }{ #1 } |^2 }
+\newcommand{\dnucdens}[1]{ \derivR \nucdens{ #1 } }
+\newcommand{\ddnucdens}[1]{ \derivRsq \nucdens{ #1 } }
+\newcommand{\marginal}[1]{ \chi ( \mathbf{ #1 }, t ) } 
+\newcommand{\conditionalst}[1]{ \ket{ \Phi_\mathbf{ #1 } } }
+\newcommand{\conditionalwf}[1]{ \Phi_\mathbf{ #1 } ( \mathbf{ r }, t )  }
+\newcommand{\bhsum}[2]{ \sum_n #1  \adiabwf{ n }{ #2 } }
+\newcommand{\bhdblsum}[2]{ \sum_{ n,  m } #1  \adiabwf{ n }{ #2 } \dladiabwf{ n }{ #2 }  }
+\newcommand{\bhsumk}[2]{ \sum_n #1 \ket{ n ( \mathbf{ #2 } ) } }
+\newcommand{\bhdblsumk}[2]{ \sum_{ n, m } #1  \braketl{ n ( \mathbf{ #2 } ) }{ m ( \mathbf{ #2 } ) } }
+\newcommand{\tbfbraket}[1]{\braketeo{\chi_k^{(I)}}{#1}{\chi^{(J)}_{k'}}_\mathbf{R}}
+
+\title{Unshifted Moments of TBF Pair Distribution Function}
+\author{\vspace{-0.5cm}}
+\date{\vspace{-0.5cm}}
+\begin{document}
+\maketitle
+As always the 1D complex Gaussian wavepackets (CGWPs) of AIMS are of the form 
+\begin{equation}
+    \chi_i(x; q_i, p_i, a_i) = \braketl{x}{q_i, p_i, a_i} = \parenths{\frac{2 a}{\pi}}^{1/4} \exp\parenths{- a (x-q)^2 + 
+    i p (x-q)}\,, 
+\end{equation}
+The overlap between two such Gaussians $\chi_i$ and $\chi_j$ is 
+\begin{equation} 
+    S_{ij}  \equiv \braketl{\chi_i}{\chi_j} = 
+    \sqrt{ \frac{2 \sqrt{a_i a_j}}{a_{ij}} } 
+    \exp\sqbrackets{-\frac{a_i a_j}{a_{ij}} \Delta q_{ij}^2 + i \omega_{ij}  
+    - \frac{ \Delta p_{ji}^2 }{4 a_{ij}} + i q_{ij} \Delta p_{ji} }
+\end{equation}
+To condense the notation slightly we have defined the following variables
+\begin{align}
+    \Delta p_{ji} &= p_j - p_i \\
+    \Delta q_{ij} &= q_i - q_j \\
+    a_{ij} &= a_i + a_j \\
+    q_{ij} &= \frac{a_i q_i + a_j q_j}{a_i + a_j} \\
+    \omega_{ij} &= q_i p_i - q_j p_j\,. 
+\end{align}
+As shall become clearer later we can rewrite the overlap expression ever so slightly
+\begin{equation} 
+    S_{ij} = 
+    \sqrt{ \frac{2 \sqrt{a_i a_j}}{a_{ij}} } 
+    \exp\sqbrackets{-\frac{a_i a_j}{a_{ij}} \Delta q_{ij}^2 + i (q_i p_i - q_j p_j) 
+    + \frac{ (i\Delta p_{ji})^2 }{4 a_{ij}} + i q_{ij} \Delta p_{ji} }\,.
+\end{equation}
+Here we shall focus on the unshifted moments of the (complex) pair distribution function $\chi_i^* 
+\chi_j$, that is, the integrals
+\begin{equation}
+    m_{ij, n} \equiv \bigbrakete{\chi_i}{x^n}{\chi_j} = \int\ds{x}\, x^n 
+    \chi_i^*(x) \chi_j(x)\,.
+\end{equation}
+Plugging the definition of the CGWPs into this expression one can see that
+\begin{align}
+    \nonumber
+    m_{ij, n} &= \sqrt{ \frac{2 \sqrt{a_i a_j}}{\pi} } \int\ds{x}\, 
+    \exp\parenths{-\frac{a_i a_j}{a_{ij}} \Delta q_{ij} + i \omega_{ij} - 
+    a_{ij} (x - q_{ij})^2 + i \Delta p_{ji} x} x^n \\
+    \nonumber
+    &= \sqrt{ \frac{2 \sqrt{a_i a_j}}{\pi} } \int\ds{x}\, \frac{\partial^n}{\partial (i\Delta p_{ji})^n} 
+    \exp\parenths{-\frac{a_i a_j}{a_{ij}} \Delta q_{ij} + i \omega_{ij} - 
+    a_{ij} (x - q_{ij})^2 + i \Delta p_{ji} x} \\
+    \nonumber
+    &= \frac{\partial^n}{\partial (i\Delta p_{ji})^n} \sqbrackets{ 
+    \sqrt{ \frac{2 \sqrt{a_i a_j}}{\pi} } \int\ds{x}\,  
+    \exp\parenths{-\frac{a_i a_j}{a_{ij}} \Delta q_{ij} + i \omega_{ij} - 
+    a_{ij} (x - q_{ij})^2 + i \Delta p_{ji} x} }\\
+    &= \frac{\partial^n}{\partial (i\Delta p_{ji})^n} S_{ij}
+\end{align}
+The derivatives are straight forward to calculate, as we shall now do 
+\begin{equation}
+    m_{ij, n} = \frac{\partial^n}{\partial (i\Delta p_{ji})^n} S_{ij} 
+    = \frac{\partial^{n-1}}{\partial (i\Delta p_{ji})^{n-1}} 
+    \sqbrackets{\parenths{\frac{i\Delta p_{ji}}{2 a_{ij}} + q_{ij}} S_{ij}} \,.
+\end{equation}
+Denoting $z_{ij} = \frac{i\Delta p_{ji}}{2 a_{ij}} + q_{ij}$, it is clear then that
+$m_{ij, 1} = z_{ij} S_{ij}$, which is the first moment. Using the chain-rule we get  
+\begin{align}
+    \nonumber
+    m_{ij, n} &= \frac{\partial^{n-1}}{\partial (i\Delta p_{ji})^{n-1}} 
+    \sqbrackets{z_{ij} S_{ij}} \\ 
+    \nonumber
+    &= \frac{\partial^{n-2}}{\partial (i\Delta p_{ji})^{n-2}}  
+    \sqbrackets{ S_{ij} \frac{\partial}{\partial (i\Delta p_{ji})} z_{ij} + z_{ij} 
+    \frac{\partial}{\partial (i\Delta p_{ji})}  S_{ij} } \\
+    \nonumber
+    &=  \frac{\partial^{n-2}}{\partial (i\Delta p_{ji})^{n-2}}  
+    \sqbrackets{ S_{ij} \frac{1}{2 a_{ij}} + z^2_{ij}  S_{ij} } \\ 
+    &=  \frac{\partial^{n-2}}{\partial (i\Delta p_{ji})^{n-2}}  
+    \sqbrackets{ \parenths{z^2_{ij} + \frac{1}{2 a_{ij}}} S_{ij} } 
+\end{align}
+Thus $m_{ij, 2} = \parenths{z^2_{ij} + \frac{1}{2 a_{ij}}} S_{ij}$. Going to the 
+next order we get
+\begin{align}
+    \nonumber
+    m_{ij, n} &= \frac{\partial^{n-2}}{\partial (i\Delta p_{ji})^{n-2}} 
+    \sqbrackets{ \parenths{z^2_{ij} + \frac{1}{2 a_{ij}}} S_{ij} }\\
+    \nonumber
+    &= \frac{\partial^{n-3}}{\partial (i\Delta p_{ji})^{n-3}} 
+    \sqbrackets{ 2 z_{ij} \frac{1}{2 a_{ij}} S_{ij} + \parenths{z^2_{ij} + \frac{1}{2 a_{ij}}} z_{ij} S_{ij}} \\ 
+    &= \frac{\partial^{n-3}}{\partial (i\Delta p_{ji})^{n-3}} 
+    \sqbrackets{ \parenths{z^3_{ij} + 3 z_{ij} \frac{1}{2 a_{ij}}}  S_{ij}}\,, 
+\end{align}
+that is, $m_{ij, 3} = \parenths{z^3_{ij} + 3 z_{ij} \frac{1}{2 a_{ij}}}  S_{ij}$.
+\begin{align}
+    \nonumber
+    m_{ij, n} &= \frac{\partial^{n-3}}{\partial (i\Delta p_{ji})^{n-3}} 
+    \sqbrackets{ \parenths{z^3_{ij} + 3 z_{ij} \frac{1}{2 a_{ij}}}  S_{ij} }\\
+    \nonumber
+    &= \frac{\partial^{n-4}}{\partial (i\Delta p_{ji})^{n-4}} 
+    \sqbrackets{ \parenths{3 z^2_{ij} \frac{1}{2 a_{ij}} + 3 \frac{1}{(2 a_{ij})^2}} S_{ij} 
+    + \parenths{z^3_{ij} + 3 z_{ij} \frac{1}{2 a_{ij}}} z_{ij} S_{ij}} \\ 
+    &= \frac{\partial^{n-4}}{\partial (i\Delta p_{ji})^{n-4}} 
+    \sqbrackets{ \parenths{z^4_{ij} + 6 z_{ij}^2 \frac{1}{2 a_{ij}} + 3 \frac{1}{(2 a_{ij})^2}}  S_{ij}}\,, 
+\end{align}
+so $m_{ij, 4} = \parenths{z^4_{ij} + 6 z_{ij}^2 \frac{1}{2 a_{ij}} + 3 \frac{1}{(2 a_{ij})^2}}  
+S_{ij}$.  
+\begin{align}
+    \nonumber
+    m_{ij, n} &= \frac{\partial^{n-4}}{\partial (i\Delta p_{ji})^{n-4}} 
+    \sqbrackets{ \parenths{ z^4_{ij} + 6 z_{ij}^2 \frac{1}{2 a_{ij}} + 3 \frac{1}{(2 a_{ij})^2} }  S_{ij} }\\
+    \nonumber
+    &= \frac{\partial^{n-5}}{\partial (i\Delta p_{ji})^{n-5}} 
+    \sqbrackets{ \parenths{4 z^3_{ij} \frac{1}{2 a_{ij}} + 12 z_{ij} \frac{1}{(2 a_{ij})^2} } S_{ij} 
+    + \parenths{ z^4_{ij} + 6 z_{ij}^2 \frac{1}{2 a_{ij}} + 3 \frac{1}{(2 a_{ij})^2} } z_{ij} S_{ij}} \\ 
+    &= \frac{\partial^{n-5}}{\partial (i\Delta p_{ji})^{n-5}} 
+    \sqbrackets{ \parenths{z^5_{ij} + 10 z_{ij}^3 \frac{1}{2 a_{ij}} + 15 z_{ij} \frac{1}{(2 a_{ij})^2}}  S_{ij}}\,, 
+\end{align}
+thus  $m_{ij, 5} = \parenths{z^5_{ij} + 10 z_{ij}^3 \frac{1}{2 a_{ij}} + 15 z_{ij} 
+\frac{1}{(2 a_{ij})^2}} S_{ij}$. The next order should make clear the pattern that is emerging from
+these derivatives:
+\begin{align}
+    \nonumber
+    m_{ij, n} &= \frac{\partial^{n-4}}{\partial (i\Delta p_{ji})^{n-4}} 
+    \sqbrackets{ \parenths{z^5_{ij} + 10 z_{ij}^3 \frac{1}{2 a_{ij}} + 15 z_{ij} 
+    \frac{1}{(2 a_{ij})^2}}  S_{ij} }\\
+    \nonumber
+    &= \frac{\partial^{n-6}}{\partial (i\Delta p_{ji})^{n-6}} 
+    \sqbrackets{ \parenths{ 5 z^4_{ij} \frac{1}{2 a_{ij}} 
+    + 30 z_{ij}^2 \frac{1}{(2 a_{ij})^2} + 15 \frac{1}{(2 a_{ij})^3}}
+    S_{ij} + \parenths{z^5_{ij} + 10 z_{ij}^3 \frac{1}{2 a_{ij}} + 15 z_{ij} \frac{1}{(2 a_{ij})^2}} 
+    z_{ij} S_{ij}} \\ 
+    &= \frac{\partial^{n-6}}{\partial (i\Delta p_{ji})^{n-6}} 
+    \sqbrackets{ \parenths{z^6_{ij} + 15 z_{ij}^4 \frac{1}{2 a_{ij}} 
+    + 45 z_{ij}^2 \frac{1}{(2 a_{ij})^2} + 15 \frac{1}{(2 a_{ij})^3}}  S_{ij}}\,, 
+\end{align}
+hence $m_{ij, 6} = \parenths{z^6_{ij} + 15 z_{ij}^4 \frac{1}{2 a_{ij}} + 45 z_{ij}^2 \frac{1}{(2 
+a_{ij})^2} + 15 \frac{1}{(2 a_{ij})^3}}  S_{ij}$. It is not hard to see that 
+\begin{equation}
+    m_{ij, n} = S_{ij} \sum_{k=0}^{\lfloor n/2 \rfloor} T(n, k) z_{ij}^{n-2k} \frac{1}{(2 a_{ij})^k} 
+    \label{eq:moment}
+\end{equation}
+where the coefficients $T(n,k)$ are the so-called Bessel numbers. To find some kind of pattern in
+them we can look at a table of the coefficients of the $n$-th moments up to $n=9$. If no number is 
+written, $T(n,k) = 0$.
+\begin{table}[H]
+    \centering
+    \begin{tabular}{c | c c c c c c c c c}
+     & $k=0$ & $k=1$ & $k=2$ & $k=3$ & $k=4$ & $k=5$\\ 
+     \hline
+    $n=1$ & 1 &  \\
+    $n=2$ & 1 & 1 \\
+    $n=3$ & 1 & 3 \\
+    $n=4$ & 1 & 6 & 3 \\
+    $n=5$ & 1 & 10 & 15 \\
+    $n=6$ & 1 & 15 & 45 & 15 \\
+    $n=7$ & 1 & 21 & 105 & 105 \\
+    $n=8$ & 1 & 28 & 210 & 420 & 105 \\
+    $n=8$ & 1 & 36 & 378 & 1260 & 945 \\
+    $n=9$ & 1 & 45 & 630 & 3150 & 4725 & 945 \\
+    $n=9$ & 1 & 55 & 990 & 6930 & 17325 & 10395 \\
+    \end{tabular}
+\end{table}
+A couple of things should immediately catch ones eye: at even $n$ the number
+of nonzero coefficients increases by one with respect to the previous odd order.
+Furthermore, we can see that 
+\begin{equation}
+    T(n,k) = T(n-1, k-1) (n-1 - 2(k-1)) + T(n-1,k) \quad \forall n>1, k \in \{1,2,\ldots, \lfloor n/2 \rfloor\}
+\end{equation}
+and that $\forall n > 1: T(n,0) = T(n-1,0) = 1 $.
+To convince oneself of this recursion it is good to look at some examples: 
+$\mathrm{LHS} = T(5, 2) = 15$, $\mathrm{RHS} = T(4,1) (4 - 2) + T(4,2) = 6 \cdot 2 + 3 = 15$; 
+$\mathrm{LHS} = T(6, 2) = 45$, $\mathrm{RHS} = T(5,1) (6 - 2) + T(5,2) = 10 \cdot 3 + 15 = 45$;
+etc. We shall now prove the validity of Eq~\eqref{eq:moment} for all orders of $n$ by induction.
+To be precise, since we have already looked at the base cases, we need only to show that at 
+any $n$ given
+\begin{equation}
+    m_{ij, n} = S_{ij} \sum_{k=0}^{\lfloor n/2 \rfloor} T(n, k) z_{ij}^{n-2k} \frac{1}{(2 a_{ij})^k}
+\end{equation}
+that at $n+1$
+\begin{equation}
+    m_{ij, n+1} = S_{ij} \sum_{k=0}^{\lfloor n/2 \rfloor} T(n+1, k) z_{ij}^{n+1-2k} 
+    \frac{1}{(2 a_{ij})^k}
+\end{equation}
+with $\forall k \in \{1,2,\ldots, \lfloor n/2 \rfloor\}: T(n+1,k) = T(n, k-1) (n-1 - 2(k-1)) + T(n,k)$ and $T(n+1, 0) = T(n,0)$. 
+We already know that
+\begin{equation}
+    m_{ij, n+1} = \frac{\partial}{\partial (i\Delta p_{ji})} m_{ij, n}\,, 
+\end{equation}
+holds so we can simply plug in the expression for the $n$-th moment~\eqref{eq:moment} to get
+\begin{align*}
+    m_{ij, n+1} &= \frac{\partial}{\partial (i\Delta p_{ji})} S_{ij} \sum_{k=0}^{\lfloor n/2 \rfloor} 
+    T(n, k) z_{ij}^{n-2k} \frac{1}{(2 a_{ij})^k} 
+    + S_{ij} \sum_{k=0}^{\lfloor n/2 \rfloor}  T(n, k) \frac{\partial}{\partial (i\Delta p_{ji})} 
+    z_{ij}^{n-2k} \frac{1}{(2 a_{ij})^k} \\
+    &= z_{ij} S_{ij} \sum_{k=0}^{\lfloor n/2 \rfloor} 
+    T(n, k) z_{ij}^{n-2k} \frac{1}{(2 a_{ij})^k} 
+    + S_{ij} \sum_{k=0}^{\lfloor n/2 \rfloor}  T(n, k) (n-2k) z_{ij}^{n-1-2k} \frac{1}{(2 a_{ij})^{k+1}} \\
+\end{align*}
+which after some index reshuffling becomes 
+\begin{align}   
+    \nonumber
+    m_{ij, n+1} 
+    &= S_{ij} \sum_{k=0}^{\lfloor n/2 \rfloor} 
+    T(n, k) z_{ij}^{n+1-2k} \frac{1}{(2 a_{ij})^k} 
+    + S_{ij} \sum_{k=0}^{\lfloor n/2 \rfloor}  T(n, k) (n-2k) z_{ij}^{n-1-2k} 
+    \frac{1}{(2 a_{ij})^{k+1}} \\
+    \nonumber
+    &= S_{ij} \sum_{k=0}^{\lfloor n/2 \rfloor} 
+    T(n, k) z_{ij}^{n+1-2k} \frac{1}{(2 a_{ij})^k} 
+    + S_{ij} \sum_{k=1}^{\lfloor n/2 \rfloor}  T(n, k-1) (n-2(k-1)) z_{ij}^{n-1-2(k-1)} 
+    \frac{1}{(2 a_{ij})^{k}}\\
+    \nonumber
+    &= S_{ij} \sum_{k=0}^{\lfloor n/2 \rfloor} 
+    T(n, k) z_{ij}^{n+1-2k} \frac{1}{(2 a_{ij})^k} 
+    + S_{ij} \sum_{k=1}^{\lfloor n/2 \rfloor}  T(n, k-1) (n-2(k-1)) z_{ij}^{n+1-2k} 
+    \frac{1}{(2 a_{ij})^{k}}\\
+    &= S_{ij} \sum_{k=0}^{\lfloor n/2 \rfloor}  T(n+1, k) z_{ij}^{n+1-2k} \frac{1}{(2 a_{ij})^k}
+\end{align}
+with $T(n+1,0)=T(n,0)$ and $\forall k \in \{1,2,\ldots, \lfloor n/2 \rfloor\}: T(n+1, k) = T(n, k-1)
+(n - 2(k-1)) + T(n,k)$ which is exactly what we wanted to show.  
+\end{document}

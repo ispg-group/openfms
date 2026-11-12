@@ -2,7 +2,7 @@ module test_overlap
    use testdrive, only: new_unittest, unittest_type, error_type, check
    use testutils, only: check_dieerror_called
    use GlobalModule, only: DefReal, DefInt, fmiOut
-   use OverlapModule, only: overlap, overlap_S_dot
+   use OverlapModule, only: overlap, overlap_S_dot, generate_bessel_number_row
    use TrajectoryModule
    implicit none
    private
@@ -19,7 +19,8 @@ contains
       type(unittest_type), allocatable, intent(out) :: testsuite(:)
 
       testsuite = [ &
-                  new_unittest('overlap_S_dot', test_overlap_S_dot) &
+                  new_unittest('overlap_S_dot', test_overlap_S_dot), &
+                  new_unittest('generate_bessel_number_row', test_generate_bessel_number_row) &
                   ]
 
    end subroutine collect_overlap_suite
@@ -134,5 +135,54 @@ contains
 
       open (newunit=output_unit, file='/dev/null', action='write')
    end function open_dev_null
+
+   subroutine test_generate_bessel_number_row(error)
+      type(error_type), allocatable, intent(out) :: error
+      integer(kind=DefInt), allocatable :: expected_array(:)
+      integer(kind=DefInt), allocatable :: output_array(:)
+
+      integer(kind=DefInt) :: n, n_rows
+
+      n = 4
+      n_rows = 1 + floor(n / 2.0d0)
+      allocate (expected_array(n_rows), output_array(n_rows))
+      expected_array = [1, 6, 3]
+      call generate_bessel_number_row(n, n_rows, output_array)
+      call check(error, all(output_array == expected_array), 'Bessel numbers are incorrect')
+      deallocate (expected_array, output_array)
+
+      n = 5
+      n_rows = 1 + floor(n / 2.0d0)
+      allocate (expected_array(n_rows), output_array(n_rows))
+      expected_array = [1, 10, 15]
+      call generate_bessel_number_row(n, n_rows, output_array)
+      call check(error, all(output_array == expected_array), 'Bessel numbers are incorrect')
+      deallocate (expected_array, output_array)
+
+      n = 6
+      n_rows = 1 + floor(n / 2.0d0)
+      allocate (expected_array(n_rows), output_array(n_rows))
+      expected_array = [1, 15, 45, 15]
+      call generate_bessel_number_row(n, n_rows, output_array)
+      call check(error, all(output_array == expected_array), 'Bessel numbers are incorrect')
+      deallocate (expected_array, output_array)
+
+      n = 7
+      n_rows = 1 + floor(n / 2.0d0)
+      allocate (expected_array(n_rows), output_array(n_rows))
+      expected_array = [1, 21, 105, 105]
+      call generate_bessel_number_row(n, n_rows, output_array)
+      call check(error, all(output_array == expected_array), 'Bessel numbers are incorrect')
+      deallocate (expected_array, output_array)
+
+      n = 8
+      n_rows = 1 + floor(n / 2.0d0)
+      allocate (expected_array(n_rows), output_array(n_rows))
+      expected_array = [1, 28, 210, 420, 105]
+      call generate_bessel_number_row(n, n_rows, output_array)
+      call check(error, all(output_array == expected_array), 'Bessel numbers are incorrect')
+      deallocate (expected_array, output_array)
+
+   end subroutine test_generate_bessel_number_row
 
 end module test_overlap
