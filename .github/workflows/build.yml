@@ -196,7 +196,7 @@ jobs:
 
 
   qml_build:
-    name: QML build (${{ matrix.toolchain.compiler }}-${{ matrix.toolchain.version }})
+    name: QML build (${{ matrix.toolchain.compiler }}-${{ matrix.toolchain.version }}) (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
