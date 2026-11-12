@@ -9,7 +9,6 @@ set(OPENFMS_CORE_SOURCES
   src/modules/QM_MM_Module.f90
   src/modules/TrajectoryModule.f90
   src/modules/ToyModelModule.f90
-  src/modules/TemplateModule.f90
   src/modules/TerachemModule.F90
   src/modules/QuanticsModule.F90
   src/modules/SMDModule.f90
