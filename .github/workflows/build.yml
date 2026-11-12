@@ -220,7 +220,7 @@ jobs:
       run: ./configure.sh qml
 
     - name: Build
-      run: make -j
+      run: make
 
     - name: Unit tests
       run: make unittest
