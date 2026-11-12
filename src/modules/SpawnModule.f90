@@ -25,25 +25,25 @@ module SpawnModule
 
    !> Parameters controlling the spawning algorithm
    type :: t_spawn_params
-      !> threshold for entry to  spawn regions
-      real(kind=DefReal) :: CSThresh
+      !> threshold for entry to spawn regions
+      real(kind=DefReal) :: CSThresh = 0.1
       !> threshold for exit from spawn regions
-      real(kind=DefReal) :: CFThresh
+      real(kind=DefReal) :: CFThresh = 0.005
       !> min pop to bother with a spawn
-      real(kind=DefReal) :: PopToSpawn
+      real(kind=DefReal) :: PopToSpawn = 0.1
       !> OMax_inter is a maximum overlap between parent trajectory
       !> and any existing trajectory on the target state.
       !> If this overlap is bigger than OMax_intra, we don't enter
       !> the spawning procedure.
       !> NOTE: This parameter is critical to prevent spawning
       !> right after a spawning event.
-      real(kind=DefReal) :: OMax_inter
+      real(kind=DefReal) :: OMax_inter = OMAX_DEFAULT
       !> OMax_intra is a maximum overlap that we allow between the child TBF
       !> and any other pre-existing TBFs on the same electronic state.
       !> If the overlap is larger than this threshold, we abort the spawning procedure
       !> so that we don't produce essentially equivalent TBFs.
       !> NOTE: The overlap check happens after child backpropagation.
-      real(kind=DefReal) :: OMax_intra
+      real(kind=DefReal) :: OMax_intra = OMAX_DEFAULT
       !> OMin_parent is a minimum overlap between child and parent
       !> If the overlap between the parent and the child TBFs at t_spawn
       !> is below this threshold, we abort the spawn.
@@ -51,20 +51,22 @@ module SpawnModule
       !> in the coordinate space is 1 by definition,
       !> but can be less than 1 in momentum space due to
       !> velocity rescaling along the NAC vector.
-      real(kind=DefReal) :: OMin_parent
+      real(kind=DefReal) :: OMin_parent = OMAX_DEFAULT
       !> Maximum number of trajectories
-      integer(kind=DefInt) :: MaxTraj
+      !> If set to 0, it is set to MaxTrajLimit
+      integer(kind=DefInt) :: MaxTraj = 0
       !> Flag determining if continuous spawning (0) or single spawning (1) is employed
-      integer(kind=DefInt) :: MultiSpawn
+      integer(kind=DefInt) :: MultiSpawn = 1
       !> Flag deteriming wether to return either coupling .dot. velocity or norm of coupling
-      logical :: SpawnCoupV
+      logical :: SpawnCoupV = .false.
       !> threshhold to SOC Norm for spawning
-      real(kind=DefReal) :: SOCThresh
+      real(kind=DefReal) :: SOCThresh = 0.0d0
    contains
-      procedure, public :: initialize => initialize_spawn_params
+      procedure, public :: set => set_spawn_params
    end type t_spawn_params
 
-   type(t_spawn_params) :: spawn_params
+   ! Initialize spawn parameters to their default values.
+   type(t_spawn_params) :: spawn_params = t_spawn_params()
 
 ! TODO: Make the module private by default
    public
@@ -75,8 +77,8 @@ module SpawnModule
 
 contains
 
-   subroutine initialize_spawn_params(self, CSThresh, CFThresh, PopToSpawn, OMax_inter, OMax_intra, &
-                                      OMin_parent, SOCThresh, MaxTraj, MultiSpawn, SpawnCoupV)
+   subroutine set_spawn_params(self, CSThresh, CFThresh, PopToSpawn, OMax_inter, OMax_intra, &
+                               OMin_parent, SOCThresh, MaxTraj, MultiSpawn, SpawnCoupV)
       class(t_spawn_params), intent(inout) :: self
       real(kind=DefReal), intent(in) :: CSThresh, CFThresh, PopToSpawn, OMax_inter, &
                                         OMax_intra, OMin_parent, SOCThresh
@@ -93,7 +95,7 @@ contains
       self%MaxTraj = MaxTraj
       self%MultiSpawn = MultiSpawn
       self%SpawnCoupV = SpawnCoupV
-   end subroutine initialize_spawn_params
+   end subroutine set_spawn_params
 
    subroutine print_spawning_parameters(unit)
       integer, intent(in) :: unit
