@@ -305,8 +305,6 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    AnalysisMode = .false.
    Brown = .false.
    BrownCon = .false.
-   CFThresh = 0.005
-   CSThresh = 0.1
    Constrain = .false.
    DGamma = 0.0d0
    EnergyAdjust = .false.
@@ -374,21 +372,23 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    NumInitBasis = 1
    nums = 0
    NumStates = -1
-!     OMAX_DEFAULT is defined in SpawnModule
+
+   ! Spawning parameters
+   CFThresh = spawn_params%CFThresh
+   CSThresh = spawn_params%CSThresh
+   SpawnCoupV = spawn_params%SpawnCoupV
+   PopToSpawn = spawn_params%PopToSpawn
+   SOCThresh = spawn_params%SOCThresh
    OMax = OMAX_DEFAULT
+   ! We use sentinel valued for these to see if user set them in Control.dat or not.
+   ! They are set to OMax if the user haven't set them.
    OMax_intra = -1
    OMax_inter = -1
    OMin_parent = -1
-   PopToSpawn = 0.1
-!      QIniKvec=24*0.0
-!      QIniPos=24*0.0
+
    RegThresh = 0.0001
-!      Reject=0.7
    SimulationTime = -1.0d0
    SharpEnergy = .false.
-   SpawnCoupV = .false.
-!      TDB=.false.
-!      TDBOMax=0.5
    Temperature = 0.0d0
    TimeStep = -1.0d0
    WriteMolden = .false.
@@ -461,7 +461,6 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
 ! GAIMS added
    NumSinglets = -1
    NumTriplets = 0
-   SOCThresh = 0.d0
    ShiftTrip = 0.d0
    SPA1_SOC_model = .false.
 ! GAIMS added end
@@ -707,9 +706,9 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
       MaxTraj = MaxTrajLimit
    end if
 
-   call spawn_params%initialize(CSThresh=CSThresh, CFThresh=CFThresh, PopToSpawn=PopToSpawn, OMax_inter=OMax_inter, &
-                                OMax_intra=OMax_intra, OMin_parent=OMin_parent, SOCThresh=SOCThresh, MaxTraj=MaxTraj, &
-                                MultiSpawn=MultiSpawn, SpawnCoupV=SpawnCoupV)
+   call spawn_params%set(CSThresh=CSThresh, CFThresh=CFThresh, PopToSpawn=PopToSpawn, OMax_inter=OMax_inter, &
+                         OMax_intra=OMax_intra, OMin_parent=OMin_parent, SOCThresh=SOCThresh, MaxTraj=MaxTraj, &
+                         MultiSpawn=MultiSpawn, SpawnCoupV=SpawnCoupV)
 
 !     Copy QM/MM variables into QM_MM_Module
    qcZQMMM = ZQMMM
