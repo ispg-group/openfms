@@ -21,7 +21,7 @@ module SpawnModule
    !> To preserve the semantics of existing input files,
    !> OMax_intra, OMax_inter and OMin_parent are assigned the OMax value
    !> unless the user provides their value in Control.dat
-   real(kind=DefReal), parameter :: OMAX_DEFAULT = 0.8
+   real(kind=DefReal), parameter, public :: OMAX_DEFAULT = 0.8
 
    !> Parameters controlling the spawning algorithm
    type :: t_spawn_params
@@ -63,17 +63,15 @@ module SpawnModule
       real(kind=DefReal) :: SOCThresh = 0.0d0
    contains
       procedure, public :: set => set_spawn_params
+      procedure, public :: print => print_spawn_params
    end type t_spawn_params
 
    ! Initialize spawn parameters to their default values.
-   type(t_spawn_params) :: spawn_params = t_spawn_params()
+   type(t_spawn_params), public :: spawn_params = t_spawn_params()
 
-! TODO: Make the module private by default
-   public
-   public :: spawn_params, FMS_Spawn, spawn_couple, FMS_SpawnDCouple, print_spawning_parameters
-   private :: propagate_forward_overlap, propagate_backward
-   private :: propagate_cont_spawn, propagate_recursive
-   private :: FMS_AdjustEnergy2, adjust_child_energy, write_spawn_log
+   private
+   public :: FMS_Spawn, spawn_couple, FMS_SpawnDCouple
+   public :: FMS_AdjustEnergy
 
 contains
 
@@ -97,46 +95,40 @@ contains
       self%SpawnCoupV = SpawnCoupV
    end subroutine set_spawn_params
 
-   subroutine print_spawning_parameters(unit)
+   subroutine print_spawn_params(self, unit)
+      class(t_spawn_params), intent(inout) :: self
       integer, intent(in) :: unit
       write (unit, '(a30)') 'SPAWNING PARAMETERS'
-      write (unit, '(a14,i7  ,a)') 'maxTraj:    ', spawn_params%MaxTraj, ' (Max number of Trajectories)'
-      write (unit, '(a14,f7.4,a)') 'OMin_parent:', spawn_params%OMin_parent, ' (Min parent-child overlap to spawn)'
-      write (unit, '(a14,f7.4,a)') 'OMax_inter: ', spawn_params%OMax_inter, ' (Max overlap between parent and existing TBFs)'
-      write (unit, '(a14,f7.4,a)') 'OMax_intra: ', spawn_params%Omax_intra, ' (Max overlap between child and existing TBFs)'
-      write (unit, '(a14,f7.4,a)') 'CSThresh:   ', spawn_params%CSThresh, ' (Coupling threshold to enter spawning region)'
-      write (unit, '(a14,f7.4,a)') 'CFThresh:   ', spawn_params%CFThresh, ' (Coupling threshold to exit spawning region)'
-      write (unit, '(a14,f7.4,a)') 'PopToSpawn: ', spawn_params%PopToSpawn, ' (Min population to Spawn)'
-   end subroutine print_spawning_parameters
+      write (unit, '(a14,i7  ,a)') 'maxTraj:    ', self%MaxTraj, ' (Max number of Trajectories)'
+      write (unit, '(a14,f7.4,a)') 'OMin_parent:', self%OMin_parent, ' (Min parent-child overlap to spawn)'
+      write (unit, '(a14,f7.4,a)') 'OMax_inter: ', self%OMax_inter, ' (Max overlap between parent and existing TBFs)'
+      write (unit, '(a14,f7.4,a)') 'OMax_intra: ', self%Omax_intra, ' (Max overlap between child and existing TBFs)'
+      write (unit, '(a14,f7.4,a)') 'CSThresh:   ', self%CSThresh, ' (Coupling threshold to enter spawning region)'
+      write (unit, '(a14,f7.4,a)') 'CFThresh:   ', self%CFThresh, ' (Coupling threshold to exit spawning region)'
+      write (unit, '(a14,f7.4,a)') 'PopToSpawn: ', self%PopToSpawn, ' (Min population to Spawn)'
+   end subroutine print_spawn_params
 
-!!    Driver for spawning algorithm
-!!
-!!    Determines if a spawn is required.  If so, this routine will
-!!    perform all the necessary logic to tile the phase space with
-!!    virtual trajectories, which are added to the trajectory bundle.
-!!    Odds are that this is by far the most complex piece of code in the
-!!    FMS program and it is certainly the most crucial routine.
-!!
-!!    If a timestep is rejected during the spawn, we divide the timestep
-!!    in half and retry the spawn.
-!!    \param TimeStep Time step to use during spawning
-!!    @ingroup spawning
-
-! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   !> Main driver for the spawning algorithm
+   !>
+   !> Determines if a spawn is required.  If so, this routine will
+   !> perform all the necessary logic to tile the phase space with
+   !> virtual trajectories, which are added to the trajectory bundle.
+   !> Odds are that this is by far the most complex piece of code in the
+   !> FMS program and it is certainly the most crucial routine.
+   !>
+   !> If a timestep is rejected during the spawn, we divide the timestep
+   !> in half and retry the spawn.
    subroutine FMS_Spawn(B1, TimeStep)
-! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-!
-!  parent_i ---> parent_s ----> parent_f
-!                |
-!               \/
-!  child_i  <--- child_s -----> child_f
-!
-      use ElecStrucModule
       use SelectionModule, only: FMS_CalculateSelectionTime
 
       type(T_TrajectoryBundle), target, intent(inout) :: B1
+      !> Time step to use during spawning
       real(kind=DefReal), intent(in) :: TimeStep
 
+      !  parent_i ---> parent_s ----> parent_f
+      !                |
+      !               \/
+      !  child_i  <--- child_s -----> child_f
       type(T_Trajectory) :: parent_i, parent_s, parent_f, &
                             child_i, child_s, child_f
 
@@ -879,26 +871,22 @@ contains
 
    end subroutine adjust_child_energy
 
-! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    subroutine FMS_AdjustEnergy2(child, parent, COUP_FIELD, COUP_CI, success, scale_in)
-! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-!!    Adjust kinetic energy of child such that total energy of
-!!    child and parent are identical.
-!!    @ingroup spawning
-!!    @param child  Trajectory to be adjusted
-!!    @param parent Trajectory providing reference energy
-!!    @param scale_in (optional) dictates the direction along which
-!!    the momentum adjustment will be applied.  The default is to choose
-!!    this direction as the momentum vector itself, i.e. scale all
-!!    momentum components equally.
-!!    @return Success or failure. Fails only if
-!!    kinetic energy becomes negative (frustrated) or
-!!    scale factor becomes complex
-!!
-!<
+      !! Adjust kinetic energy of child such that total energy of
+      !! child and parent are identical.
+      !!
+      !! Returns Success or failure. Fails only if
+      !! kinetic energy becomes negative (frustrated) or
+      !! scale factor becomes complex
+
+      !> Trajectory to be adjusted
       type(T_Trajectory), intent(inout) :: child
+      !> Trajectory providing reference energy
       type(T_Trajectory), intent(in) :: parent
       logical, intent(inout), optional :: success
+      !> Dictates the direction along which the momentum adjustment will be applied.
+      !> The default is to choose this direction as the momentum vector itself,
+      !> i.e. scale all momentum components equally.
       real(kind=DefReal), intent(in), optional :: scale_in(child%NumDimensions)
 
       logical :: split_momentum ! if true, a component of the momentum
@@ -1170,20 +1158,19 @@ contains
 
    end function spawn_couple_field
 
-!     TODO(DH): Remove this function in favour of SpawnModule::spawn_couple
-!     https://github.com/ispg-group/fms90-redux/issues/79
-!>
-!!    Computes the interstate coupling dotted with velocity between trajectory T1 and a
-!!    trajectory at the same coordinates in state JState.  This calculation
-!!    has been moved here in order to make the subroutine FMS_Spawn.f more
-!!    readable.
-!!
-!!    The returned quantity depends on spzSpawnCoupV - if this is
-!!    .true., then we return the NACV dotted into the velocity vector.
-!!    If not, we just return the norm of the NACV.
-!!    \param iState Index of electronic state to calculate coupling with current electronic state
-!!    @ingroup spawning
-!<
+   !> Computes the interstate coupling dotted with velocity between trajectory T1 and a
+   !> trajectory at the same coordinates in state JState.  This calculation
+   !> has been moved here in order to make the subroutine FMS_Spawn.f more
+   !> readable.
+   !>
+   !> The returned quantity depends on spzSpawnCoupV - if this is
+   !> .true., then we return the NACV dotted into the velocity vector.
+   !> If not, we just return the norm of the NACV.
+   !>
+   !> \param iState Index of electronic state to calculate coupling with current electronic state
+   !>
+   !> @todo Remove this function in favour of SpawnModule::spawn_couple
+   !> https://github.com/ispg-group/fms90-redux/issues/79
    function FMS_SpawnDCouple(T1, IState) result(DCouple)
       use TrajectoryCalcsModule, only: FMS_CoupDotVel, Kinetic, Potential
       type(T_Trajectory), intent(in) :: T1
@@ -1211,26 +1198,24 @@ contains
       if (DCouple /= DCouple) call FMS_DieError('SpawnDCouple: coupling norm is nan')
    end function FMS_SpawnDCouple
 
-!>
-!!    Adjust kinetic energy of TChild such that energy of
-!!    TChild and TParent are identical.
-!!    @ingroup spawning
-!!    @param TChild Trajectory to be adjusted
-!!    @param TParent Trajectory providing reference energy
-!!    @param ScaleVector (optional) dictates the direction along which
-!!    the momentum adjustment will be applied.  The default is to choose
-!!    this direction as the momentum vector itself, i.e. scale all
-!!    momentum components equally.
-!!    @return Success or failure. Fails only if
-!!    kinetic energy becomes negative (frustrated) or
-!!    scale factor becomes complex
-!<
-! TODO(DH): Figure out the differences between this and FMS_AdjustEnergy2
-! We probably don't need both!
+   !> Adjust kinetic energy of TChild such that energy of
+   !> TChild and TParent are identical.
+   !>
+   !> Returns Success or failure. Fails only if
+   !> kinetic energy becomes negative (frustrated) or
+   !> scale factor becomes complex
+   !>
+   !> @todo Figure out the differences between this and FMS_AdjustEnergy2
+   !> We probably don't need both!
    function FMS_AdjustEnergy(TChild, TParent, ScaleVector) result(Success)
       use TrajectoryCalcsModule, only: Kinetic, Potential
+      !> Trajectory to be adjusted
       type(T_Trajectory), intent(inout) :: TChild
+      !> Trajectory providing reference energy
       type(T_Trajectory), intent(in) :: TParent
+      !> Dictates the direction along which the momentum adjustment will be applied.
+      !> The default is to choose this direction as the momentum vector itself,
+      !> i.e. scale all momentum components equally.
       real(kind=DefReal), intent(in), optional :: ScaleVector(TChild%NumDimensions)
       logical :: Success
 
