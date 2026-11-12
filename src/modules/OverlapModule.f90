@@ -583,6 +583,7 @@ contains
 
       ! enumerated type for cases
       integer :: mode
+      ! allow(C081)
       type t_coup_mode
          integer :: A = 1
          integer :: B = 2
