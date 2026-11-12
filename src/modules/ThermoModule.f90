@@ -1,6 +1,9 @@
 ! Copyright Todd J. Martinez and Raphael D. Levine, 1994
 
 !> author: Will Glover and Tingyao Lu
+!> display: public
+!>         protected
+!>         private
 !> Module implementing various thermostats
 !>
 !> The Nosé-Hoover chain implementation follows the reference paper by Martyna et al.
@@ -330,6 +333,7 @@ contains
    end subroutine thermo_NHC_MBDist
 
    !> Propagate a single scalar momentum coupled to a Nosé-Hoover chain.
+   !>
    !> The scalar degree of freedom is treated as a local thermostat group,
    !> so the first chain thermostat is driven by \(p^2/m-1/\beta\)
    !> (twice the particle kinetic energy minus the target value).
@@ -392,8 +396,9 @@ contains
    end subroutine thermo_NHC_local
 
    !> Propagate all particle momenta as one global Nosé-Hoover thermostat
-   !> group. The chain propagator and
-   !> common momentum scaling follow Eq. (35) of Martyna et al. (1996);
+   !> group.
+   !>
+   !> The chain propagator and common momentum scaling follow Eq. (35) of Martyna et al. (1996);
    !> see [[thermo_NHC_prop]] for the update equations.
    subroutine thermo_NHC_global(dt, M, ndim, natom, p, mass, beta, rNHC, pNHC, mNHC, thermE)
       implicit none
