@@ -7,6 +7,8 @@ include CONFIGFMS
 export FC
 export FCTYPE
 export LD
+export STDLIB_LIBDIR
+export STDLIB_MODULEDIR
 export FFLAGS
 export LDFLAGS
 export KERNEL
@@ -23,6 +25,10 @@ PROGBASE	= openfms
 PROGRAM		= $(PROGBASE).$(ESP)
 TARGET		= bin/$(PROGRAM)
 MAKEFILE	= Makefile
+
+ifneq ($(STDLIB_LIBDIR),)
+    STDLIB_LIBS = -Wl,--start-group $(wildcard $(STDLIB_LIBDIR)/*.a) -Wl,--end-group
+endif
 
 # Decide what to compile
 ifeq ($(ESP),zero)
@@ -47,6 +53,9 @@ ifeq ($(ESP),quantics)
    LIBS += ${QUANTICS_OBJ}/liblapack.a
    LIBS += ${QUANTICS_OBJ}/libblas.a
    LIBS += ${QUANTICS_OBJ}/libomp.a
+endif
+ifneq ($(STDLIB_LIBDIR),)
+   FFLAGS += -DSTDLIB
 endif
 
 .PHONY: FORCE test testclean updatetestref clean veryclean list
@@ -77,7 +86,7 @@ bin:
 # This is standalone OpenFMS, without external electronic structure
 bin/$(PROGBASE).zero: $(FMSLIB) $(MAIN) $(MAKEFILE)
 		@echo;echo "Linking $(PROGRAM) ..."
-		$(LD) $(MAIN) $(FMSLIB) -I$(MODULEDIR) -o $(TARGET) $(LIBS) $(LDFLAGS)
+		$(LD) $(MAIN) $(FMSLIB) -I $(MODULEDIR) -o $(TARGET) $(LIBS) $(LDFLAGS) $(STDLIB_LIBS)
 		@rm -f bin/$(PROGBASE)
 		@ln -s $(PROGRAM) bin/$(PROGBASE)
 		@echo "done"
