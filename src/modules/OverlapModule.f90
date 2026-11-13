@@ -630,7 +630,7 @@ contains
          CBFi = T_i%CBF; CBFj = T_j%CBF
 ! GAIMS end changed
 !bfec
-         if (glzCentroids .and. (CBFi /= CBFj)) then
+         if (glzCentroids .and. (CBFi /= CBFj) .and. present(T_c)) then
             ic = T_c%CentID(1); jc = T_c%CentID(2)
          end if
          is = T_i%StateID; js = T_j%StateID
@@ -671,11 +671,15 @@ contains
          if (glzCentroids) then
             if (.not. present(T_c)) then
                call FMS_DieError('overlap_V_trajectory :: no centroid passed')
+               V = (0.d0, 0.d0)
+               return
             end if
 
             cent_match = (CBFi == ic .and. CBFj == jc) .or. (CBFj == ic .and. CBFi == jc)
             if (.not. cent_match) then
                call FMS_DieError('overlap_V_trajectory :: centroids dont match')
+               V = (0.d0, 0.d0)
+               return
             end if
          end if
 
