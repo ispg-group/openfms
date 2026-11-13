@@ -21,6 +21,8 @@ program OpenFMS
    use ElecStrucModule, only: FMS_ESInit
    use RestartModule, only: inIRestart, RestartTime, getRestart
    use PropagationModule, only: FMS_SetTimeStep
+   use, intrinsic :: iso_fortran_env, only: in_unit => input_unit, out_unit => output_unit, Rkind => real64
+
    implicit none
 
    type(T_TrajectoryBundle) :: Bundle
@@ -29,10 +31,61 @@ program OpenFMS
    real(kind=DefReal) :: simulationtime, dt
    character(len=:), allocatable :: tc_port_name
    real(8) :: RndNum
+   real(kind=Rkind), allocatable :: Q(:)
+   real(kind=Rkind), allocatable :: V(:, :)
+   real(kind=Rkind), allocatable :: G(:, :, :)
+   real(kind=Rkind), allocatable :: NAC(:, :, :)
+
+   character(len=16) :: model_name
+   logical :: adiabatic
+
+   integer :: i, j, k, ndim, nsurf, option
+   real(kind=Rkind) :: DQ
 
 !-----------------------------------------------------------------------
 !                          STARTUP
 !-----------------------------------------------------------------------
+#ifdef QuantumModelLib
+   model_name = 'Tully'
+   ndim = 1 ! it would be initialized
+   nsurf = 2 ! it would be initialized
+   option = 1
+   adiabatic = .true.
+   call sub_Init_Qmodel(ndim, nsurf, model_name, adiabatic, option)
+
+   write (out_unit, *) 'ndim,nsurf', ndim, nsurf
+   allocate (Q(ndim))
+   allocate (V(nsurf, nsurf))
+   allocate (G(nsurf, nsurf, ndim))
+
+   if (nsurf > 1) then
+      write (out_unit, *) ' Test V, G and NAC'
+
+      allocate (NAC(nsurf, nsurf, ndim))
+
+      call get_Qmodel_Q0(Q, 0)
+      Q(1) = -5.0_rkind
+      DQ = 0.1_rkind
+      do k = 1, 100
+         write (out_unit, *) '------------------------------------------------------'
+         call sub_Qmodel_VG_NAC(V, G, NAC, Q)
+         write (out_unit, *) Q(1), V(1, 1), V(2, 2), NAC(1, 2, 1)
+
+         Q(:) = Q(:) + DQ
+      end do
+
+      deallocate (NAC)
+   else
+      write (out_unit, *) ' Test V, G'
+
+      call get_Qmodel_Q0(Q, 0)
+
+      call sub_Qmodel_VG(V, G, Q)
+      write (out_unit, *) 'Q', Q
+      write (out_unit, *) 'Potential', V
+      write (out_unit, *) 'Gradient', G
+   end if
+#endif
 
    ! Get working directory
    call getenv('PWD', FMSWorkingDir)
