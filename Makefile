@@ -26,10 +26,6 @@ PROGRAM		= $(PROGBASE).$(ESP)
 TARGET		= bin/$(PROGRAM)
 MAKEFILE	= Makefile
 
-ifneq ($(STDLIB_LIBDIR),)
-    STDLIB_LIBS = -Wl,--start-group $(wildcard $(STDLIB_LIBDIR)/*.a) -Wl,--end-group
-endif
-
 # Decide what to compile
 ifeq ($(ESP),zero)
    all:	$(TARGET)
@@ -54,7 +50,9 @@ ifeq ($(ESP),quantics)
    LIBS += ${QUANTICS_OBJ}/libblas.a
    LIBS += ${QUANTICS_OBJ}/libomp.a
 endif
+
 ifneq ($(STDLIB_LIBDIR),)
+   LIBS += -Wl,--start-group $(wildcard $(STDLIB_LIBDIR)/*.a) -Wl,--end-group
    FFLAGS += -DSTDLIB
 endif
 
@@ -86,7 +84,7 @@ bin:
 # This is standalone OpenFMS, without external electronic structure
 bin/$(PROGBASE).zero: $(FMSLIB) $(MAIN) $(MAKEFILE)
 		@echo;echo "Linking $(PROGRAM) ..."
-		$(LD) $(MAIN) $(FMSLIB) -I $(MODULEDIR) -o $(TARGET) $(LIBS) $(LDFLAGS) $(STDLIB_LIBS)
+		$(LD) $(MAIN) $(FMSLIB) -I$(MODULEDIR) -o $(TARGET) $(LIBS) $(LDFLAGS)
 		@rm -f bin/$(PROGBASE)
 		@ln -s $(PROGRAM) bin/$(PROGBASE)
 		@echo "done"
