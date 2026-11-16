@@ -1,7 +1,7 @@
 # How to contribute to OpenFMS
 
 Thanks for contributing to OpenFMS!💜
-Here's a couple of guidelines that you should keep in mind.
+Here's a couple of guidelines to keep in mind.
 
 ## Setup your environment
 
@@ -18,7 +18,7 @@ From now on, prek will execute hooks defined in `prek.toml` before every commit.
 You can also run the hooks manually at any point:
 
 ```
-❯ prek run -a
+❯ prek run --all-files
 don't commit to branch.................................Passed
 check yaml.............................................Passed
 check for added large files............................Passed
@@ -29,12 +29,47 @@ Check module usage.....................................Passed
 Autoformat code........................................Passed
 ```
 
-To run only autoformatter
+To run only autoformatter (`--all-files` abbreviated as `-a`)
 
 ```
 ❯ prek run -a format
 Autoformat code........................................Passed
 ```
+
+If any of the checks fail, the commit is aborted. Often times, the violations
+are fixed automatically (e.g. formatter will autoformat the code), so simply
+re-running `git commit` together with the changed files is enough.
+Sometimes, manual intervention is necessary, for example if `fortitude` catches
+that you forgot to use `implicit none`.
+
+```console
+❯ prek run -a fortitude
+fortitude................................................................Failed
+- hook id: fortitude
+- exit code: 1
+
+  src/abin.F90:19:1: C001 program missing 'implicit none'
+     |
+  17 | !  You should have received a copy of the GNU General Public License
+  18 | !  along with this program in the file LICENSE. If not, see <http://www.gnu.org/licenses/>.
+  19 | program abin
+     | ^^^^^^^^^^^^ C001
+  20 |    use, intrinsic :: iso_fortran_env, only: OUTPUT_UNIT
+  21 |    use mod_const, only: DP, AUtoFS
+  22 |    use mod_arrays
+     |
+
+  fortitude: 47 files scanned.
+  Number of errors: 1
+```
+
+
+> [!TIP]
+> In rare circumstances, you might want to skip the checks and make a commit even if they are failing,
+> such as when you want to quickly save your work.
+> Use the `--no-verify` (or `-n`) option to skip the pre-commit hooks.
+> `git commit --no-verify`
+> Note that the pre-commit hooks are nevertheless always enforced on GitHub.
 
 See [prek documentation](https://prek.j178.dev/) for more details.
 
@@ -44,7 +79,7 @@ See [prek documentation](https://prek.j178.dev/) for more details.
 Here's a quick summary of our code style that we try to adhere to (especially in new code):
 
  - use `implicit none` everywhere, no exceptions! This is enforced by the compiler in CI.
- - each function/subroutine argument should have the intent attribute.
+ - each function/subroutine dummy argument should have the intent attribute.
  - use `real(DefReal)` for real numbers, `integer(DefInt)` for integers and complex(DefComp) for complex numbers.
    The `DefXXX` constants indicating the kind (precision) are defined in `GlobalModule`.
  - variables and subroutines in modules should be private by default, use `private` attribute,e.g.
@@ -67,7 +102,7 @@ end module mod_my_module
 
 Code formatting is enforced using `fprettify` formatter,
 and you don't need to think about it for the most part.
-Here's a quick summary of our formatting style, as it is defined in `.fprettify.rc` config file.
+Here's a quick summary of our formatting style, defined in `.fprettify.rc` config file.
 
  - use 3 spaces for indentation, no tabs.
  - use C-style relational operators (`< > == /=`) instead of the old FORTRAN style (`.gt. .lt.`)
