@@ -7,6 +7,7 @@ function(openfms_add_unit_tests openfms_core_target)
     unit_tests/test_overlap.F90
     unit_tests/testdrive.F90
     unit_tests/testutils.F90
+    unit_tests/test_qml.F90
   )
 
   add_executable(openfms_unit_tests ${OPENFMS_UNIT_TEST_SOURCES})
@@ -27,6 +28,7 @@ function(openfms_add_unit_tests openfms_core_target)
     BundleModule
     ParticleModule
     TrajectoryModule
+    QMLSubmodule
   )
 
   foreach(suite_name IN LISTS OPENFMS_UNIT_TEST_SUITES)
