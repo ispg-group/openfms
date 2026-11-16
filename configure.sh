@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e # quit if any command in this script quits with an error
 # Embarassigly barebones configure.sh, which generates the CONFIGFMS file used by make
 # Takes in command-line options that define flags used during compilation and linking
 # The first parameter to this script determines the interface that is compiled.
