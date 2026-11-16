@@ -20,6 +20,9 @@ syntax: glob
 *.pdf
 .DS_Store
 bin/
+build/
+configureAIMS.sh
+unit_tests/test_thermo/
 
 *CONFIG*
 

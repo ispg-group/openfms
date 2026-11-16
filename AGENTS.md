@@ -43,7 +43,7 @@ Developer docs (FORD): `ford ford_config.md` → `developer_docs/`.
 
 - `src/openfms.F90` is the main program: reads `Control.dat` (`FMS_ReadNameList` in `src/read_namelist.f90`, a single `&control` namelist), seeds the PRNG, initialises electronic structure (`FMS_ESInit`) and the interface, builds the trajectory bundle, sets initial conditions or restarts from `Last_Bundle.txt`, then loops `FMS_Dynamics` / `FMS_Output` until the simulation time is reached, and finally `FMS_Shutdown`.
 - Core data model: `t_Particle` (atoms) → `t_Trajectory` (one Gaussian basis function / TBF on a given state) → `t_TrajectoryBundle` (the full wavefunction). `*CalcsModule` and `*IOModule` hold computations and I/O for trajectories/bundles; `SpawnModule` handles spawning of new TBFs; `OverlapModule`, `PropagationModule`, `VerletModule` cover overlaps and integration.
-- Electronic structure dispatch is in `ElecStrucModule` (`select case (gliModel)`): `FMSZERO`/toy models in `ToyModelModule` (selected by `iMethod`), `TEMPLATE` (`TemplateModule`, external programs via input/output templates), `TC` (`TerachemModule.F90`, compiled only with `-DTeraChem`), `QUANTICS` (`-DQuantics`). Backend-specific files use `.F90` for preprocessing.
+- Electronic structure dispatch is in `ElecStrucModule` (`select case (gliModel)`): `FMSZERO`/toy models in `ToyModelModule` (selected by `iMethod`), `TC` (`TerachemModule.F90`, compiled only with `-DTeraChem`), `QUANTICS` (`-DQuantics`). Backend-specific files use `.F90` for preprocessing.
 - New namelist input variables must be declared and added to the `&control` namelist in `src/read_namelist.f90`.
 
 ## Tests

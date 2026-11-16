@@ -270,7 +270,7 @@ contains
       use BundleModule
       use TrajectoryCalcsModule, only: FMS_Weight
       use SelectionModule, only: print_stochastic_selection_params
-      use SpawnModule, only: print_spawning_parameters
+      use SpawnModule, only: spawn_params
       use RestartModule, only: iniRestart
 
       type(T_TrajectoryBundle), intent(in) :: Bundle
@@ -280,8 +280,6 @@ contains
       select case (gliModel)
       case (glModelType%TOY)
          write (fmiOut, *) '     FMSZero: analytical potential'
-      case (glModelType%TEMPLATE)
-         write (fmiOut, *) '     System call template interface'
       case (glModelType%QUANTICS)
          write (fmiOut, *) '     Quantics interface     '
       case default
@@ -292,7 +290,7 @@ contains
       write (fmiOut, *)
       write (fmiOut, *)
 
-      call print_spawning_parameters(fmiOut)
+      call spawn_params%print(fmiOut)
 
       if (glzStochastic) then
          call print_stochastic_selection_params()
@@ -330,14 +328,11 @@ contains
 
    subroutine initialize_interface(NumParticles, NumStates, tc_port_name)
       use GlobalModule, only: gliModel, glModelType
-      use TemplateModule, only: FMS_TemplateInit
       use TerachemModule, only: InitTerachem
       integer, intent(in) :: NumParticles, NumStates
       character(len=:), allocatable, intent(inout) :: tc_port_name
 
       select case (gliModel)
-      case (glModelType%TEMPLATE)
-         call FMS_TemplateInit()
       case (glModelType%TC)
          call InitTerachem(NumParticles, NumStates, tc_port_name)
       case default

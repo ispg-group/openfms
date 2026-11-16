@@ -170,13 +170,6 @@ contains
          end select
 !     end of fmszero initialization
 
-!
-!     FMSTemplate (deprecated): write electronic structure input decks with templates
-!
-      case (glModelType%TEMPLATE)
-         write (fmiOut, *) 'FMSTemplate: system call ES interface.'
-         if (eslCIVec > 0) esnElecPhase = NumStates
-
       case (glModelType%TC)
          eszAnalyticForces = .true.
          eszNACoupVec = .true.

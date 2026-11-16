@@ -56,8 +56,6 @@ module GlobalModule
       integer(DefInt) :: TC = 1
       !> Interface to Quantics (currently not implemented)
       integer(DefInt) :: QUANTICS = 2
-      !> Deprecated: pretend it's not here :-)
-      integer(DefInt) :: TEMPLATE = 13
    end type t_ModelType
 
    type(t_ModelType), parameter :: glModelType = t_ModelType()
