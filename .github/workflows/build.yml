@@ -183,7 +183,7 @@ jobs:
     - name: Configure with TC interface
       env:
         FC: ${{ matrix.mpi == 'mpich' && '${HOME}/mpich/4.0.2/install/bin/mpifort' || 'mpif90' }}
-      run: ./configure.sh tc
+      run: ./configure.sh --interface tc
 
     - name: Build
       run: make -j

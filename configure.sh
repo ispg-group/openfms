@@ -29,7 +29,7 @@ OPTIONS
 
 function check_path() {
     if [[ ! -d $1 ]]; then
-        echo "$1 is not a directory!"
+        echo "'$1' is not a directory!"
         exit 1
     fi
 }
@@ -84,14 +84,14 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-#Sanity check for command-line set variables
-if [[ ! ( -v STDLIB_LIBDIR ) && $STDLIB ]]; then
-   echo "ERROR: Please provide location of the STDLIB library directory"
-exit 1
+# Sanity check for command-line set variables
+if [[ -z ${STDLIB_LIBDIR-} && ${STDLIB-} = "TRUE" ]]; then
+    echo "ERROR: Please provide location of the STDLIB library directory"
+    exit 1
 fi
-if [[ ! ( -v STDLIB_MODULEDIR ) && $STDLIB ]]; then
-   echo "ERROR: Please provide location of the STDLIB module directory"
-exit 1
+if [[ -z ${STDLIB_MODULEDIR-} && ${STDLIB-} = "TRUE" ]]; then
+    echo "ERROR: Please provide location of the STDLIB module directory"
+    exit 1
 fi
 
 
