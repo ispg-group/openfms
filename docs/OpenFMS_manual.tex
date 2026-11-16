@@ -479,7 +479,7 @@ Common parameters:\\
 {\tt MaxTraj}        & {\tt Real (100)}       & {\small Maximum number of allowed trajectories.}\\&&
                                                 {\small Above which, spawning is disabled.}\\ 
 {\tt IgnoreState}    & {\tt Integer (0)}      & {\small Stop dynamics of trajectories on {\tt IgnoreState}}\\&&
-                                                {\small if not coupled for at least {\tt DecoherenceTime}.}\\&&
+                                                {\small if not coupled for at least {\tt TimeLeftToDeath}.}\\&&
                                                 {\small Choose 1 if only interested in excited states.}\\
 {\tt MaxEDiff}       & {\tt Real (0.03)}      & {\small Energy gap threshold for calculating}\\&&
                                                 {\small nonadiabatic couplings, above which,}\\&&
@@ -487,7 +487,7 @@ Common parameters:\\
 Expert parameters:\\
 %{\tt MultiSpawn}     & {\tt Integer (1)}      & {\small How many trajectory basis functions to}\\&&
 %                                                {\small spawn during one coupling event.}\\
-{\tt DecoherenceTime}&{\tt Real (200.0)}      & {\small See above.}\\
+{\tt TimeLeftToDeath}&{\tt Real (200.0)}      & {\small See above.}\\
 {\tt SpawnCoupV}     & {\tt Logical (.false.)}& {\small Use Coup.velocity as criterion for spawning}\\&&
                                                 {\small rather than NACV magnitude alone.}\\
 {\tt EShellOnly}     & {\tt Logical (.true.)} & {\small Require spawned trajetories to have same}\\&&
