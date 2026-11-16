@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e #quit if any command in this script quits with an error
+set -e # quit if any command in this script quits with an error
 # Embarassigly barebones configure.sh, which generates the CONFIGFMS file used by make
 # Takes in command-line options that define flags used during compilation and linking
 # The first parameter to this script determines the interface that is compiled.
@@ -12,14 +12,18 @@ echo "
 NAME
    configure.sh  
 DESCRIPTION
-   Takes in command-line options that define flags used during compilation and linking
+   Generates local compilation config file for OpenFMS and saves it to CONFIGFMS
 
 USAGE
    configure [--interface] [--stdlib-lib path/to/stdlib-lib] [--stdlib-module path/to/stdlib-module]
 OPTIONS
-   --interface   Define electronic-structure interface with which OpenFMS is compiled. Valid options are: 'tc' for TeraChem;  'zero' for no interface, i.e., only compile with model systems. Default: 'zero'
-   --stdlib-lib  location of STDLIB libraries
-   --stdlib-module location of STDLIB modules
+   --interface      Define electronic-structure interface with which OpenFMS is compiled.
+                    Valid options:
+                      'zero' for no interface, only model systems will be available. (default)
+                      'tc' for TeraChem
+   --stdlib-lib     location of STDLIB libraries (https://stdlib.fortran-lang.org/)
+   --stdlib-module  location of STDLIB modules (https://stdlib.fortran-lang.org/)
+   -h|--help        print this help and exit
 "
 }
 
@@ -34,12 +38,14 @@ function check_path() {
 # Output file name
 VARS=CONFIGFMS
 
+ESP=zero
+
 # Parse command-line options
 PARAMS="$@"
 while [[ $# -gt 0 ]]; do
     case "$1" in
       --interface)
-        ESP=${2-zero} #the default is #zero'
+        ESP=${2}
         if [[ $ESP != "tc" && $ESP != "zero" && $ESP != "quantics" ]]; then
             echo "ERROR: Unsupported interface target '$ESP'"
             echo "Supported targets: 'zero', 'tc'"
@@ -50,7 +56,7 @@ while [[ $# -gt 0 ]]; do
       --stdlib-lib)
         STDLIB_LIBDIR=$2
         check_path "$STDLIB_LIBDIR"
-		STDLIB=TRUE
+        STDLIB=TRUE
         shift 2
         ;;
       --stdlib-module)
@@ -60,13 +66,18 @@ while [[ $# -gt 0 ]]; do
             exit 1
         fi
         check_path "$STDLIB_MODULEDIR"
-		if [[ $STDLIB_LIBDIR != "none" && $STDLIB_MODULEDIR != "none" ]]; then
-		    STDLIB=TRUE
-		fi
-		STDLIB=TRUE
+        if [[ $STDLIB_LIBDIR != "none" && $STDLIB_MODULEDIR != "none" ]]; then
+            STDLIB=TRUE
+        fi
+        STDLIB=TRUE
         shift 2
         ;;
+      --help|-h)
+        show_help
+        exit 0
+        ;;
       *)
+        echo "ERROR: Invalid option '$1'"
         show_help
         exit 1
         ;;
