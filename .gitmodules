@@ -1,0 +1,3 @@
+[submodule "QuantumModelLib"]
+	path = QuantumModelLib
+	url = https://github.com/lauvergn/QuantumModelLib.git

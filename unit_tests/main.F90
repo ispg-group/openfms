@@ -7,6 +7,7 @@ program tester
    use test_trajectory, only: collect_trajectory_suite
    use test_bundle, only: collect_bundle_suite
    use test_overlap, only: collect_overlap_suite
+   use test_qml, only: collect_qml_suite
    use test_thermo, only: collect_thermo_suite
    use GlobalModule, only: set_error_handler
    implicit none
@@ -43,6 +44,7 @@ program tester
                 new_testsuite('TrajectoryModule', collect_trajectory_suite), &
                 new_testsuite('BundleModule', collect_bundle_suite), &
                 new_testsuite('OverlapModule', collect_overlap_suite), &
+                new_testsuite('QMLSubmodule', collect_qml_suite) &
                 new_testsuite('ThermoModule', collect_thermo_suite) &
                 ]
 

@@ -1,6 +1,7 @@
 # All source files in this folder should have .F90 suffix!
 SUFFIXES = .F90
 LIBFMS = ../src/libfms.a
+LIBQML = ../QuantumModelLib/libQMLFull.a
 INCFLAGS = -I../src/modules
 MAKEFILE = Makefile
 CONFIG = ../CONFIGFMS
@@ -22,7 +23,7 @@ run: test
 
 # Create a driver binary "test"
 test: main.o $(TESTOBJECTS) $(TESTDRIVEOBJS)
-	$(FC) $(LDFLAGS) main.o $(TESTDRIVEOBJS) $(TESTOBJECTS) $(LIBFMS) -o test
+	$(FC) $(LDFLAGS) main.o $(TESTDRIVEOBJS) $(TESTOBJECTS) $(LIBFMS) $(LIBQML) -fopenmp -o test
 
 main.o: main.F90 $(TESTOBJECTS) $(TESTDRIVEOBJS)
 
