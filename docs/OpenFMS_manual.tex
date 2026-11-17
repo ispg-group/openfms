@@ -326,6 +326,8 @@ Common parameters:\\
                                                   {\small If disabled, use Last\_Bundle.txt.}\\
 {\tt IRndSeed}       &{\tt Integer (0)}         & {\small Initial condition random number seed.}\\
 {\tt InitialCond}    &{\tt ('NoSample')}        & {\small Read initial conditions from Geometry.dat.}\\
+                     &{\tt 'PIMD'}              & {\small Initialize a ring polymer from Geometry.dat;}\\&&
+                                                  {\small requires {\tt nBeads}>1 and skips classical sampling.}\\
                      &{\tt 'Wigner'}            & {\small Sample from the Wigner distribution of harmonic}\\&&
                                                   {\small normal modes in Frequencies.dat.}\\
                      &{\tt 'Quasiclassical'}    & {\small As above, for the Quasiclassical distribution.}\\

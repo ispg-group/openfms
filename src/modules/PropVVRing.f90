@@ -30,6 +30,8 @@ contains
       !note: since ringprop uses a temporary trajectory structure,
       !the evecs of T1 are not updated
       call ringprop(FMS_rings(itraj),TimeStep,force_func,skip0here,.true.)
+      FMS_rings(itraj)%force_state = T1%StateID
+      FMS_rings(itraj)%forces_current = .true.
       ! Copy ring centroid positions back to T1%Particle
       allocate(r_cent(FMS_rings(itraj)%ndim, FMS_rings(itraj)%natom))
       r_cent = ring_centvec(FMS_rings(itraj)%r, FMS_rings(itraj)%ndim, FMS_rings(itraj)%natom, FMS_rings(itraj)%n)
@@ -92,7 +94,6 @@ contains
       call Ttemp%destroy()
 
       end function force_func
-
 
       end subroutine PropVVRing
 

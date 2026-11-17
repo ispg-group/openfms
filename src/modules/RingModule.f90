@@ -1,6 +1,7 @@
 module RingModule
 use GlobalModule, only: FMS_DieError
 use TrajectoryModule, only: T_Trajectory
+use TrajectoryCalcsModule, only: FMS_Forces
 implicit none
 real(8),parameter ::  pi=4.0d0*datan(1.0d0)
 type T_Ring
@@ -9,6 +10,8 @@ integer  :: n !< Number of beads
 integer  :: natom !< Number of atoms
 integer  :: ndim !< Dimensions per atom
 integer  :: nNHC !< Number of Nose-Hoover chain variables
+integer  :: traj_id !< Associated trajectory ID
+integer  :: force_state !< Electronic state associated with F_ext
 real (8),allocatable :: r(:,:,:)      !< ndim,natom,n Positions (bohr)
 real (8),allocatable :: p(:,:,:)      !< ndim,natom,n Momenta (a.u.)
 real (8),allocatable :: rNHC(:,:,:,:) !< nNHC,ndim,natom,n (bohr)
@@ -29,6 +32,7 @@ real (8) :: tau0 !< Thermostat relaxation time of centroid mode
 real (8) :: gamma_sq !< PA-CMD adiabaticity γ²; negative → Manolopoulos Ω
 logical :: nm !< Are we in normal modes or not
 logical :: zcom !< Do we include center of mass as degrees of freedom
+logical :: forces_current !< Does F_ext correspond to the current bead positions?
 end type T_Ring
 
 public
@@ -66,6 +70,8 @@ ring1%beta       = ring2%beta
 ring1%beta_n     = ring2%beta_n
 ring1%thermE     = ring2%thermE
 ring1%time       = ring2%time
+ring1%traj_id    = ring2%traj_id
+ring1%force_state = ring2%force_state
 ring1%method     = ring2%method
 ring1%thermostat = ring2%thermostat
 ring1%rNHC       = ring2%rNHC
@@ -75,6 +81,7 @@ ring1%tau0       = ring2%tau0
 ring1%gamma_sq   = ring2%gamma_sq
 ring1%nm         = ring2%nm
 ring1%zcom       = ring2%zcom
+ring1%forces_current = ring2%forces_current
 
 end subroutine ring_assign
 
@@ -117,6 +124,8 @@ ring%ndim=ndim
 ring%natom=natom
 ring%n=n
 ring%nNHC=nNHC
+ring%traj_id=0
+ring%force_state=0
 
 ring%beta=0.0d0
 ring%beta_n=0.0d0
@@ -127,6 +136,7 @@ ring%thermostat=''
 ring%gamma_sq=0.005d0
 ring%nm=.false.
 ring%zcom=.false.
+ring%forces_current=.false.
 
 if (.not. ZSuccess) then
    write(*,*)' Memory allocation error in ring_create'
@@ -148,6 +158,9 @@ istat=0
 ring%n=0
 ring%ndim=0
 ring%natom=0
+ring%traj_id=0
+ring%force_state=0
+ring%forces_current=.false.
 
 if(allocated(ring%r)) deallocate(ring%r,stat=istat) ; if (istat /= 0) ZSuccess=.false.
 if(allocated(ring%p))  deallocate(ring%p,stat=istat) ; if (istat /= 0) ZSuccess=.false.
@@ -172,6 +185,262 @@ subroutine FMS_ring_setup(nTraj)
   if (allocated(FMS_rings)) deallocate(FMS_rings)
   allocate(FMS_rings(nTraj))
 end subroutine FMS_ring_setup
+
+subroutine FMS_InitialPIMD(trajectories, random_seed)
+  use GlobalModule, only: DefInt4, DefReal, fmiOut, gliNBeads, gliRPMDNNHC, &
+                          gldRPMDBeta, glRPMDMethod, glRPMDThermostat, &
+                          FMSWorkingDir, BohrToAng, MassToAu, &
+                          gldRPMDTau0, glzRPMDSetInitialPositions, &
+                          gldRPMDInitialPositions, glzRPMDSetInitialMomenta, &
+                          gldRPMDInitialMomenta
+  type(T_Trajectory), intent(inout) :: trajectories(:)
+  integer(kind=DefInt4), intent(in) :: random_seed
+
+  real(kind=DefReal), allocatable :: masses(:), reference_geometry(:, :), &
+                                     centroid_momentum(:, :)
+  integer :: trajectory_index, num_dimensions, num_particles
+  integer :: particle_index, bead_index, coordinate_offset
+  logical :: success, geometry_has_beads
+
+  if (gliNBeads <= 1) call FMS_DieError("InitialCond='PIMD' requires nBeads > 1")
+
+  write (fmiOut, *) 'PIMD initial conditions from the input geometry'
+  write (fmiOut, *) 'Initializing ring polymer with', gliNBeads, 'beads per trajectory'
+  write (fmiOut, *) '  Method: ', trim(glRPMDMethod), '  Thermostat: ', trim(glRPMDThermostat)
+
+  call FMS_ring_setup(size(trajectories))
+  do trajectory_index = 1, size(trajectories)
+    num_dimensions = trajectories(trajectory_index)%Particle(1)%NumDimensions
+    num_particles = trajectories(trajectory_index)%NumParticles
+    allocate(masses(num_particles), reference_geometry(num_dimensions, num_particles), &
+             centroid_momentum(num_dimensions, num_particles))
+
+    do particle_index = 1, num_particles
+      masses(particle_index) = trajectories(trajectory_index)%get_mass(particle_index)
+      reference_geometry(:, particle_index) = &
+        trajectories(trajectory_index)%Particle(particle_index)%get_pos()
+    end do
+
+    success = ring_create(FMS_rings(trajectory_index), num_dimensions, num_particles, &
+                          gliNBeads, gliRPMDNNHC)
+    if (.not. success) call FMS_DieError('ring_create failed for trajectory')
+    FMS_rings(trajectory_index)%traj_id = trajectories(trajectory_index)%TrajID
+    call ring_init(FMS_rings(trajectory_index), reference_geometry, masses, gldRPMDBeta, &
+                   glRPMDMethod, 'MB        ', glRPMDThermostat, gldRPMDTau0, &
+                   .false., random_seed)
+
+    deallocate(masses, reference_geometry, centroid_momentum)
+  end do
+
+  call read_pimd_geometry(FMS_rings, geometry_has_beads)
+  do trajectory_index = 1, size(trajectories)
+    num_dimensions = trajectories(trajectory_index)%Particle(1)%NumDimensions
+    num_particles = trajectories(trajectory_index)%NumParticles
+    allocate(reference_geometry(num_dimensions, num_particles), &
+             centroid_momentum(num_dimensions, num_particles))
+
+    if (.not. geometry_has_beads .and. glzRPMDSetInitialPositions) then
+      if (trajectory_index * size(FMS_rings(trajectory_index)%r) > &
+          size(gldRPMDInitialPositions)) then
+        call FMS_DieError('Too many ring coordinates for RPMDInitialPositions')
+      end if
+      do particle_index = 1, num_particles
+        do bead_index = 1, FMS_rings(trajectory_index)%n
+          coordinate_offset = (trajectory_index - 1) * size(FMS_rings(trajectory_index)%r) + &
+                              ((particle_index - 1) * FMS_rings(trajectory_index)%n + &
+                               bead_index - 1) * num_dimensions
+          FMS_rings(trajectory_index)%r(:, particle_index, bead_index) = &
+            gldRPMDInitialPositions(coordinate_offset + 1:coordinate_offset + num_dimensions)
+        end do
+      end do
+    end if
+
+    if (.not. geometry_has_beads .and. glzRPMDSetInitialMomenta) then
+      if (trajectory_index * size(FMS_rings(trajectory_index)%p) > &
+          size(gldRPMDInitialMomenta)) then
+        call FMS_DieError('Too many ring coordinates for RPMDInitialMomenta')
+      end if
+      do particle_index = 1, num_particles
+        do bead_index = 1, FMS_rings(trajectory_index)%n
+          coordinate_offset = (trajectory_index - 1) * size(FMS_rings(trajectory_index)%p) + &
+                              ((particle_index - 1) * FMS_rings(trajectory_index)%n + &
+                               bead_index - 1) * num_dimensions
+          FMS_rings(trajectory_index)%p(:, particle_index, bead_index) = &
+            gldRPMDInitialMomenta(coordinate_offset + 1:coordinate_offset + num_dimensions)
+        end do
+      end do
+    end if
+
+    reference_geometry = ring_centvec(FMS_rings(trajectory_index)%r, num_dimensions, &
+                                      num_particles, FMS_rings(trajectory_index)%n)
+    centroid_momentum = ring_centvec(FMS_rings(trajectory_index)%p, num_dimensions, &
+                                     num_particles, FMS_rings(trajectory_index)%n)
+    do particle_index = 1, num_particles
+      call trajectories(trajectory_index)%set_pos( &
+        particle_index, reference_geometry(:, particle_index))
+      call trajectories(trajectory_index)%set_mom( &
+        particle_index, centroid_momentum(:, particle_index))
+    end do
+
+    deallocate(reference_geometry, centroid_momentum)
+  end do
+contains
+
+  subroutine read_pimd_geometry(rings, found)
+    type(T_Ring), intent(inout) :: rings(:)
+    logical, intent(out) :: found
+
+    character(len=256) :: file_path, line, units_line, atom_name
+    integer :: input_unit, ios, natoms, iring, ibead, iatom
+    real(kind=DefReal) :: values(3)
+    logical :: angstrom_units
+
+    found = .false.
+    file_path = trim(FMSWorkingDir)//'Geometry.dat'
+    open (newunit=input_unit, file=file_path, status='old', action='read')
+    read (input_unit, '(A)', iostat=ios) units_line
+    if (ios /= 0) call FMS_DieError('Could not read units from Geometry.dat')
+    angstrom_units = index(to_upper(units_line), 'UNITS=ANG') == 1
+    read (input_unit, *, iostat=ios) natoms
+    if (ios /= 0 .or. natoms /= rings(1)%natom) &
+      call FMS_DieError('Invalid atom count in Geometry.dat PIMD input')
+
+    do
+      read (input_unit, '(A)', iostat=ios) line
+      if (ios /= 0) exit
+      if (trim(to_upper(adjustl(line))) == 'PIMD_POSITIONS') then
+        found = .true.
+        exit
+      end if
+    end do
+    if (.not. found) then
+      close (input_unit)
+      return
+    end if
+
+    write (fmiOut, *) 'Reading PIMD bead positions and momenta from Geometry.dat'
+    do iring = 1, size(rings)
+      do ibead = 1, rings(iring)%n
+        do iatom = 1, rings(iring)%natom
+          call next_pimd_line(input_unit, line, ios)
+          if (ios /= 0 .or. trim(to_upper(adjustl(line))) == 'PIMD_MOMENTA') &
+            call FMS_DieError('Not enough bead positions in Geometry.dat')
+          read (line, *, iostat=ios) atom_name, values
+          if (ios /= 0) call FMS_DieError('Invalid PIMD bead position in Geometry.dat')
+          if (angstrom_units) values = values / BohrToAng
+          rings(iring)%r(:, iatom, ibead) = values
+        end do
+      end do
+    end do
+
+    call next_pimd_line(input_unit, line, ios)
+    if (ios /= 0 .or. trim(to_upper(adjustl(line))) /= 'PIMD_MOMENTA') &
+      call FMS_DieError('PIMD_MOMENTA must follow bead positions in Geometry.dat')
+    do iring = 1, size(rings)
+      do ibead = 1, rings(iring)%n
+        do iatom = 1, rings(iring)%natom
+          call next_pimd_line(input_unit, line, ios)
+          if (ios /= 0) call FMS_DieError('Not enough bead momenta in Geometry.dat')
+          read (line, *, iostat=ios) values
+          if (ios /= 0) call FMS_DieError('Invalid PIMD bead momentum in Geometry.dat')
+          if (angstrom_units) values = values / (BohrToAng * MassToAu)
+          rings(iring)%p(:, iatom, ibead) = values
+        end do
+      end do
+    end do
+    close (input_unit)
+  end subroutine read_pimd_geometry
+
+  subroutine next_pimd_line(input_unit, line, ios)
+    integer, intent(in) :: input_unit
+    character(len=*), intent(out) :: line
+    integer, intent(out) :: ios
+
+    do
+      read (input_unit, '(A)', iostat=ios) line
+      if (ios /= 0) return
+      line = adjustl(line)
+      if (len_trim(line) > 0 .and. line(1:1) /= '#' .and. line(1:1) /= '!') return
+    end do
+  end subroutine next_pimd_line
+
+  function to_upper(text) result(upper_text)
+    character(len=*), intent(in) :: text
+    character(len=len(text)) :: upper_text
+    integer :: character_index, character_code
+
+    upper_text = text
+    do character_index = 1, len(text)
+      character_code = iachar(upper_text(character_index:character_index))
+      if (character_code >= iachar('a') .and. character_code <= iachar('z')) &
+        upper_text(character_index:character_index) = achar(character_code - 32)
+    end do
+  end function to_upper
+end subroutine FMS_InitialPIMD
+
+function get_centroidforce(trajectory, available) result(force)
+  type(T_Trajectory), intent(in) :: trajectory
+  logical, intent(out) :: available
+  real(8), allocatable :: force(:)
+
+  real(8), allocatable :: force_sum(:, :)
+  type(T_Trajectory) :: bead_trajectory
+  integer :: ibead, iring
+  logical :: refresh_forces
+
+  allocate(force(trajectory%NumDimensions)) ! NumDimensions = ndim * natom
+  force = 0.0d0
+  available = .false.
+
+  if (.not. allocated(FMS_rings)) return
+  if (size(FMS_rings) == 0) return
+
+  do iring = 1, size(FMS_rings)
+    if (FMS_rings(iring)%traj_id /= trajectory%TrajID) cycle
+    if (FMS_rings(iring)%n <= 0) return
+    if (.not. allocated(FMS_rings(iring)%F_ext)) return
+    if (FMS_rings(iring)%ndim * FMS_rings(iring)%natom /= trajectory%NumDimensions) return
+
+    refresh_forces = .not. FMS_rings(iring)%forces_current .or. &
+                     FMS_rings(iring)%force_state /= trajectory%StateID
+    if (refresh_forces) then
+      if (trajectory%StateID < 1 .or. trajectory%StateID > trajectory%NumStates) return
+      bead_trajectory = trajectory
+    end if
+
+    allocate(force_sum(FMS_rings(iring)%ndim, FMS_rings(iring)%natom))
+    force_sum = 0.0d0
+    do ibead = 1, FMS_rings(iring)%n
+      if (refresh_forces) then
+        call set_ring_bead_geometry(bead_trajectory, FMS_rings(iring)%r(:, :, ibead))
+        FMS_rings(iring)%F_ext(:, :, ibead) = reshape( &
+          FMS_Forces(bead_trajectory, trajectory%StateID), &
+          shape(FMS_rings(iring)%F_ext(:, :, ibead)))
+      end if
+      force_sum = force_sum + FMS_rings(iring)%F_ext(:, :, ibead)
+    end do
+
+    if (refresh_forces) then
+      call bead_trajectory%destroy()
+      FMS_rings(iring)%force_state = trajectory%StateID
+      FMS_rings(iring)%forces_current = .true.
+    end if
+
+    force = reshape(force_sum / dble(FMS_rings(iring)%n), shape(force))
+    available = .true.
+    return
+  end do
+end function get_centroidforce
+
+subroutine set_ring_bead_geometry(trajectory, bead_positions)
+  type(T_Trajectory), intent(inout) :: trajectory
+  real(8), intent(in) :: bead_positions(:, :) ! shape (ndim, natom)
+  integer :: iparticle
+
+  do iparticle = 1, size(bead_positions, 2)
+    call trajectory%set_pos(iparticle, bead_positions(:, iparticle))
+  end do
+end subroutine set_ring_bead_geometry
 
 subroutine FMS_ring_add_child(parent_index, child, copies)
   integer, intent(in) :: parent_index
@@ -215,6 +484,9 @@ subroutine FMS_ring_add_child(parent_index, child, copies)
                           FMS_rings(parent_index)%nNHC)
     if (.not. success) call FMS_DieError('Failed to create spawned trajectory ring polymer')
     rings_temp(i) = FMS_rings(parent_index)
+    rings_temp(i)%traj_id = child%TrajID + icopy - 1
+    rings_temp(i)%force_state = 0
+    rings_temp(i)%forces_current = .false.
     do ibead = 1, rings_temp(i)%n
       do iparticle = 1, rings_temp(i)%natom
         rings_temp(i)%r(:, iparticle, ibead) = rings_temp(i)%r(:, iparticle, ibead) &
@@ -748,6 +1020,9 @@ case ("MB")
 
 end select
 
+ring%force_state=0
+ring%forces_current=.false.
+
 end subroutine ring_init
 
 subroutine ring_setconsts(ring,m,beta,method,thermostat,tau0,zcom,omega_in,widths_in,gamma_sq_in)
@@ -941,6 +1216,8 @@ do k=2,ring%n
 enddo
 
 call nmtran_backward(ring)
+ring%force_state=0
+ring%forces_current=.false.
 
 end subroutine ring_modesample
 
@@ -1010,6 +1287,7 @@ interface
   end function Force_func
 end interface
 ring%F_ext=Force_func(ring%r,ring%ndim,ring%natom,ring%n)
+ring%forces_current=.true.
 return
 end subroutine ring_updateforce
 
@@ -1152,6 +1430,7 @@ real(8) :: dtm_inv,mwterm,mwterm_inv,wtterm,coswt,sinwt,mwsinwt,mw_invsinwt,pnew
 integer :: iatom,idm,k
 logical nm_orig
 
+ring%forces_current=.false.
 nm_orig=ring%nm
 !Transform to normal modes
 call nmtran_forward(ring)

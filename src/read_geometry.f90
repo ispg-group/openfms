@@ -16,8 +16,15 @@
 !!    .     .     .
 !!    .     .     .
 !!    .     .     .
+!!    PIMD_POSITIONS
+!!    [Name1] [x1] [y1] [z1]  # trajectory 1, bead 1, atom 1
+!!    .       .    .    .
+!!    PIMD_MOMENTA
+!!    [px1]  [py1]  [pz1]     # trajectory 1, bead 1, atom 1
+!!    .      .      .
 !!    </pre>
-!!     Momenta are optional unless inInitialCond=0
+!!     PIMD blocks use trajectory-major, bead-major, atom-major order.
+!!     Classical momenta are optional unless inInitialCond=0.
 !!    @ingroup initial
 !<
 subroutine FMS_ReadGeometry(T1)

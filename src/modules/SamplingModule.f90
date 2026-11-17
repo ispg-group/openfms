@@ -21,7 +21,8 @@ module SamplingModule
       BOLTZ = 3, &
       COLDWIG = 4, &
       SWARM = 5, &
-      HUSIMI = 6
+      HUSIMI = 6, &
+      PIMD = 7
 
 !>    System temperature
    real(kind=DefReal), public :: indTemperature

@@ -562,11 +562,12 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    case ('boltzmann'); inInitialCond = BOLTZ
    case ('coldwigner'); inInitialCond = COLDWIG
    case ('swarm'); inInitialCond = SWARM
+   case ('pimd'); inInitialCond = PIMD
    case default
       write (error_unit, *) 'ERROR in Control.dat:'
       write (error_unit, *) '  Unrecognized initial condition "'//trim(InitialCond)//'"'
       write (error_unit, *) 'Available initial conditions methods:'
-      write (error_unit, *) '  NOSAMPLE, WIGNER, QUASICLASSICAL, BOLTZMANN, COLDWIGNER'
+      write (error_unit, *) '  NOSAMPLE, WIGNER, HUSIMI, QUASICLASSICAL, BOLTZMANN, COLDWIGNER, SWARM, PIMD'
       zFatal = .true.
    end select
 

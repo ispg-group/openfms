@@ -5,7 +5,9 @@
 module test_ring
    use testdrive, only: new_unittest, unittest_type, error_type, check
    use RingModule, only: T_Ring, ring_create, ring_destroy, ring_setconsts, ringprop, &
-                       ring_T, ring_V, ring_centvec, nmtran_forward, nmtran_backward
+                       ring_T, ring_V, ring_centvec, nmtran_forward, nmtran_backward, &
+                       FMS_rings, FMS_ring_setup, FMS_ring_compact, get_centroidforce
+   use TrajectoryModule, only: T_Trajectory
    use ToyModelModule, only: quartic_force
    private
    public :: collect_ring_suite
@@ -23,9 +25,60 @@ contains
          new_unittest("PA-CMD quartic: two trajectories, explicit beads", &
                       test_pacmd_nve_quartic_2trajs_set_beads), &
          new_unittest("PA-CMD quartic: two trajectories, centroid beads", &
-                      test_pacmd_nve_quartic_2trajs_centroid_beads) &
+                      test_pacmd_nve_quartic_2trajs_centroid_beads), &
+         new_unittest("centroid force: bead mean and trajectory lookup", &
+                      test_get_centroidforce) &
       ]
    end subroutine collect_ring_suite
+
+   subroutine test_get_centroidforce(error)
+      type(error_type), allocatable, intent(out) :: error
+      type(T_Trajectory) :: trajectory
+      real(8), allocatable :: force(:)
+      logical :: available, success
+
+      call trajectory%create(numparticles=1, numstates=1)
+      trajectory%TrajID = 42
+
+      call FMS_ring_setup(2)
+      success = ring_create(FMS_rings(1), 3, 1, 2, 0)
+      call check(error, success, "ring_create failed for first centroid-force ring")
+      if (allocated(error)) return
+      success = ring_create(FMS_rings(2), 3, 1, 2, 0)
+      call check(error, success, "ring_create failed for second centroid-force ring")
+      if (allocated(error)) return
+
+      FMS_rings(1)%traj_id = 7
+      FMS_rings(2)%traj_id = 42
+      FMS_rings(2)%time = 1.d0
+      FMS_rings(2)%force_state = trajectory%StateID
+      FMS_rings(2)%forces_current = .true.
+      FMS_rings(2)%F_ext(:, 1, 1) = [1.d0, 2.d0, 3.d0]
+      FMS_rings(2)%F_ext(:, 1, 2) = [3.d0, 4.d0, 5.d0]
+
+      force = get_centroidforce(trajectory, available)
+      call check(error, available, "centroid force was not available")
+      if (allocated(error)) return
+      call check(error, maxval(abs(force - [2.d0, 3.d0, 4.d0])) < 1.d-12, &
+                 "centroid force is not the arithmetic bead mean")
+      if (allocated(error)) return
+
+      call FMS_ring_compact([.false., .true.])
+      force = get_centroidforce(trajectory, available)
+      call check(error, available, "trajectory lookup failed after ring compaction")
+      if (allocated(error)) return
+      call check(error, maxval(abs(force - [2.d0, 3.d0, 4.d0])) < 1.d-12, &
+                 "centroid force changed after ring compaction")
+      if (allocated(error)) return
+
+      FMS_rings(1)%forces_current = .false.
+      force = get_centroidforce(trajectory, available)
+      call check(error, .not. available, "stale ring force was reported as available")
+      if (allocated(error)) return
+
+      call FMS_ring_setup(0)
+      call trajectory%destroy()
+   end subroutine test_get_centroidforce
 
    subroutine test_pacmd_nve_quartic(error)
       implicit none

@@ -1,3 +1,8 @@
+! FFTPack routines
+! https://www.netlib.org/fftpack/
+! Ref: P.N. Swarztrauber, Vectorizing the FFTs, in Parallel Computations (G. Rodrigue, ed.), 
+! Academic Press, 1982, pp. 51--83.
+
 module FFTModule
 IMPLICIT DOUBLE PRECISION (A-H,O-Z)
 !Expose interface routines only

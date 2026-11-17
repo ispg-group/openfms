@@ -44,3 +44,4 @@ __pycache__/
 
 # FORD dev docs 
 developer_docs
+unit_tests/test_thermo/

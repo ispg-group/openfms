@@ -65,7 +65,7 @@ contains
 
    subroutine test_overlap_S_dot(error)
       use GlobalModule, only: gliModel, gliMethod
-      use TrajectoryCalcsModule, only: FMS_Forces
+      use RingModule, only: FMS_rings, FMS_ring_setup, ring_create
       use ToyModelModule, only: izmaylov_params
       use ElecStrucModule
       type(error_type), allocatable, intent(out) :: error
@@ -73,9 +73,11 @@ contains
       integer(kind=DefInt) :: num_particles, num_states
       complex(kind=DefReal) :: SDot_analytical(7)
       complex(kind=DefReal) :: SDot_numerical(7)
-      real(kind=DefReal) :: pos(6), mom(6), vel(6)
+      complex(kind=DefReal) :: SDot_force, SDot_zero, SDot_double
+      real(kind=DefReal) :: pos(6), mom(6), vel(6), force(6)
       real(kind=DefReal) :: mass
       real(kind=DefReal) :: min_err
+      logical :: ring_created
 
       num_particles = 2
       num_states = 1
@@ -107,6 +109,7 @@ contains
       call T2%set_pos(pos)
       call T2%set_mom(mom)
       call T2%set_vel(vel)
+      T2%TrajID = 22
       T2%StateID = 1
       T2%Phase = 0.0320
       T2%Particle(:)%mass = 0.0005485
@@ -125,6 +128,32 @@ contains
                  //'significantly from numerical one')
       if (allocated(error)) return
 
+            call FMS_ring_setup(1)
+            ring_created = ring_create(FMS_rings(1), 3, 2, 2, 0)
+            call check(error, ring_created, 'ring_create failed for SDot test')
+            if (allocated(error)) return
+            FMS_rings(1)%traj_id = T2%TrajID
+            FMS_rings(1)%time = 1.d0
+            FMS_rings(1)%force_state = T2%StateID
+            FMS_rings(1)%forces_current = .true.
+            FMS_rings(1)%F_ext = 0.d0
+            SDot_zero = overlap_S_dot(T1, T2)
+
+      force = [0.3d0, -0.2d0, 0.1d0, -0.4d0, 0.5d0, -0.6d0]
+            FMS_rings(1)%F_ext(:, :, 1) = reshape(force, [3, 2])
+            FMS_rings(1)%F_ext(:, :, 2) = reshape(force, [3, 2])
+            SDot_force = overlap_S_dot(T1, T2)
+            FMS_rings(1)%F_ext = 2.d0 * FMS_rings(1)%F_ext
+            SDot_double = overlap_S_dot(T1, T2)
+      call check(error, abs(SDot_force - SDot_zero) > atol, &
+               'Ring centroid force did not change SDot')
+      if (allocated(error)) return
+      call check(error, abs((SDot_double - SDot_zero) - &
+                   2.d0 * (SDot_force - SDot_zero)) < atol, &
+             'Ring force contribution to SDot is not linear')
+      if (allocated(error)) return
+
+            call FMS_ring_setup(0)
       call T1%destroy()
       call T2%destroy()
    end subroutine test_overlap_S_dot

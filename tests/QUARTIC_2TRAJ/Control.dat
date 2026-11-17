@@ -1,0 +1,33 @@
+! Two-trajectory PA-CMD test on the one-dimensional quartic potential.
+
+&control
+ InitState=1
+ InitialCond='PIMD'
+ iRndSeed=57034456
+
+ Model='TOY'
+ iMethod=5
+ NumParticles=1
+ NumStates=1
+ NumInitBasis=2
+ NormInitial=.true.
+
+ nBeads=4
+ Temperature=39472.0
+ RPMDMethod='PA-CMD'
+ RPMDThermostat='NHC-L'
+ RPMDNNHCChain=2
+
+ TimeStep=0.01d0
+ MinTimeStep=0.01d0
+ SimulationTime=0.10d0
+ TimeStepRejection=.false.
+ MaxTraj=2
+ MultiSpawn=0
+
+ zAllText=.true.
+ NStepToPrint=1
+/
+ 1
+#Name  AtomicNum  AtomicWeight(amu)  Width(1/bohr**2)
+ QQ    1          0.0005485          0.004775

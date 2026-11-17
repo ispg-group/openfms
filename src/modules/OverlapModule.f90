@@ -4,6 +4,7 @@ module OverlapModule
    use ToyModelModule, only: GAIMS_model_params
    use ParticleModule
    use TrajectoryModule
+   use RingModule, only: get_centroidforce
    use TrajectoryCalcsModule, only: FMS_Forces, FMS_PotentialT, FMS_KineticT, &
                                     FMS_Coupling, FMS_SOCoupling, FMS_Dipole, FMS_PhaseDot, FMS_TransDipoleIJxf, &
                                     FMS_SetIgnoreError
@@ -904,6 +905,8 @@ contains
       complex(kind=DefComp) :: S_dot
 
       complex(kind=DefComp) :: S_ij
+      real(kind=DefReal) :: force_T2(T2%NumDimensions)
+      logical :: ring_force_available
 
       if (present(S_ij_precalc)) then
          S_ij = S_ij_precalc
@@ -927,9 +930,13 @@ contains
       !  ∇_{R_i} χ_i = [- α (R - R_i) - i P_i ] χ_i
       !
       !  Thus it follows that ∇_R χ_i = - ∇_{R_i} χ_i
+
+      force_T2 = get_centroidforce(T2, ring_force_available)
+      if (.not. ring_force_available) force_T2 = FMS_Forces(T2)
+
       S_dot = (-dot_product(T2%get_vel(), &
                             overlap_dx_trajectory(T1, T2, S_ij)) &
-               + dot_product(FMS_Forces(T2), &
+               + dot_product(force_T2, &
                              overlap_dp_trajectory(T1, T2, S_ij)) &
                + (0.d0, 1.d0) * FMS_PhaseDot(T2) * S_ij)
 

@@ -66,7 +66,7 @@ InitialModule.o: InitialModule.f90 GlobalModule.o FMSModule.o SpawnModule.o \
 SamplingModule.o: SamplingModule.f90 GlobalModule.o FMSModule.o EispackModule.o \
 	RandomModule.o QM_MM_Module.o TrajectoryModule.o BundleCalcsModule.o OverlapModule.o
 
-ThermoModule.o: ThermoModule.f90 GlobalModule.o TrajectoryModule.o TrajectoryCalcsModule.o
+ThermoModule.o: ThermoModule.f90 GlobalModule.o RandomModule.o TrajectoryModule.o TrajectoryCalcsModule.o
 
 ElecStrucModule.o: ElecStrucModule.f90 GlobalModule.o
 
@@ -88,7 +88,7 @@ TrajectoryIOModule.o: TrajectoryIOModule.f90 TrajectoryModule.o TrajectoryCalcsM
 			ElecStrucModule.o GlobalModule.o RingModule.o
 
 OverlapModule.o: OverlapModule.f90 GlobalModule.o \
-		ParticleModule.o TrajectoryModule.o TrajectoryCalcsModule.o
+		ParticleModule.o TrajectoryModule.o TrajectoryCalcsModule.o RingModule.o
 
 BundleModule.o: BundleModule.f90 TrajectoryModule.o TrajectoryCalcsModule.o GlobalModule.o
 
@@ -138,6 +138,7 @@ FFTModule.o: FFTModule.f90
 	@$(FC) $(filter-out -fimplicit-none,$(FFLAGS)) $(INCFLAGS) -std=legacy \
 		-Wno-maybe-uninitialized -Wno-array-bounds -Wno-do-subscript -c $<
 
-RingModule.o: RingModule.f90 ThermoModule.o FFTModule.o GlobalModule.o TrajectoryModule.o
+RingModule.o: RingModule.f90 ThermoModule.o FFTModule.o GlobalModule.o \
+	TrajectoryModule.o TrajectoryCalcsModule.o
 
 PropVVRing.o: PropVVRing.f90 GlobalModule.o TrajectoryModule.o TrajectoryCalcsModule.o ParticleModule.o RingModule.o
