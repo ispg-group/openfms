@@ -53,21 +53,14 @@ while [[ $# -gt 0 ]]; do
         shift 2
         ;;
       --stdlib-lib)
-        STDLIB_LIBDIR=$2
-        check_path "$STDLIB_LIBDIR"
+        check_path "$2"
+        STDLIB_LIBDIR=$(realpath "$2")
         STDLIB=TRUE
         shift 2
         ;;
       --stdlib-module)
-        STDLIB_MODULEDIR=$2
-        if [[ $STDLIB_LIBDIR != "none" && $STDLIB_MODULEDIR = "none" ]]; then
-            echo "ERROR: Please provide location of the STDLIB module directory"
-            exit 1
-        fi
-        check_path "$STDLIB_MODULEDIR"
-        if [[ $STDLIB_LIBDIR != "none" && $STDLIB_MODULEDIR != "none" ]]; then
-            STDLIB=TRUE
-        fi
+        check_path "$2"
+        STDLIB_MODULEDIR=$(realpath "$2")
         STDLIB=TRUE
         shift 2
         ;;

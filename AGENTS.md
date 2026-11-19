@@ -6,7 +6,7 @@ OpenFMS is an open-source Fortran implementation of ab initio multiple spawning 
 
 ```console
 ./configure.sh          # writes CONFIGFMS (default 'zero' backend = toy models only)
-./configure.sh tc       # TeraChem backend; needs mpifort/mpiifort built with the same MPI as TeraChem
+./configure.sh --interface tc       # TeraChem backend; needs mpifort/mpiifort built with the same MPI as TeraChem
 make -j                 # builds src/libfms.a, links bin/openfms.<backend> (+ symlink bin/openfms)
 make unittest           # builds and runs unit_tests/test
 make test               # all end-to-end tests in tests/
