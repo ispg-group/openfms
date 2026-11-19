@@ -7,6 +7,8 @@ include CONFIGFMS
 export FC
 export FCTYPE
 export LD
+export STDLIB_LIBDIR
+export STDLIB_MODULEDIR
 export FFLAGS
 export LDFLAGS
 export KERNEL
@@ -15,6 +17,7 @@ export MV = mv
 export SHELL = bash
 export CP = cp
 export RM = rm -f
+export INCFLAGS
 
 # By default run all end-to-end tests in tests/
 TEST=all
@@ -49,9 +52,13 @@ ifeq ($(ESP),quantics)
    LIBS += ${QUANTICS_OBJ}/libomp.a
 endif
 
-.PHONY: FORCE test testclean updatetestref clean veryclean list
+ifneq ($(STDLIB_LIBDIR),)
+   LIBS += -Wl,--start-group $(wildcard $(STDLIB_LIBDIR)/*.a) -Wl,--end-group
+   FFLAGS += -DSTDLIB
+   INCFLAGS += -I$(STDLIB_MODULEDIR)
+endif
 
-MODULEDIR=Modules/
+.PHONY: FORCE test testclean updatetestref clean veryclean list
 
 SUFFIXES=.f .c .F
 
@@ -77,7 +84,7 @@ bin:
 # This is standalone OpenFMS, without external electronic structure
 bin/$(PROGBASE).zero: $(FMSLIB) $(MAIN) $(MAKEFILE)
 		@echo;echo "Linking $(PROGRAM) ..."
-		$(LD) $(MAIN) $(FMSLIB) -I$(MODULEDIR) -o $(TARGET) $(LIBS) $(LDFLAGS)
+		$(LD) $(MAIN) $(FMSLIB) -o $(TARGET) $(LIBS) $(LDFLAGS)
 		@rm -f bin/$(PROGBASE)
 		@ln -s $(PROGRAM) bin/$(PROGBASE)
 		@echo "done"
@@ -93,7 +100,7 @@ bin/$(PROGBASE).tc: $(FMSLIB) $(MAIN) $(MAKEFILE)
 bin/$(PROGBASE).quantics: $(FMSLIB) $(MAIN) $(MAKEFILE)
 		@rm -f bin/$(PROGBASE)
 		@echo;echo "Linking $(PROGRAM) ..."
-		$(LD) $(MAIN) $(FMSLIB) -I$(MODULEDIR) -o $(TARGET) $(LIBS) $(LDFLAGS) -J$(QUANTICS_OBJ)/include -L$(QUANTICS_DIR)/bin/dyn_libs -lsrf -lusrf -lsqlite3 -Wl,-rpath=$(QUANTICS_DIR)/bin/dyn_libs
+		$(LD) $(MAIN) $(FMSLIB) -o $(TARGET) $(LIBS) $(LDFLAGS) -J$(QUANTICS_OBJ)/include -L$(QUANTICS_DIR)/bin/dyn_libs -lsrf -lusrf -lsqlite3 -Wl,-rpath=$(QUANTICS_DIR)/bin/dyn_libs
 		@ln -s $(PROGRAM) bin/$(PROGBASE)
 		@echo "done"
 

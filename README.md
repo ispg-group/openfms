@@ -26,7 +26,7 @@ In the default (`zero`) compilation target, only the analytical model potentials
 To compile with TeraChem interface, run:
 
 ```console
-./configure.sh tc
+./configure.sh --interface tc
 ```
 
 In this case, the compiler needs to be changed to `mpif90` using the MPI implementation

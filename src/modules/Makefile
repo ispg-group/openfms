@@ -2,7 +2,7 @@
 # Machine dependencies #
 ########################
 CONFIG = ../../CONFIGFMS
-INCFLAGS = -I ..
+INCFLAGS += -I ..
 SUFFIXES = .f90 .f .F90 .F
 INTERFACES = ../fortran_interfaces.inc
 MAKEFILE = Makefile

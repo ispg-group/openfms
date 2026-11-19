@@ -1,7 +1,7 @@
 # All source files in this folder should have .F90 suffix!
 SUFFIXES = .F90
 LIBFMS = ../src/libfms.a
-INCFLAGS = -I../src/modules
+INCFLAGS += -I../src/modules
 MAKEFILE = Makefile
 CONFIG = ../CONFIGFMS
 

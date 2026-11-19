@@ -1,19 +1,91 @@
 #!/bin/bash
 # Embarassigly barebones configure.sh, which generates the CONFIGFMS file used by make
+# Takes in command-line options that define flags used during compilation and linking
 # The first parameter to this script determines the interface that is compiled.
 # Currently, only the MPI-based interface to TeraChem is available.
 # By default, we only compile with the model potentials ('zero').
 
+
+function show_help() {
+echo "
+NAME
+   configure.sh  
+DESCRIPTION
+   Generates local compilation config file for OpenFMS and saves it to CONFIGFMS
+
+USAGE
+   configure [--interface] [--stdlib-lib path/to/stdlib-lib] [--stdlib-module path/to/stdlib-module]
+OPTIONS
+   --interface      Define electronic-structure interface with which OpenFMS is compiled.
+                    Valid options:
+                      'zero' for no interface, only model systems will be available. (default)
+                      'tc' for TeraChem
+   --stdlib-lib     location of STDLIB libraries (https://stdlib.fortran-lang.org/)
+   --stdlib-module  location of STDLIB modules (https://stdlib.fortran-lang.org/)
+   -h|--help        print this help and exit
+"
+}
+
+function check_path() {
+    if [[ ! -d $1 ]]; then
+        echo "'$1' is not a directory!"
+        exit 1
+    fi
+}
+
+
 # Output file name
 VARS=CONFIGFMS
 
-# Electronic structure interface
-ESP=${1-zero}
-if [[ $ESP != "tc" && $ESP != "zero" && $ESP != "quantics" ]]; then
-    echo "ERROR: Unsupported interface target '$ESP'"
-    echo "Supported targets: 'zero', 'tc'"
+ESP=zero
+
+# Parse command-line options
+PARAMS="$@"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --interface)
+        ESP=${2}
+        if [[ $ESP != "tc" && $ESP != "zero" && $ESP != "quantics" ]]; then
+            echo "ERROR: Unsupported interface target '$ESP'"
+            echo "Supported targets: 'zero', 'tc'"
+            exit 1
+        fi
+        shift 2
+        ;;
+      --stdlib-lib)
+        check_path "$2"
+        STDLIB_LIBDIR=$(realpath "$2")
+        STDLIB=TRUE
+        shift 2
+        ;;
+      --stdlib-module)
+        check_path "$2"
+        STDLIB_MODULEDIR=$(realpath "$2")
+        STDLIB=TRUE
+        shift 2
+        ;;
+      --help|-h)
+        show_help
+        exit 0
+        ;;
+      *)
+        echo "ERROR: Invalid option '$1'"
+        show_help
+        exit 1
+        ;;
+    esac
+done
+
+# Sanity check for command-line set variables
+if [[ -z ${STDLIB_LIBDIR-} && ${STDLIB-} = "TRUE" ]]; then
+    echo "ERROR: Please provide location of the STDLIB library directory"
     exit 1
 fi
+if [[ -z ${STDLIB_MODULEDIR-} && ${STDLIB-} = "TRUE" ]]; then
+    echo "ERROR: Please provide location of the STDLIB module directory"
+    exit 1
+fi
+
 
 if [[ -z $FC ]]; then
     if [[ $ESP = 'tc' ]];then
@@ -71,6 +143,8 @@ cat << EOF > $VARS
 ESP = $ESP
 FC = $FC
 LD = $FC
+STDLIB_LIBDIR = $STDLIB_LIBDIR
+STDLIB_MODULEDIR = $STDLIB_MODULEDIR
 FCTYPE = $FCTYPE
 FFLAGS = $FFLAGS
 KERNEL = $(uname -s)
