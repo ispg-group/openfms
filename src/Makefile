@@ -88,23 +88,23 @@ build_info.F90: FORCE
 
 # Always recompile build_info.F90 to keep the git revision up to date.
 build_info.o: build_info.F90 openfms.o $(OBJS) $(MOD_OBJS)
-	$(FC) -c $(FFLAGS) -I $(MODULEDIR) -DOPENFMS_BUILD_DATE="'$(BUILD_DATE)'" $<
+	$(FC) -c $(FFLAGS) -I$(MODULEDIR) $(INCFLAGS) -DOPENFMS_BUILD_DATE="'$(BUILD_DATE)'" $<
 
 %.o : %.F
 	@echo "Compiling $<"
-	@$(FC) -c $(FFLAGS) -I $(MODULEDIR) $<
+	@$(FC) -c $(FFLAGS) -I$(MODULEDIR) $(INCFLAGS) $<
 
 %.o : %.f
 	@echo "Compiling $<"
-	@$(FC) -c $(FFLAGS) -I $(MODULEDIR) $<
+	@$(FC) -c $(FFLAGS) -I$(MODULEDIR) $(INCFLAGS) $<
 
 %.o : %.f90
 	@echo "Compiling $<"
-	@$(FC) -c $(FFLAGS) -I $(MODULEDIR) $<
+	@$(FC) -c $(FFLAGS) -I$(MODULEDIR) $(INCFLAGS) $<
 
 %.o : %.F90
 	@echo "Compiling $<"
-	@$(FC) -c $(FFLAGS) -I $(MODULEDIR) $<
+	@$(FC) -c $(FFLAGS) -I$(MODULEDIR) $(INCFLAGS) $<
 
 $(MODFILES): modules
 # NOTE: It's VERY important to have the recipe for MOD_OBJS empty (note the semicolon at the end),
