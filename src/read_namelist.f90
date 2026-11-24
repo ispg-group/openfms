@@ -225,6 +225,11 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    integer(kind=DefInt) :: nCubeOrbs
    integer(kind=DefInt) :: nCubeOrbIndex(MaxArray)
    integer(kind=DefInt) :: NCubeStep
+   logical :: AssumeHermitian
+   logical :: Adaptive
+   logical :: NoisyGuess
+   real(kind=DefReal) :: NoisyGuessFac
+   real(kind=DefReal) :: MaxCoup
 
    namelist /control/ AnalysisMode, Brown &
       , BrownCon, CFThresh, CSThresh, DGamma, EnergyAdjust, Equi &
@@ -273,8 +278,11 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
       ! Toy models
       , IzmOmegax, IzmOmegay, IzmXshift, IzmYshift, IzmDeltaE, IzmCoupC &
       , Grsigma &
-      ! Backwards compat
+      ! Backwards compatibility, these keywords are not doing anything and will be removed
+      ! after version 0.1
       , Tunnel, EShellOnly, SpawnAdaptive, SteepestDescent &
+      , AssumeHermitian, Adaptive, MaxCoup &
+      , NoisyGuess, NoisyGuessFac &
       !TM
       , NDummyParticles, DummyCoeff
 
@@ -302,7 +310,9 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    nCubeOrbs = 0
    nCubeOrbIndex = 0
    nCubeStep = 0
+   Adaptive = .false.
    AnalysisMode = .false.
+   AssumeHermitian = .true.
    Brown = .false.
    BrownCon = .false.
    Constrain = .false.
@@ -351,6 +361,7 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    end do
    ISaddle = 0
    IterInv = .false.
+   MaxCoup = 1.d6
    MaxEDiff = 0.03d0
    MaxTraj = 100
    MinSearch = .false.
@@ -360,6 +371,8 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
    MoldenStep = 200
    MultiSpawn = 1
    NCycles = 0
+   NoisyGuessFac = 0.05
+   NoisyGuess = .false.
    NormInitial = .false.
    OSAmp = .false.
    NSteps = 0
@@ -751,6 +764,12 @@ subroutine FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
       end do
       write (fmiOut, *) 'Performing Average Hamiltonian Dynamics over states:', gliAvHStates(1:gliAvHNStates)
    end if
+
+   ! Check for deprecated / removed variables
+   ! We print error only if the value differs from the default.
+   if (NoisyGuess) call FMS_DieError("'NoisyGuess' keyword has been removed")
+   if (Adaptive) call FMS_DieError("'Adaptive' keyword has been removed")
+   if (.not. AssumeHermitian) call FMS_DieError("'AssumeHermitian' keyword has been removed")
 
 !
 !     Make sure required variables have been set
