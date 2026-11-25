@@ -569,7 +569,7 @@ contains
       call child_a%destroy()
 
       call cpu_time(time_tmp2)
-      ftime = ftime + time_tmp2 - time_tmp1
+      glTimers%forwardprop = glTimers%forwardprop + time_tmp2 - time_tmp1
    end subroutine propagate_cont_spawn
 
 !-------------------------------------------------------------------------------
@@ -744,7 +744,7 @@ contains
       call child_a%destroy()
 
       call cpu_time(time_tmp2)
-      ftime = ftime + time_tmp2 - time_tmp1
+      glTimers%forwardprop = glTimers%forwardprop + time_tmp2 - time_tmp1
    end subroutine propagate_forward_overlap
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -768,7 +768,7 @@ contains
       write (fmiOut, *) 'Done backpropagating'
 
       call cpu_time(time_tmp2)
-      btime = btime + time_tmp2 - time_tmp1
+      glTimers%backprop = glTimers%backprop + time_tmp2 - time_tmp1
    end subroutine propagate_backward
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

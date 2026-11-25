@@ -11,7 +11,7 @@
 program OpenFMS
    use FMSModule
    use GlobalModule, only: DefInt, DefReal, fmiOut, &
-                           FMS_DeleteFile, FmsWorkingDir, timei, FMS_DieError, &
+                           FMS_DeleteFile, FmsWorkingDir, glTimers, FMS_DieError, &
                            fmzWriteEveryStep, gldTimeStep, glzMinSearch
    use RandomModule, only: FMS_ranb, initialize_fortran_prng
    use BundleModule
@@ -43,7 +43,7 @@ program OpenFMS
 
    call get_cmdline(tc_port_name)
    ! Start the timer
-   call cpu_time(timei)
+   call cpu_time(glTimers%initial)
 
    ! Get parameters for this run and populate parameter modules
    call FMS_ReadNameList(NumParticles, NumStates, NumTraj, SimulationTime)
@@ -60,7 +60,7 @@ program OpenFMS
 
    ! Initialize random number generator
    if (inIRndSeed == 0) then
-      inIRndSeed = int(timei, 4)
+      inIRndSeed = int(glTimers%initial, 4)
       write (fmiOut, *) 'Random seed from clock: ', inIRndSeed
       if (inIRndSeed == 0) then
          call FMS_DieError('Failed to get non-zero random seed from clock.')

@@ -635,7 +635,7 @@ contains
       end do
 
       call cpu_time(time_tmp2)
-      bhstime = bhstime + time_tmp2 - time_tmp1
+      glTimers%bhs = glTimers%bhs + time_tmp2 - time_tmp1
 
       if (.not. IterInv) then
 !---------------------------------------------------------------
@@ -680,7 +680,7 @@ contains
          Bundle%BMatrices%HEff = matmul(Bundle%BMatrices%SInv, CTmpMat)
 
          call cpu_time(time_tmp2)
-         invtime = invtime + time_tmp2 - time_tmp1
+         glTimers%inv = glTimers%inv + time_tmp2 - time_tmp1
       else
          Bundle%BMatrices%HEff1 = Bundle%BMatrices%H - c1i * Bundle%BMatrices%SDot
       end if
@@ -707,8 +707,6 @@ contains
       type(T_TrajectoryBundle) :: B1 !< Calculate time-derivatives quantum amplitude for this bundle
       complex(kind=DefComp), allocatable :: Amp(:)
       complex(kind=DefComp), allocatable :: CX(:), CB(:)
-!     complex (kind=DefComp) CX(B1%NumTraj),CB(B1%NumTraj)
-!     complex (kind=DefComp) CA(B1%NumTraj,B1%NumTraj)
       complex(kind=DefComp), allocatable :: SMat(:, :)
       integer(kind=DefInt) :: ITraj, JTraj, NumTraj
       integer(kind=DefInt) :: LastDimension
@@ -778,7 +776,7 @@ contains
          end do
 
          call cpu_time(time_tmp2)
-         cgtime = cgtime + time_tmp2 - time_tmp1
+         glTimers%cg = glTimers%cg + time_tmp2 - time_tmp1
 
       end if
 
