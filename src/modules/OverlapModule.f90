@@ -358,7 +358,7 @@ contains
       if (present(same_state)) then
          if (same_state .and. (T1%stateID /= T2%stateID)) then
             S = (0., 0.)
-            return !note- this won't update olaptime, but that's ok
+            return !note- this won't update olap timer, but that's ok
          end if
       end if
 
@@ -366,7 +366,7 @@ contains
       if (present(same_state)) then
          if (same_state .and. (T1%Ms /= T2%Ms)) then
             S = (0., 0.)
-            return !note- this won't update olaptime, but that's ok
+            return !note- this won't update olap timer, but that's ok
          end if
       end if
 ! GAIMS added end
@@ -377,7 +377,7 @@ contains
       end do
 
       call cpu_time(time_tmp2)
-      olaptime = olaptime + time_tmp2 - time_tmp1
+      glTimers%olap = glTimers%olap + time_tmp2 - time_tmp1
    end function overlap_trajectory
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -859,7 +859,7 @@ contains
       end select
 
       call cpu_time(time_tmp2)
-      pottime = pottime + time_tmp2 - time_tmp1
+      glTimers%pot = glTimers%pot + time_tmp2 - time_tmp1
    end function overlap_V_trajectory
 
 ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

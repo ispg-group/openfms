@@ -230,7 +230,7 @@ contains
 !     Record timing statistics
       glNESCalls = glNESCalls + 1
       call cpu_time(time_tmp2)
-      estime = estime + time_tmp2 - time_tmp1
+      glTimers%elecstruct = glTimers%elecstruct + time_tmp2 - time_tmp1
    end subroutine FMS_UpdatePES
 
 ! Public routines to return electronic structure quantities

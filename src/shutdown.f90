@@ -27,27 +27,26 @@ subroutine FMS_Shutdown(B1, T1, terminate)
       call tc_finalize()
    end if
 
-!     Write timing info
-!     TODO: Convert all the globals to a single derived type 'timing_info'
-   call cpu_time(timef)
+   ! Write timing info
+   call cpu_time(glTimers%final)
    write (fmiOut, *)
    write (fmiOut, *) '== FMS DONE =='
    write (fmiOut, *)
    write (fmiOut, *) '-------------- Timing Info: -------------------'
    write (fmiOut, 1) '# electronic structure calls:  ', glNESCalls
    write (fmiOut, 1) '# rejected timesteps:          ', glnStepsRejected
-   write (fmiOut, 2) 'Spawning- Forward propagation: ', ftime
-   write (fmiOut, 2) 'Spawning- Backward propagation:', btime
+   write (fmiOut, 2) 'Spawning - Forward propagation: ', glTimers%forwardprop
+   write (fmiOut, 2) 'Spawning - Backward propagation:', glTimers%backprop
    if (GlzIterInv) then
-      write (fmiOut, 2) 'Conjugate gradient time:       ', cgtime
+      write (fmiOut, 2) 'Conjugate gradient time:       ', glTimers%cg
    else
-      write (fmiOut, 2) 'S inversion time:              ', invtime
+      write (fmiOut, 2) 'S inversion time:              ', glTimers%inv
    end if
-   write (fmiOut, 2) 'BuildHS time:                  ', bhstime
-   write (fmiOut, 2) 'Overlap time:                  ', olaptime
-   write (fmiOut, 2) 'V matrix element time:         ', pottime
-   write (fmiOut, 2) 'Electronic structure time:     ', estime
-   write (fmiOut, 2) 'Total runtime:                 ', timef - timei
+   write (fmiOut, 2) 'BuildHS time:                  ', glTimers%bhs
+   write (fmiOut, 2) 'Overlap time:                  ', glTimers%olap
+   write (fmiOut, 2) 'V matrix element time:         ', glTimers%pot
+   write (fmiOut, 2) 'Electronic structure time:     ', glTimers%elecstruct
+   write (fmiOut, 2) 'Total runtime:                 ', glTimers%final - glTimers%initial
    if (present(B1)) then
       write (fmiOut, 1) 'Final # of trajectories:       ', NumTraj
    end if

@@ -69,18 +69,27 @@ module GlobalModule
 !     TIMERS
 !----------------------------------------------------------------
    real(kind=DefReal) :: glRestartTime
-   real(kind=DefReal) :: ftime = 0.0d0
-   real(kind=DefReal) :: btime = 0.0d0
-   real(kind=DefReal) :: cgtime = 0.0d0
-   real(kind=DefReal) :: invtime = 0.0d0
-   real(kind=DEfReal) :: bhstime = 0.0d0
-   real(kind=DefReal) :: olaptime = 0.0d0
-   real(kind=DefReal) :: pottime = 0.0d0
-   real(kind=DefReal) :: kintime = 0.0d0
-   real(kind=DefReal) :: estime = 0.0d0
-   real(kind=DefReal) :: timei = 0.0d0
-   real(kind=DefReal) :: timef = 0.0d0
-   real(kind=DefReal) :: sdottime = 0.0d0
+
+   type t_timers
+      !> Time spent during forward-propagation while spawning
+      real(kind=DefReal) :: forwardprop = 0.0d0
+      !> Time spent during backward-propagation while spawning
+      real(kind=DefReal) :: backprop = 0.0d0
+      real(kind=DefReal) :: cg = 0.0d0
+      real(kind=DefReal) :: inv = 0.0d0
+      real(kind=DEfReal) :: bhs = 0.0d0
+      real(kind=DefReal) :: olap = 0.0d0
+      real(kind=DefReal) :: pot = 0.0d0
+      real(kind=DefReal) :: kin = 0.0d0
+      real(kind=DefReal) :: elecstruct = 0.0d0
+      real(kind=DefReal) :: initial = 0.0d0
+      real(kind=DefReal) :: final = 0.0d0
+      ! Currently unused
+      real(kind=DefReal) :: sdot = 0.0d0
+   end type t_timers
+
+   type(t_timers) :: glTimers = t_timers()
+
    integer :: glNESCalls = 0
    integer(kind=DefInt) :: glnStepsRejected = 0
 
