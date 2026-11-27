@@ -324,9 +324,7 @@ contains
          call WriteTraj(B%Trajectory(n), nf)
       end do
 
-!bfec
       if (glzCentroids) then
-! do n = 1, ntraj*(ntraj-1)/2
          do n = 1, nCBFs * (nCBFs - 1) / 2
             write (nf, '(a,i4,a)') '###############   Centroid      ', n, ' ############'
             call WriteTraj(B%Centroids(n), nf)
@@ -351,15 +349,16 @@ contains
       type(T_Trajectory), pointer :: T
 
       real(kind=DefReal) :: time
+      character(len=500) :: header
 
-      read (nf, *, end=20, err=20) ! ######## START BUNDLE ###########
-      read (nf, *, end=20, err=20) time
-      read (nf, *, end=20, err=20) ntraj
-      read (nf, *, end=20, err=20) ndead
-      read (nf, *, end=20, err=20) nstate
-      read (nf, *, end=20, err=20) nsing
-      read (nf, *, end=20, err=20) npart
-      read (nf, *, end=20, err=20) ncbfs
+      read (nf, *) ! ######## START BUNDLE ###########
+      read (nf, *) time
+      read (nf, *) ntraj
+      read (nf, *) ndead
+      read (nf, *) nstate
+      read (nf, *) nsing
+      read (nf, *) npart
+      read (nf, *) ncbfs
 
       call B%create(numtraj=ntraj, &
                     numdeadtraj=ndead, &
@@ -370,7 +369,8 @@ contains
       B%CurrentTime = time
       B%NCBFs = ncbfs
 
-      read (nf, *, end=20, err=20) ! # Common particle info
+      read (nf, '(A)') header
+      call require_header(header, '############ Common Particle info')
 
       T => B%Trajectory(1)
 
@@ -378,39 +378,40 @@ contains
          call ReadParticle(T%Particle(n), nf)
       end do
 
-! copy this info to the rest of the trajectories in the bundle
+      ! copy this info to the rest of the trajectories in the bundle
       do n = 2, ntraj
          call B%Trajectory(n)%copy_from(T)
       end do
       do n = 1, ndead
          call B%DeadTraj(n)%copy_from(T)
       end do
-!bfec
+
       if (glzCentroids) then
          do n = 1, ncbfs * (ncbfs - 1) / 2
             call B%Centroids(n)%copy_from(T)
          end do
       end if
 
-! Now read in the Trajectories
+      ! Now read in the Trajectories
       do n = 1, ntraj
-         read (nf, *)
+         read (nf, '(A)') header
+         call require_header(header, '############### Live trajectory')
          call ReadTraj(B%Trajectory(n), nf)
          call B%Trajectory(n)%set_time(time)
       end do
 
-!bfec
       if (glzCentroids) then
-! do n = 1, ntraj*(ntraj-1)/2
          do n = 1, nCBFs * (nCBFs - 1) / 2
-            read (nf, *)
+            read (nf, '(A)') header
+            call require_header(header, '###############   Centroid')
             call ReadTraj(B%Centroids(n), nf)
             call B%Centroids(n)%set_time(time)
          end do
       end if
 
       do n = 1, ndead
-         read (nf, *)
+         read (nf, '(A)') header
+         call require_header(header, '############### Dead trajectory')
          call ReadTraj(B%DeadTraj(n), nf)
          call B%DeadTraj(n)%set_time(time)
          B%DeadTraj(n)%ESFlags%zPotEnCurrent = .true.
@@ -418,12 +419,6 @@ contains
          B%DeadTraj(n)%ESFlags%zDipolesCurrent = .true.
 
       end do
-
-      return
-
-20    continue
-      write (fmiout, *) 'error reading Bundle'
-      call B%destroy()
    end subroutine ReadBundle
 
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -542,14 +537,10 @@ contains
       write (nf, *) T1%Amplitude, ' / Amplitude'
 
       call WriteElecStruc(T1%ElecStruc, nf)
-
-      return
    end subroutine WriteTraj
 
-! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   !> Writes out the trajectory structure to a specified file
    subroutine ReadTraj(T1, nf)
-! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-! writes out the trajectory structure to a specified file
       type(T_Trajectory), intent(inout) :: T1
       integer(kind=DefInt), intent(in) :: nf
 
@@ -559,6 +550,7 @@ contains
       integer(kind=DefInt) :: nstate, i, npart, ndim, n, ns, ns2
 
       logical :: ZCouplingCurrent(T1%NumStates)
+      character(len=512) :: header
 
       npart = T1%NumParticles
       nstate = T1%NumStates
@@ -577,59 +569,72 @@ contains
          read (nf, *) T1%SWISS%BirthDate
          read (nf, *) T1%SWISS%ParentOverlap
       end if
-      read (nf, *) ! Last spawn
+
+      read (nf, '(A)') header
+      call require_header(header, '# Last spawn')
       read (nf, *) T1%LastSpawn
-      read (nf, *) ! Last time
+
+      read (nf, '(A)') header
+      call require_header(header, '# Spawn time')
       read (nf, *) T1%SpawnTime
 
       ndim = T1%Particle(1)%NumDimensions
       allocate (vec(ndim))
-! read position
-      read (nf, *) ! # Positions
+
+      read (nf, '(A)') header
+      call require_header(header, '# Positions')
       do n = 1, npart
          read (nf, *) (vec(i), i=1, ndim)
          call T1%Particle(n)%set_pos(vec)
       end do
 
-! read momenta
-      read (nf, *) ! # Momenta
+      read (nf, '(A)') header
+      call require_header(header, '# Momenta')
       do n = 1, npart
          read (nf, *) (vec(i), i=1, ndim)
          call T1%Particle(n)%set_mom(vec)
       end do
 
-      read (nf, *) ! # Energies
+      read (nf, '(A)') header
+      call require_header(header, '# Energies')
       read (nf, *) T1%ElecStruc%PotEn
 
       ns = T1%StateID
 
-      read (nf, *) !# Dipoles Current
+      read (nf, '(A)') header
+      call require_header(header, '# Dipoles Current')
       read (nf, *) T1%ESFlags%ZDipolesCurrent
       if (T1%ESFlags%ZDipolesCurrent) then
          do i = 1, nstate
-            read (nf, *) !# Dipole,i
+            read (nf, '(A)') header
+            call require_header(header, '# Dipole')
             read (nf, *) T1%ElecStruc%Dipole(i, :)
          end do
       end if
 
-      read (nf, *) !# Transition Dipoles Current
+      read (nf, '(A)') header
+      call require_header(header, '# Transition Dipoles Current')
       read (nf, *) T1%ESFlags%ZTransDipsCurrent
       if (T1%ESFlags%ZTransDipsCurrent) then
          do i = 2, nstate
-            read (nf, *) !# Transition Dipole , i
+            read (nf, '(A)') header
+            call require_header(header, '# Transition Dipole')
             read (nf, *) T1%ElecStruc%TransDipole(i, :)
          end do
       end if
 
-      read (nf, *) ! # Force
+      read (nf, '(A)') header
+      call require_header(header, '# Force')
       read (nf, *) ForceVector
 
-      read (nf, *) ! # Coupling status array
+      read (nf, '(A)') header
+      call require_header(header, '# Coupling status array')
       read (nf, *) ZCouplingCurrent
 
       do i = 1, nstate
          if (i == ns) cycle
-         read (nf, *) !Coupling history, ns, i
+         read (nf, '(A)') header
+         call require_header(header, '# Coupling history')
          read (nf, *) T1%CoupHist(:, i)
       end do
 
@@ -638,12 +643,13 @@ contains
          if (i == ns) cycle
          ns2 = ns2 + 1
          if (ZCouplingCurrent(i)) then
-            read (nf, *) ! # coupling ,ns, i
+            read (nf, '(A)') header
+            call require_header(header, '# coupling')
             read (nf, *) Coupling(ns2, :)
          end if
       end do
 
-!translate old format into new derivmat
+      ! translate old format into new derivmat
       T1%ElecStruc%DerivMat = 0.0d0
       T1%ElecStruc%DerivMat(ns, ns, :) = -ForceVector
       T1%ESFlags%ZDerivCurrent(ns, ns) = .true.
@@ -725,22 +731,21 @@ contains
 
 3     format(10(1x, es15.8))
 
-      read (nf, '(A)') header
-
       ! Read orbitals
+      read (nf, '(A)') header
       call parse_matrix_header(header, '# Orbitals', rows, cols)
       call resolve_orbital_restart_dimensions(rows, cols)
       call read_matrix_from_unit(ES%OldOrbitals, nf, rows, cols, 'orbital matrix')
-      call read_next_restart_header(nf, header)
       if (rows > 0) esNBasis = rows
 
       ! Read CI vectors
+      call read_next_restart_header(nf, header)
       call parse_matrix_header(header, '# CI vectors', rows, cols)
       call resolve_ci_restart_dimensions(rows, cols, size(ES%PotEn))
       call read_matrix_from_unit(ES%OldCIVecs, nf, rows, cols, 'CI vector matrix')
-      call read_next_restart_header(nf, header)
       if (cols > 0) esLCIVec = cols
 
+      call read_next_restart_header(nf, header)
       call require_header(header, '# Overlap matrix')
       read (nf, 3) ES%OverlapMatrix
 
@@ -894,7 +899,7 @@ contains
       if (index(adjustl(header), trim(label)) /= 1) then
 
          call FMS_DieError('Unsupported restart trajectory format: expected ''' &
-                           //trim(label)//''' got '''//trim(header)//'''')
+                           //trim(label)//''' got '''//trim(adjustl(header))//'''')
 
       end if
 
@@ -928,13 +933,32 @@ contains
       type(T_Particle), intent(inout) :: P
       !> Unit number to write to
       integer(kind=DefInt), intent(in) :: nf
+      character(len=256) :: header
 
-      read (nf, *) P%ParticleID
+1     format(i6, a) ! integer   format with label
+3     format(e17.10, a) ! real      format with label
+
+      header = ''
+      read (nf, 1) P%ParticleID, header
+      call require_header(header, '/ Particle ID')
+
       read (nf, *) P%Elmnt
-      read (nf, *) P%Width
-      read (nf, *) P%Mass
-      read (nf, *) P%Charge
-      read (nf, *) P%AtomicNum
+
+      header = ''
+      read (nf, 3) P%Width, header
+      call require_header(header, '/ Width')
+
+      header = ''
+      read (nf, 3) P%Mass, header
+      call require_header(header, '/ Mass')
+
+      header = ''
+      read (nf, 3) P%Charge, header
+      call require_header(header, '/ Charge')
+
+      header = ''
+      read (nf, 3) P%AtomicNum, header
+      call require_header(header, '/ Atomic number')
    end subroutine ReadParticle
 
 end module RestartModule
