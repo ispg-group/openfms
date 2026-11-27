@@ -706,16 +706,12 @@ contains
 
       write (nf, *) '# Overlap matrix'
       write (nf, 3) ES%OverlapMatrix
-      if (allocated(ES%OldBlob)) then
-         write (nf, *) '# TC Blob'
-         write (nf, 3) ES%OldBlob
-      end if
-      ! write (nf, *) '# MSPT2 Coeffs'
-      ! write (nf, 3) ES%OldMSPT2C
-      if (allocated(ES%ElecPhase)) then
-         write (nf, *) '# Electronic Phases'
-         write (nf, *) ES%ElecPhase
-      end if
+      write (nf, *) '# TC Blob'
+      write (nf, 3) ES%OldBlob
+      write (nf, *) '# MSPT2 Coeffs'
+      write (nf, 3) ES%OldMSPT2C
+      write (nf, *) '# Electronic Phases'
+      write (nf, *) ES%ElecPhase
 
    end subroutine WriteElecStruc
 
@@ -747,15 +743,29 @@ contains
 
       call require_header(header, '# Overlap matrix')
       read (nf, 3) ES%OverlapMatrix
+
+      call read_next_restart_header(nf, header)
+      call require_header(header, '# TC Blob')
       if (allocated(ES%OldBlob)) then
-         read (nf, *)
          read (nf, 3) ES%OldBlob
-      end if
-      ! read (nf, *)
-      ! read (nf, 3) ES%OldMSPT2C
-      if (allocated(ES%ElecPhase)) then
+      else
          read (nf, *)
+      end if
+
+      call read_next_restart_header(nf, header)
+      call require_header(header, '# MSPT2 Coeffs')
+      if (allocated(ES%OldMSPT2C)) then
+         read (nf, 3) ES%OldMSPT2C
+      else
+         read (nf, *)
+      end if
+
+      call read_next_restart_header(nf, header)
+      call require_header(header, '# Electronic Phases')
+      if (allocated(ES%ElecPhase)) then
          read (nf, *) ES%ElecPhase
+      else
+         read (nf, *)
       end if
 
    end subroutine ReadElecStruc
@@ -883,7 +893,8 @@ contains
 
       if (index(adjustl(header), trim(label)) /= 1) then
 
-         call FMS_DieError('Unsupported restart trajectory format: expected '''//trim(label)//'''')
+         call FMS_DieError('Unsupported restart trajectory format: expected ''' &
+                           //trim(label)//''' got '''//trim(header)//'''')
 
       end if
 

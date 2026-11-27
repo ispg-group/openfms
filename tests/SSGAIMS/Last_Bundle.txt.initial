@@ -53,6 +53,12 @@
 
  # Overlap matrix
   0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
 ############### Live trajectory    2 ############
      2                                   / Traj ID
      2                                   / CBF ID
@@ -93,6 +99,12 @@
 
  # Overlap matrix
   0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
 ############### Live trajectory    3 ############
      3                                   / Traj ID
      3                                   / CBF ID
@@ -133,6 +145,12 @@
 
  # Overlap matrix
   0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
 ############### Live trajectory    4 ############
      4                                   / Traj ID
      4                                   / CBF ID
@@ -173,6 +191,12 @@
 
  # Overlap matrix
   0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
 ############### Live trajectory    5 ############
      5                                   / Traj ID
      4                                   / CBF ID
@@ -213,6 +237,12 @@
 
  # Overlap matrix
   0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
 ############### Live trajectory    6 ############
      6                                   / Traj ID
      4                                   / CBF ID
@@ -253,6 +283,12 @@
 
  # Overlap matrix
   0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
 ############### Live trajectory    7 ############
      7                                   / Traj ID
      5                                   / CBF ID
@@ -293,6 +329,12 @@
 
  # Overlap matrix
   0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
 ############### Live trajectory    8 ############
      8                                   / Traj ID
      5                                   / CBF ID
@@ -333,6 +375,12 @@
 
  # Overlap matrix
   0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
 ############### Live trajectory    9 ############
      9                                   / Traj ID
      5                                   / CBF ID
@@ -373,6 +421,12 @@
 
  # Overlap matrix
   0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
 ###############   Centroid         1 ############
     -1                                   / Traj ID
      2                                   / CBF ID
@@ -413,6 +467,12 @@
 
  # Overlap matrix
   0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
 ###############   Centroid         2 ############
     -2                                   / Traj ID
      3                                   / CBF ID
@@ -451,6 +511,12 @@
 
  # Overlap matrix
   0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
 ###############   Centroid         3 ############
     -3                                   / Traj ID
      3                                   / CBF ID
@@ -489,6 +555,12 @@
 
  # Overlap matrix
   0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
 ###############   Centroid         4 ############
     -4                                   / Traj ID
      4                                   / CBF ID
@@ -529,6 +601,12 @@
 
  # Overlap matrix
   0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
 ###############   Centroid         5 ############
     -5                                   / Traj ID
      4                                   / CBF ID
@@ -569,6 +647,12 @@
 
  # Overlap matrix
   0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
 ###############   Centroid         6 ############
     -6                                   / Traj ID
      4                                   / CBF ID
@@ -607,6 +691,12 @@
 
  # Overlap matrix
   0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
 ###############   Centroid         7 ############
     -7                                   / Traj ID
      5                                   / CBF ID
@@ -647,6 +737,12 @@
 
  # Overlap matrix
   0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
 ###############   Centroid         8 ############
     -8                                   / Traj ID
      5                                   / CBF ID
@@ -687,6 +783,12 @@
 
  # Overlap matrix
   0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
 ###############   Centroid         9 ############
     -9                                   / Traj ID
      5                                   / CBF ID
@@ -725,6 +827,12 @@
 
  # Overlap matrix
   0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
 ###############   Centroid        10 ############
    -10                                   / Traj ID
      5                                   / CBF ID
@@ -765,3 +873,9 @@
 
  # Overlap matrix
   0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # TC Blob
+
+ # MSPT2 Coeffs
+  0.00000000E+00  0.00000000E+00  0.00000000E+00  0.00000000E+00
+ # Electronic Phases
+
