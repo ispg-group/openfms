@@ -763,14 +763,14 @@ contains
 !bfec
          if (glzCentroids) then
             F_ij = FMS_Coupling(T_c, is, js)
-            V = dot_product(F_ij, overlap_dx_M_trajectory(T_i, T_j, S_ij))
+            V = -dot_product(F_ij, overlap_dx_M_trajectory(T_i, T_j, S_ij))
          else
             CVec1 = FMS_Coupling(T_i, is, js)
             CVec2 = FMS_Coupling(T_j, is, js)
 ! phase should be ok, need to be checked for FMS/TC with CASSCF.
             F_ij = 0.5d0 * (CVec1 + CVec2)
             write (fmiout, *) 'Using LI approximation for matrix elements.'
-            V = dot_product(F_ij, overlap_dx_M_trajectory(T_i, T_j, S_ij))
+            V = -dot_product(F_ij, overlap_dx_M_trajectory(T_i, T_j, S_ij))
          end if
 
          if (glzxfaims) then
